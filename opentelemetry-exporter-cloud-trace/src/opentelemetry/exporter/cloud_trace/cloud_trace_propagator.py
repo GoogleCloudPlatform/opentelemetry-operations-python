@@ -16,7 +16,7 @@
 import re
 import typing
 
-import opentelemetry.trace as trace
+from opentelemetry import trace
 from opentelemetry.context.context import Context
 from opentelemetry.trace.propagation import httptextformat
 from opentelemetry.trace.span import (
@@ -27,6 +27,8 @@ from opentelemetry.trace.span import (
 
 _TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
 _TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)"
+
+
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 
 
