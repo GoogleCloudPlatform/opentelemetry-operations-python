@@ -1,0 +1,86 @@
+version: 2.1
+
+commands:
+  run_with_pip_cache:
+    description: Run the passed steps with a restored pip cache
+    parameters:
+      cache_key_base:
+        type: string
+        description: Base part of the cache key. Version and a more specific checksum of files will be added too.
+      cache_key_version:
+        type: string
+        description: Version prefix. Can be changed to invalidate caches.
+        default: v1
+      steps:
+        type: steps
+    steps:
+      - run: cat tox.ini dev-constraints.txt > check.txt
+      - restore_cache:
+          name: Restoring pip wheel cache
+          keys:
+            - &key_full << parameters.cache_key_version >>-<< parameters.cache_key_base >>-{{ checksum "check.txt" }}
+            - &key << parameters.cache_key_version >>-<< parameters.cache_key_base >>
+      - steps: << parameters.steps >>
+      - save_cache:
+          name: Saving pip wheel cache
+          key: *key
+          paths:
+            - ~/.cache/pip
+      - save_cache:
+          name: Saving pip wheel cache
+          key: *key_full
+          paths:
+            - ~/.cache/pip
+
+  setup:
+    description: Checkout code and install tox
+    steps:
+      - checkout
+      - run: sudo pip install tox-factor
+
+jobs:
+  lint:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - setup
+      - run_with_pip_cache:
+          cache_key_base: lint-python3.8
+          steps:
+            - run: tox -e lint-ci
+
+  tests:
+    parameters:
+      python3_minor:
+        type: integer
+        description: The x in python3.x
+    docker:
+      - image: circleci/python:3.<< parameters.python3_minor >>
+    steps:
+      - setup
+      - run_with_pip_cache:
+          cache_key_base: test-python3.<< parameters.python3_minor >>
+          steps:
+            - run:
+                name: Run tox test factors for python3.<< parameters.python3_minor >>
+                command: >
+                  tox
+                  -s false
+                  -pauto
+                  -f py3<< parameters.python3_minor >>-ci
+                  -- '--junitxml=../test-results/$TOX_ENV_NAME/junit.xml'
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - lint
+      - tests:
+          name: tests-python3.<< matrix.python3_minor >>
+          matrix:
+            parameters:
+              python3_minor: [4, 5, 6, 7, 8]
