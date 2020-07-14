@@ -8,6 +8,7 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,

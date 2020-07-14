@@ -19,6 +19,7 @@ from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
     UNIQUE_IDENTIFIER_KEY,
