@@ -1,5 +1,4 @@
 import requests
-
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
 
