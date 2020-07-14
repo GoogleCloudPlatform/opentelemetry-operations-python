@@ -44,13 +44,13 @@ import logging
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
+import opentelemetry.trace as trace_api
 import pkg_resources
 from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
-from opentelemetry import trace as trace_api
 from opentelemetry.exporter.cloud_trace.version import (
     __version__ as cloud_trace_version,
 )
