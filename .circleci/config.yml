@@ -22,12 +22,12 @@ commands:
             - &key << parameters.cache_key_version >>-<< parameters.cache_key_base >>
       - steps: << parameters.steps >>
       - save_cache:
-          name: Saving pip wheel cache
+          name: Saving base pip wheel cache
           key: *key
           paths:
             - ~/.cache/pip
       - save_cache:
-          name: Saving pip wheel cache
+          name: Saving checksummed pip wheel cache
           key: *key_full
           paths:
             - ~/.cache/pip
