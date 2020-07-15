@@ -41,8 +41,8 @@ def get_gke_resources():
     """
     # The user must specify these environment variables via the Downward API
     container_name = os.getenv("CONTAINER_NAME")
-    pod_namespace = os.getenv("NAMESPACE", "")
-    if not container_name:
+    pod_namespace = os.getenv("NAMESPACE")
+    if not container_name or not pod_namespace:
         return {}
     all_metadata = _get_all_google_metadata()
     pod_name = os.getenv("HOSTNAME", "")
