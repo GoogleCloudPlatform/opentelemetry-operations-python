@@ -20,6 +20,7 @@ from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
+
 from opentelemetry.exporter.cloud_trace import (
     MAX_EVENT_ATTRS,
     MAX_LINK_ATTRS,

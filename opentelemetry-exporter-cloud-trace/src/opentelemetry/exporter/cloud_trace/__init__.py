@@ -44,13 +44,14 @@ import logging
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
-import opentelemetry.trace as trace_api
 import pkg_resources
 from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.rpc.status_pb2 import Status
+
+import opentelemetry.trace as trace_api
 from opentelemetry.exporter.cloud_trace.version import (
     __version__ as cloud_trace_version,
 )
@@ -306,7 +307,16 @@ OT_RESOURCE_LABEL_TO_GCP = {
         "cloud.account.id": "project_id",
         "host.id": "instance_id",
         "cloud.zone": "zone",
-    }
+    },
+    "gke_container": {
+        "cloud.account.id": "project_id",
+        "k8s.cluster.name": "cluster_name",
+        "k8s.namespace.name": "namespace_id",
+        "host.id": "instance_id",
+        "k8s.pod.name": "pod_id",
+        "container.name": "container_name",
+        "cloud.zone": "zone",
+    },
 }
 
 

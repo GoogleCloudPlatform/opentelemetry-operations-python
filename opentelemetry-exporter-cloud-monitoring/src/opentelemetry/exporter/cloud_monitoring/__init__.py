@@ -8,6 +8,7 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
@@ -26,7 +27,16 @@ OT_RESOURCE_LABEL_TO_GCP = {
         "cloud.account.id": "project_id",
         "host.id": "instance_id",
         "cloud.zone": "zone",
-    }
+    },
+    "gke_container": {
+        "cloud.account.id": "project_id",
+        "k8s.cluster.name": "cluster_name",
+        "k8s.namespace.name": "namespace_id",
+        "host.id": "instance_id",
+        "k8s.pod.name": "pod_id",
+        "container.name": "container_name",
+        "cloud.zone": "zone",
+    },
 }
 
 
