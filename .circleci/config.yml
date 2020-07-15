@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  win: circleci/windows@2.2.0
+
 commands:
   run_with_pip_cache:
     description: Run the passed steps with a restored pip cache
@@ -74,6 +77,12 @@ jobs:
       - store_artifacts:
           path: test-results
 
+  tests_windows_python38:
+    executor:
+      name: win/default
+    steps:
+      - setup
+
 workflows:
   version: 2
   main:
@@ -84,3 +93,5 @@ workflows:
           matrix:
             parameters:
               python3_minor: [4, 5, 6, 7, 8]
+
+      - tests_windows_python38
