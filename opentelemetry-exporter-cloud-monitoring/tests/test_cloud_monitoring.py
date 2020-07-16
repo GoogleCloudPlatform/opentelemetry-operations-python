@@ -197,7 +197,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         client = mock.Mock()
 
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9
+            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client
@@ -245,7 +245,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_one = SumAggregator()
         sum_agg_one.checkpoint = 1
-        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
+        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
         exporter.export(
             [
                 MetricRecord(
@@ -296,7 +296,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_two = SumAggregator()
         sum_agg_two.checkpoint = 1
-        sum_agg_two.last_update_timestamp = (WRITE_INTERVAL + 2) * 1e9
+        sum_agg_two.last_update_timestamp = (WRITE_INTERVAL + 2) * int(1e9)
         exporter.export(
             [
                 MetricRecord(
@@ -345,7 +345,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
     def test_stateless_times(self):
         client = mock.Mock()
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: 1e9
+            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client,
@@ -369,7 +369,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         agg = SumAggregator()
         agg.checkpoint = 1
-        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * 1e9
+        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
 
         metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
 
@@ -390,7 +390,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             WRITE_INTERVAL + 1,
         )
 
-        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * 1e9
+        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * int(1e9)
 
         metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
 

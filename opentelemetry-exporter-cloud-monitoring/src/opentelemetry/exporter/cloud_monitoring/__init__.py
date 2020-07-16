@@ -1,5 +1,3 @@
-# pylint: disable=too-many-locals
-
 import logging
 import random
 from typing import Optional, Sequence
@@ -24,6 +22,7 @@ logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
+NANOS_PER_SECOND = int(1e9)
 
 OT_RESOURCE_LABEL_TO_GCP = {
     "gce_instance": {
@@ -72,7 +71,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         (
             self._exporter_start_time_seconds,
             self._exporter_start_time_nanos,
-        ) = divmod(time_ns(), 1e9)
+        ) = divmod(time_ns(), NANOS_PER_SECOND)
 
     @staticmethod
     def _get_monitored_resource(
@@ -163,6 +162,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
             )
 
+        # SumAggregator is best represented as a cumulative, but it can't be represented that way
+        # if it can decrement. So we need to make sure that the instrument is not an UpDownCounter
         if isinstance(record.aggregator, SumAggregator) and not isinstance(
             record.instrument, UpDownCounter
         ):
@@ -193,6 +194,47 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self._metric_descriptors[descriptor_type] = descriptor
         return descriptor
 
+    def _set_start_end_times(self, point, record, metric_descriptor):
+        updated_key = (metric_descriptor.type, record.labels)
+        seconds, nanos = divmod(
+            record.aggregator.last_update_timestamp, NANOS_PER_SECOND
+        )
+
+        if (
+            metric_descriptor.metric_kind
+            == MetricDescriptor.MetricKind.CUMULATIVE
+        ):
+            if (
+                record.instrument.meter.batcher.stateful
+                or updated_key not in self._last_updated
+            ):
+                # The aggregation has not reset since the exporter
+                # has started up, so that is the start time
+                point.interval.start_time.seconds = (
+                    self._exporter_start_time_seconds
+                )
+                point.interval.start_time.nanos = (
+                    self._exporter_start_time_nanos
+                )
+            else:
+                # The aggregation reset the last time it was exported
+                # Add 1ms to guarantee there is no overlap from the previous export
+                # (see https://cloud.google.com/monitoring/api/ref_v3/rpc/google.monitoring.v3#timeinterval)
+                (
+                    point.interval.start_time.seconds,
+                    point.interval.start_time.nanos,
+                ) = divmod(
+                    self._last_updated[updated_key] + int(1e6),
+                    NANOS_PER_SECOND,
+                )
+
+        self._last_updated[
+            updated_key
+        ] = record.aggregator.last_update_timestamp
+
+        point.interval.end_time.seconds = seconds
+        point.interval.end_time.nanos = nanos
+
     def export(
         self, metric_records: Sequence[MetricRecord]
     ) -> "MetricsExportResult":
@@ -221,48 +263,19 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 point.value.int64_value = record.aggregator.checkpoint
             elif instrument.value_type == float:
                 point.value.double_value = record.aggregator.checkpoint
-            seconds, nanos = divmod(
-                record.aggregator.last_update_timestamp, 1e9
+
+            seconds = (
+                record.aggregator.last_update_timestamp // NANOS_PER_SECOND
             )
 
             # Cloud Monitoring API allows, for any combination of labels and
             # metric name, one update per WRITE_INTERVAL seconds
             updated_key = (metric_descriptor.type, record.labels)
             last_updated_time = self._last_updated.get(updated_key, 0)
-            last_updated_time_seconds = last_updated_time // 1e9
+            last_updated_time_seconds = last_updated_time // NANOS_PER_SECOND
             if seconds <= last_updated_time_seconds + WRITE_INTERVAL:
                 continue
-
-            if (
-                metric_descriptor.metric_kind
-                == MetricDescriptor.MetricKind.CUMULATIVE
-            ):
-                if (
-                    instrument.meter.batcher.stateful
-                    or updated_key not in self._last_updated
-                ):
-                    # The aggregation has not reset since the exporter has started up, so that is the start time
-                    point.interval.start_time.seconds = int(
-                        self._exporter_start_time_seconds
-                    )
-                    point.interval.start_time.nanos = int(
-                        self._exporter_start_time_nanos
-                    )
-                else:
-                    # The aggregation reset the last time it was exported
-                    (
-                        point.interval.start_time.seconds,
-                        point.interval.start_time.nanos,
-                    ) = map(
-                        int, divmod(self._last_updated[updated_key] + 1e6, 1e9)
-                    )
-
-            self._last_updated[
-                updated_key
-            ] = record.aggregator.last_update_timestamp
-
-            point.interval.end_time.seconds = int(seconds)
-            point.interval.end_time.nanos = int(nanos)
+            self._set_start_end_times(point, record, metric_descriptor)
             all_series.append(series)
         try:
             self._batch_write(all_series)
