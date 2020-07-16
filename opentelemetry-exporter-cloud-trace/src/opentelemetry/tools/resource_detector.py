@@ -29,7 +29,10 @@ def get_gce_resources():
 
         See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
     """
-    basic_attributes, all_metadata = _get_google_metadata_and_basic_attributes()
+    (
+        basic_attributes,
+        all_metadata,
+    ) = _get_google_metadata_and_basic_attributes()
     basic_attributes.update(
         {
             "host.id": all_metadata["instance"]["id"],
@@ -48,7 +51,10 @@ def get_gke_resources():
     pod_namespace = os.getenv("NAMESPACE")
     if not container_name or not pod_namespace:
         return {}
-    basic_attributes, all_metadata = _get_google_metadata_and_basic_attributes()
+    (
+        basic_attributes,
+        all_metadata,
+    ) = _get_google_metadata_and_basic_attributes()
     pod_name = os.getenv("HOSTNAME", "")
     basic_attributes.update(
         {
