@@ -24,6 +24,10 @@ from opentelemetry.tools.resource_detector import (
     get_gke_resources,
 )
 
+NAMESPACE = "NAMESPACE"
+CONTAINER_NAME = "CONTAINER_NAME"
+HOSTNAME = "HOSTNAME"
+
 GCE_RESOURCES_JSON_STRING = {
     "instance": {"id": "instance_id", "zone": "projects/123/zones/zone"},
     "project": {"projectId": "project_id"},
@@ -39,8 +43,8 @@ GKE_RESOURCES_JSON_STRING = {
 }
 
 
+@mock.patch("opentelemetry.tools.resource_detector.requests.get")
 class TestGCEResourceFinder(unittest.TestCase):
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gce_resources(self, getter):
         getter.return_value.json.return_value = GCE_RESOURCES_JSON_STRING
         found_resources = get_gce_resources()
@@ -63,39 +67,30 @@ def pop_environ_key(key):
 
 
 def clear_gke_env_vars():
-    pop_environ_key("CONTAINER_NAME")
-    pop_environ_key("NAMESPACE")
-    pop_environ_key("HOSTNAME")
+    pop_environ_key(CONTAINER_NAME)
+    pop_environ_key(NAMESPACE)
+    pop_environ_key(HOSTNAME)
 
 
+@mock.patch("opentelemetry.tools.resource_detector.requests.get")
 class TestGKEResourceFinder(unittest.TestCase):
     def tearDown(self) -> None:
         clear_gke_env_vars()
 
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
-    def test_missing_environment_variables(self, getter):
+    def test_missing_container_name(self, getter):
         getter.return_value.json.return_value = GKE_RESOURCES_JSON_STRING
-
-        # If one of CONTAINER_NAME, NAMESPACE is missing from the environment
-        # return no resources
-
-        pop_environ_key("CONTAINER_NAME")
-        pop_environ_key("NAMESPACE")
+        pop_environ_key(CONTAINER_NAME)
         self.assertEqual(get_gke_resources(), {})
 
-        os.environ["NAMESPACE"] = "namespace"
+    def test_missing_namespace(self, getter):
+        getter.return_value.json.return_value = GKE_RESOURCES_JSON_STRING
+        pop_environ_key(NAMESPACE)
         self.assertEqual(get_gke_resources(), {})
 
-        pop_environ_key("NAMESPACE")
-        os.environ["CONTAINER_NAME"] = "container_name"
-        self.assertEqual(get_gke_resources(), {})
-        clear_gke_env_vars()
-
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gke_resources(self, getter):
-        os.environ["NAMESPACE"] = "namespace"
-        os.environ["CONTAINER_NAME"] = "container_name"
-        os.environ["HOSTNAME"] = "host_name"
+        os.environ[NAMESPACE] = "namespace"
+        os.environ[CONTAINER_NAME] = "container_name"
+        os.environ[HOSTNAME] = "host_name"
         getter.return_value.json.return_value = GKE_RESOURCES_JSON_STRING
         found_resources = get_gke_resources()
         self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
@@ -113,14 +108,13 @@ class TestGKEResourceFinder(unittest.TestCase):
                 "gcp.resource_type": "gke_container",
             },
         )
-        clear_gke_env_vars()
 
 
+@mock.patch("opentelemetry.tools.resource_detector.requests.get")
 class TestGoogleCloudResourceDetector(unittest.TestCase):
     def tearDown(self) -> None:
         clear_gke_env_vars()
 
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gce_resources(self, getter):
         # The necessary env variables were not set for GKE resource detection
         # to succeed. We should be falling back to detecting GCE resources
@@ -158,14 +152,13 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
             ),
         )
 
-    @mock.patch("opentelemetry.tools.resource_detector.requests.get")
     def test_finding_gke_resources(self, getter):
         # The necessary env variables were set for GKE resource detection
         # to succeed. No GCE resource info should be extracted
 
-        os.environ["NAMESPACE"] = "namespace"
-        os.environ["CONTAINER_NAME"] = "container_name"
-        os.environ["HOSTNAME"] = "host_name"
+        os.environ[NAMESPACE] = "namespace"
+        os.environ[CONTAINER_NAME] = "container_name"
+        os.environ[HOSTNAME] = "host_name"
 
         resource_finder = GoogleCloudResourceDetector()
         getter.return_value.json.return_value = GKE_RESOURCES_JSON_STRING
@@ -188,4 +181,3 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
             ),
         )
         self.assertEqual(getter.call_count, 1)
-        clear_gke_env_vars()
