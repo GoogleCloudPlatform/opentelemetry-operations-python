@@ -10,13 +10,18 @@ _GCP_METADATA_URL = (
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
 
 
-def _get_all_google_metadata():
+def _get_google_metadata_and_basic_attributes():
     token = attach(set_value("suppress_instrumentation", True))
     all_metadata = requests.get(
         _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
     ).json()
     detach(token)
-    return all_metadata
+    basic_attributes = {
+        "cloud.account.id": all_metadata["project"]["projectId"],
+        "cloud.provider": "gcp",
+        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
+    }
+    return basic_attributes, all_metadata
 
 
 def get_gce_resources():
@@ -24,15 +29,14 @@ def get_gce_resources():
 
         See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
     """
-    all_metadata = _get_all_google_metadata()
-    gce_resources = {
-        "host.id": all_metadata["instance"]["id"],
-        "cloud.account.id": all_metadata["project"]["projectId"],
-        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
-        "cloud.provider": "gcp",
-        "gcp.resource_type": "gce_instance",
-    }
-    return gce_resources
+    basic_attributes, all_metadata = _get_google_metadata_and_basic_attributes()
+    basic_attributes.update(
+        {
+            "host.id": all_metadata["instance"]["id"],
+            "gcp.resource_type": "gce_instance",
+        }
+    )
+    return basic_attributes
 
 
 def get_gke_resources():
@@ -44,24 +48,27 @@ def get_gke_resources():
     pod_namespace = os.getenv("NAMESPACE")
     if not container_name or not pod_namespace:
         return {}
-    all_metadata = _get_all_google_metadata()
+    basic_attributes, all_metadata = _get_google_metadata_and_basic_attributes()
     pod_name = os.getenv("HOSTNAME", "")
-    gke_resources = {
-        "cloud.account.id": all_metadata["project"]["projectId"],
-        "k8s.cluster.name": all_metadata["instance"]["attributes"][
-            "cluster-name"
-        ],
-        "k8s.namespace.name": pod_namespace,
-        "host.id": all_metadata["instance"]["id"],
-        "k8s.pod.name": pod_name,
-        "container.name": container_name,
-        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
-        "cloud.provider": "gcp",
-        "gcp.resource_type": "gke_container",
-    }
-    return gke_resources
+    basic_attributes.update(
+        {
+            "k8s.cluster.name": all_metadata["instance"]["attributes"][
+                "cluster-name"
+            ],
+            "k8s.namespace.name": pod_namespace,
+            "host.id": all_metadata["instance"]["id"],
+            "k8s.pod.name": pod_name,
+            "container.name": container_name,
+            "gcp.resource_type": "gke_container",
+        }
+    )
+    return basic_attributes
 
 
+# Order here matters. Since a GKE_CONTAINER is a specialized type of GCE_INSTANCE
+# We need to first check if it matches the criteria for being a GKE_CONTAINER
+# before falling back and checking if its a GCE_INSTANCE.
+# This list should be sorted from most specialized to least specialized.
 _RESOURCE_FINDERS = [get_gke_resources, get_gce_resources]
 
 
