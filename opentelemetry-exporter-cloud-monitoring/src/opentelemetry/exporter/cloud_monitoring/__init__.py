@@ -10,13 +10,13 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from opentelemetry.sdk.metrics import UpDownCounter
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
     MetricsExporter,
     MetricsExportResult,
 )
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
-from opentelemetry.sdk.metrics import UpDownCounter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.util import time_ns
 
@@ -163,7 +163,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
             )
 
-        if isinstance(record.aggregator, SumAggregator) and not isinstance(record.instrument, UpDownCounter):
+        if isinstance(record.aggregator, SumAggregator) and not isinstance(
+            record.instrument, UpDownCounter
+        ):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
         else:
             logger.warning(
@@ -248,9 +250,16 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                     )
                 else:
                     # The aggregation reset the last time it was exported
-                    point.interval.start_time.seconds, point.interval.start_time.nanos = map(int, divmod(self._last_updated[updated_key] + 1e6, 1e9))
+                    (
+                        point.interval.start_time.seconds,
+                        point.interval.start_time.nanos,
+                    ) = map(
+                        int, divmod(self._last_updated[updated_key] + 1e6, 1e9)
+                    )
 
-            self._last_updated[updated_key] = record.aggregator.last_update_timestamp
+            self._last_updated[
+                updated_key
+            ] = record.aggregator.last_update_timestamp
 
             point.interval.end_time.seconds = int(seconds)
             point.interval.end_time.nanos = int(nanos)
