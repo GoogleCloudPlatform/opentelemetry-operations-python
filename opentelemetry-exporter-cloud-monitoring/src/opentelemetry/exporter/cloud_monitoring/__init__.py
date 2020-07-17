@@ -179,7 +179,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
         else:
             logger.warning(
-                "Unsupported aggregation type %s, ignoring it",
+                "Unsupported instrument/aggregator combo, types %s and %s, ignoring it",
+                type(record.instrument).__name__,
                 type(record.aggregator).__name__,
             )
             return None
