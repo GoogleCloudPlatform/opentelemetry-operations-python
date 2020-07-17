@@ -58,10 +58,13 @@ def get_gke_resources():
     # Fallback to reading namespace from a file is the env var is not set
     pod_namespace = os.getenv("NAMESPACE")
     if pod_namespace is None:
-        with open(
-            "/var/run/secrets/kubernetes.io/serviceaccount/namespace", "r"
-        ) as namespace_file:
-            pod_namespace = namespace_file.read().strip() or ""
+        try:
+            with open(
+                "/var/run/secrets/kubernetes.io/serviceaccount/namespace", "r"
+            ) as namespace_file:
+                pod_namespace = namespace_file.read().strip()
+        except FileNotFoundError:
+            pod_namespace = ""
 
     common_attributes.update(
         {
@@ -95,7 +98,11 @@ class GoogleCloudResourceDetector(ResourceDetector):
         if not self.cached:
             self.cached = True
             for resource_finder in _RESOURCE_FINDERS:
-                found_resources = resource_finder()
+                try:
+                    found_resources = resource_finder()
+                # pylint: disable=broad-except
+                except Exception:
+                    found_resources = None
                 if found_resources:
                     self.gcp_resources = found_resources
                     break

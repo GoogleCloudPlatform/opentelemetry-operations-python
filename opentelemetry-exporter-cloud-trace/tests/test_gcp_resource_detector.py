@@ -109,6 +109,24 @@ class TestGKEResourceFinder(unittest.TestCase):
             },
         )
 
+    def test_missing_namespace_file(self, getter):
+        os.environ[CONTAINER_NAME] = "container_name"
+        found_resources = get_gke_resources()
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "k8s.cluster.name": "cluster_name",
+                "k8s.namespace.name": "",
+                "host.id": "instance_id",
+                "k8s.pod.name": "",
+                "container.name": "container_name",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "gke_container",
+            },
+        )
+
     def test_finding_gke_resources(self, getter):
         os.environ[NAMESPACE] = "namespace"
         os.environ[CONTAINER_NAME] = "container_name"
@@ -224,3 +242,26 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
             ),
         )
         self.assertEqual(getter.call_count, 1)
+
+    def test_resource_finding_fallback(self, getter):
+        # The environment variables imply its on GKE, but the metadata doesn't
+        # have GKE information
+        getter.return_value.json.return_value = GCE_RESOURCES_JSON_STRING
+        os.environ[CONTAINER_NAME] = "container_name"
+
+        # This detection will cause an error in get_gke_resources and should
+        # swallow the error and fall back to get_gce_resources
+        resource_finder = GoogleCloudResourceDetector()
+        found_resources = resource_finder.detect()
+        self.assertEqual(
+            found_resources,
+            Resource(
+                labels={
+                    "host.id": "instance_id",
+                    "cloud.provider": "gcp",
+                    "cloud.account.id": "project_id",
+                    "cloud.zone": "zone",
+                    "gcp.resource_type": "gce_instance",
+                }
+            ),
+        )
