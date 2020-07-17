@@ -1,3 +1,5 @@
+import os
+
 import requests
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
@@ -8,27 +10,82 @@ _GCP_METADATA_URL = (
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
 
 
-def get_gce_resources():
-    """ Resource finder for common GCE attributes
-
-        See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
-    """
+def _get_google_metadata_and_common_attributes():
     token = attach(set_value("suppress_instrumentation", True))
     all_metadata = requests.get(
         _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER
     ).json()
     detach(token)
-    gce_resources = {
-        "host.id": all_metadata["instance"]["id"],
+    common_attributes = {
         "cloud.account.id": all_metadata["project"]["projectId"],
-        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
         "cloud.provider": "gcp",
-        "gcp.resource_type": "gce_instance",
+        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
     }
-    return gce_resources
+    return common_attributes, all_metadata
 
 
-_RESOURCE_FINDERS = [get_gce_resources]
+def get_gce_resources():
+    """ Resource finder for common GCE attributes
+
+        See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
+    """
+    (
+        common_attributes,
+        all_metadata,
+    ) = _get_google_metadata_and_common_attributes()
+    common_attributes.update(
+        {
+            "host.id": all_metadata["instance"]["id"],
+            "gcp.resource_type": "gce_instance",
+        }
+    )
+    return common_attributes
+
+
+def get_gke_resources():
+    """ Resource finder for GKE attributes
+
+    """
+    # The user must specify the container name via the Downward API
+    container_name = os.getenv("CONTAINER_NAME")
+    if container_name is None:
+        return {}
+    (
+        common_attributes,
+        all_metadata,
+    ) = _get_google_metadata_and_common_attributes()
+
+    # Fallback to reading namespace from a file is the env var is not set
+    pod_namespace = os.getenv("NAMESPACE")
+    if pod_namespace is None:
+        try:
+            with open(
+                "/var/run/secrets/kubernetes.io/serviceaccount/namespace", "r"
+            ) as namespace_file:
+                pod_namespace = namespace_file.read().strip()
+        except FileNotFoundError:
+            pod_namespace = ""
+
+    common_attributes.update(
+        {
+            "k8s.cluster.name": all_metadata["instance"]["attributes"][
+                "cluster-name"
+            ],
+            "k8s.namespace.name": pod_namespace,
+            "k8s.pod.name": os.getenv("POD_NAME", os.getenv("HOSTNAME", "")),
+            "host.id": all_metadata["instance"]["id"],
+            "container.name": container_name,
+            "gcp.resource_type": "gke_container",
+        }
+    )
+    return common_attributes
+
+
+# Order here matters. Since a GKE_CONTAINER is a specialized type of GCE_INSTANCE
+# We need to first check if it matches the criteria for being a GKE_CONTAINER
+# before falling back and checking if its a GCE_INSTANCE.
+# This list should be sorted from most specialized to least specialized.
+_RESOURCE_FINDERS = [get_gke_resources, get_gce_resources]
 
 
 class GoogleCloudResourceDetector(ResourceDetector):
@@ -41,6 +98,12 @@ class GoogleCloudResourceDetector(ResourceDetector):
         if not self.cached:
             self.cached = True
             for resource_finder in _RESOURCE_FINDERS:
-                found_resources = resource_finder()
-                self.gcp_resources.update(found_resources)
+                try:
+                    found_resources = resource_finder()
+                # pylint: disable=broad-except
+                except Exception:
+                    found_resources = None
+                if found_resources:
+                    self.gcp_resources = found_resources
+                    break
         return Resource(self.gcp_resources)
