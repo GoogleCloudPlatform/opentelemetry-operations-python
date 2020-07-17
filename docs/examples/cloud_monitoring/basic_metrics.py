@@ -28,7 +28,7 @@ metrics.get_meter_provider().start_pipeline(
 )
 
 requests_counter = meter.create_metric(
-    name="request_counter",
+    name="MMSLC_support",
     description="number of requests",
     unit="1",
     value_type=int,
