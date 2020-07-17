@@ -301,19 +301,20 @@ def _strip_characters(ot_version):
     return "".join(filter(lambda x: x.isdigit() or x == ".", ot_version))
 
 
-GCP_COMMON_ATTRIBUTES = {
-    "cloud.account.id": "project_id",
-    "cloud.zone": "zone",
-}
 OT_RESOURCE_LABEL_TO_GCP = {
-    "gce_instance": {"host.id": "instance_id", **GCP_COMMON_ATTRIBUTES},
+    "gce_instance": {
+        "host.id": "instance_id",
+        "cloud.account.id": "project_id",
+        "cloud.zone": "zone",
+    },
     "gke_container": {
         "k8s.cluster.name": "cluster_name",
         "k8s.namespace.name": "namespace_id",
         "k8s.pod.name": "pod_id",
         "host.id": "instance_id",
         "container.name": "container_name",
-        **GCP_COMMON_ATTRIBUTES,
+        "cloud.account.id": "project_id",
+        "cloud.zone": "zone",
     },
 }
 
