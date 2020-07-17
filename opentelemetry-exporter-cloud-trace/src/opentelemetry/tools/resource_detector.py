@@ -46,23 +46,31 @@ def get_gke_resources():
     """ Resource finder for GKE attributes
 
     """
-    # The user must specify these environment variables via the Downward API
+    # The user must specify the container name via the Downward API
     container_name = os.getenv("CONTAINER_NAME")
-    pod_namespace = os.getenv("NAMESPACE")
-    if not container_name or not pod_namespace:
+    if container_name is None:
         return {}
     (
         common_attributes,
         all_metadata,
     ) = _get_google_metadata_and_common_attributes()
+
+    # Fallback to reading namespace from a file is the env var is not set
+    pod_namespace = os.getenv("NAMESPACE")
+    if pod_namespace is None:
+        with open(
+            "/var/run/secrets/kubernetes.io/serviceaccount/namespace", "r"
+        ) as namespace_file:
+            pod_namespace = namespace_file.read().strip() or ""
+
     common_attributes.update(
         {
             "k8s.cluster.name": all_metadata["instance"]["attributes"][
                 "cluster-name"
             ],
             "k8s.namespace.name": pod_namespace,
+            "k8s.pod.name": os.getenv("POD_NAME", os.getenv("HOSTNAME", "")),
             "host.id": all_metadata["instance"]["id"],
-            "k8s.pod.name": os.getenv("HOSTNAME", ""),
             "container.name": container_name,
             "gcp.resource_type": "gke_container",
         }
