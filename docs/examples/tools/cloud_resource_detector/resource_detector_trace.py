@@ -22,7 +22,9 @@ from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
 
 # MUST be run on a Google tool!
 # Detect resources from the environment
-resources = get_aggregated_resources([GoogleCloudResourceDetector()])
+resources = get_aggregated_resources(
+    [GoogleCloudResourceDetector(raise_on_error=True)]
+)
 
 # Pass the detected resources to the provider, which will in turn pass it to all
 # created spans

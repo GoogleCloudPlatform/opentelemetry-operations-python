@@ -25,7 +25,9 @@ from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
 
 # MUST be run on a Google tool!
 # Detect resources from the environment
-resources = get_aggregated_resources([GoogleCloudResourceDetector()])
+resources = get_aggregated_resources(
+    [GoogleCloudResourceDetector(raise_on_error=True)]
+)
 
 metrics.set_meter_provider(MeterProvider(resource=resources))
 meter = metrics.get_meter(__name__)

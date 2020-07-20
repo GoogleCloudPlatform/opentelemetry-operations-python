@@ -88,6 +88,10 @@ def get_gke_resources():
 _RESOURCE_FINDERS = [get_gke_resources, get_gce_resources]
 
 
+class NoGoogleResourcesFound(Exception):
+    pass
+
+
 class GoogleCloudResourceDetector(ResourceDetector):
     def __init__(self, raise_on_error=False):
         super().__init__(raise_on_error)
@@ -106,4 +110,6 @@ class GoogleCloudResourceDetector(ResourceDetector):
                 if found_resources:
                     self.gcp_resources = found_resources
                     break
+        if not self.gcp_resources:
+            raise NoGoogleResourcesFound()
         return Resource(self.gcp_resources)
