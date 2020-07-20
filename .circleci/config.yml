@@ -69,9 +69,10 @@ jobs:
           name: Upload docs html artifacts
           command: |
             cd docs/_build/html
-            zip -r docs.zip *
+            zip -r docs-html.zip *
       - store_artifacts:
           path: docs/_build/html
+          destination: docs-html
 
   tests:
     parameters:
