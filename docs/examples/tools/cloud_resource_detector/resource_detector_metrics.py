@@ -20,8 +20,14 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.resources import get_aggregated_resources
+from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
 
-metrics.set_meter_provider(MeterProvider())
+# MUST be run on a Google tool!
+# Detect resources from the environment
+resources = get_aggregated_resources([GoogleCloudResourceDetector()])
+
+metrics.set_meter_provider(MeterProvider(resource=resources))
 meter = metrics.get_meter(__name__)
 metrics.get_meter_provider().start_pipeline(
     meter, CloudMonitoringMetricsExporter(), 5

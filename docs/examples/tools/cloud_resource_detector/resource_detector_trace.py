@@ -13,29 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.ext.requests
-import requests
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.exporter.cloud_trace.cloud_trace_propagator import (
-    CloudTraceFormatPropagator,
-)
-from opentelemetry.propagators import set_global_httptextformat
+from opentelemetry.sdk.resources import get_aggregated_resources
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
 
-# Instrumenting requests
-opentelemetry.ext.requests.RequestsInstrumentor().instrument()
+# MUST be run on a Google tool!
+# Detect resources from the environment
+resources = get_aggregated_resources([GoogleCloudResourceDetector()])
 
-# Tracer boilerplate
-trace.set_tracer_provider(TracerProvider())
+# Pass the detected resources to the provider, which will in turn pass it to all
+# created spans
+trace.set_tracer_provider(TracerProvider(resource=resources))
+
+# Cloud Trace exporter will automatically format these resources and export
+cloud_trace_exporter = CloudTraceSpanExporter()
 trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(CloudTraceSpanExporter())
+    SimpleExportSpanProcessor(cloud_trace_exporter)
 )
-
-# Using the X-Cloud-Trace-Context header
-set_global_httptextformat(CloudTraceFormatPropagator())
-
 tracer = trace.get_tracer(__name__)
-with tracer.start_as_current_span("client_span"):
-    response = requests.get("http://localhost:5000/")
+with tracer.start_as_current_span("foo"):
+    print("Hello world!")
