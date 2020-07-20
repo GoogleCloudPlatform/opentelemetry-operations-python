@@ -1,5 +1,12 @@
 version: 2.1
 
+executors:
+  # Current version of python used in dev. Should match dev_basepython constant
+  # in tox.ini
+  dev_python:
+    docker:
+      - image: circleci/python:3.8
+
 commands:
   run_with_pip_cache:
     description: Run the passed steps with a restored pip cache
@@ -40,6 +47,7 @@ commands:
 
 jobs:
   lint:
+    executor: dev_python
     docker:
       - image: circleci/python:3.8
     steps:
@@ -48,6 +56,23 @@ jobs:
           cache_key_base: lint-python3.8
           steps:
             - run: tox -e lint-ci
+
+  docs:
+    executor: dev_python
+    steps:
+      - setup
+      - run_with_pip_cache:
+          cache_key_base: lint-python3.8
+          steps:
+            - run: tox -e docs-ci
+      - run:
+          name: Upload docs html artifacts
+          command: |
+            cd docs/_build/html
+            zip -r docs-html.zip *
+      - store_artifacts:
+          path: docs/_build/html
+          destination: docs-html
 
   tests:
     parameters:
@@ -79,6 +104,7 @@ workflows:
   main:
     jobs:
       - lint
+      - docs
       - tests:
           name: tests-python3.<< matrix.python3_minor >>
           matrix:
