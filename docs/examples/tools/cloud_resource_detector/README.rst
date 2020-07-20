@@ -9,11 +9,12 @@ Basic Example
 -------------
 
 To use this feature you first need to:
-    * A Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
+    * Create a Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
     * (If you want to send resource info to Cloud Trace) Enable `Cloud Trace API <https://console.cloud.google.com/apis/library?q=cloud%20trace&filter=visibility:public>`_ (listed in the Cloud Console as Stackdriver Trace API) in the project.
     * (If you want to send resource info to Cloud Monitoring) Enable the `Cloud Monitoring API <https://console.cloud.google.com/apis/library?q=cloud_monitoring>`_ (aka Stackdriver Monitoring API) in the project.
     * Enable Default Application Credentials by creating setting `GOOGLE_APPLICATION_CREDENTIALS <https://cloud.google.com/docs/authentication/getting-started>`_ or by `installing gcloud sdk <https://cloud.google.com/sdk/install>`_ and calling ``gcloud auth application-default login``.
-    * Setup a Google tool like `Google Compute Engine <https://cloud.google.com/compute/docs/quickstart-linux>`_ (GCE) or `Google Kubernetes Engine <https://cloud.google.com/kubernetes-engine/docs/quickstart>`_ (GKE)
+    * Setup a Google tool like `Google Compute Engine <https://cloud.google.com/compute/docs/quickstart-linux>`_ (GCE) or `Google Kubernetes Engine <https://cloud.google.com/kubernetes-engine/docs/quickstart>`_ (GKE).
+    * Run the below example in the Google tool.
 
 * Installation
 
