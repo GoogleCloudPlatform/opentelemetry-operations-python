@@ -65,6 +65,13 @@ jobs:
           cache_key_base: lint-python3.8
           steps:
             - run: tox -e docs-ci
+      - run:
+          name: Upload docs html artifacts
+          command: |
+            cd docs/_build/html
+            zip -r docs.zip *
+      - store_artifacts:
+          path: docs/_build/html
 
   tests:
     parameters:
