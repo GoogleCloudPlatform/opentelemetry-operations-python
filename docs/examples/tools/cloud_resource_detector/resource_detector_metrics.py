@@ -34,7 +34,7 @@ metrics.get_meter_provider().start_pipeline(
 )
 
 requests_counter = meter.create_metric(
-    name="request_counter",
+    name="request_counter_with_resource",
     description="number of requests",
     unit="1",
     value_type=int,
