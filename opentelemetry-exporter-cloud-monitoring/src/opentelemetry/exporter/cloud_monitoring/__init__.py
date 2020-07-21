@@ -14,7 +14,10 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExporter,
     MetricsExportResult,
 )
-from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    SumAggregator,
+    ValueObserverAggregator,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.util import time_ns
 
@@ -44,6 +47,8 @@ OT_RESOURCE_LABEL_TO_GCP = {
 
 # pylint is unable to resolve members of protobuf objects
 # pylint: disable=no-member
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
 class CloudMonitoringMetricsExporter(MetricsExporter):
     """ Implementation of Metrics Exporter to Google Cloud Monitoring
 
@@ -163,7 +168,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 )
             else:
                 logger.warning(
-                    "Label value %s is not a string, bool or integer", value
+                    "Label value %s is not a string, bool or integer, ignoring it",
+                    value,
                 )
 
         if self.unique_identifier:
@@ -171,12 +177,15 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
             )
 
-        # SumAggregator is best represented as a cumulative, but it can't be represented that way
-        # if it can decrement. So we need to make sure that the instrument is not an UpDownCounter
+        # SumAggregator is best represented as a cumulative, but it can't be
+        # represented that way if it can decrement. So we need to make sure
+        # that the instrument is not an UpDownCounter
         if isinstance(record.aggregator, SumAggregator) and not isinstance(
             record.instrument, UpDownCounter
         ):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
+        elif isinstance(record.aggregator, ValueObserverAggregator):
+            descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
         else:
             logger.warning(
                 "Unsupported instrument/aggregator combo, types %s and %s, ignoring it",
@@ -237,6 +246,11 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                     self._last_updated[updated_key] + int(1e6),
                     NANOS_PER_SECOND,
                 )
+        else:
+            (
+                point.interval.start_time.seconds,
+                point.interval.start_time.nanos,
+            ) = (seconds, nanos)
 
         self._last_updated[
             updated_key
@@ -269,10 +283,15 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 ] = self.unique_identifier
 
             point = series.points.add()
+            if isinstance(record.aggregator, SumAggregator):
+                data_point = record.aggregator.checkpoint
+            elif isinstance(record.aggregator, ValueObserverAggregator):
+                data_point = record.aggregator.checkpoint.last
+
             if instrument.value_type == int:
-                point.value.int64_value = record.aggregator.checkpoint
+                point.value.int64_value = data_point
             elif instrument.value_type == float:
-                point.value.double_value = record.aggregator.checkpoint
+                point.value.double_value = data_point
 
             seconds = (
                 record.aggregator.last_update_timestamp // NANOS_PER_SECOND
