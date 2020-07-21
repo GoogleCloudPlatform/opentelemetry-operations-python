@@ -27,7 +27,10 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord
-from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    SumAggregator,
+    ValueObserverAggregator,
+)
 from opentelemetry.sdk.resources import Resource
 
 
@@ -193,6 +196,29 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             ),
         )
 
+    def test_get_value_observer_metric_descriptor(self):
+        client = mock.Mock()
+        exporter = CloudMonitoringMetricsExporter(
+            project_id=self.project_id, client=client
+        )
+        exporter.project_name = self.project_name
+        record = MetricRecord(MockMetric(), (), ValueObserverAggregator(),)
+        exporter._get_metric_descriptor(record)
+        client.create_metric_descriptor.assert_called_with(
+            self.project_name,
+            MetricDescriptor(
+                **{
+                    "name": None,
+                    "type": "custom.googleapis.com/OpenTelemetry/name",
+                    "display_name": "name",
+                    "description": "description",
+                    "labels": [],
+                    "metric_kind": "GAUGE",
+                    "value_type": "INT64",
+                }
+            ),
+        )
+
     def test_export(self):
         client = mock.Mock()
 
@@ -340,6 +366,49 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                 mock.call(self.project_name, [series1, series2]),
                 mock.call(self.project_name, [series3]),
             ]
+        )
+
+    def test_export_value_observer(self):
+        client = mock.Mock()
+
+        with mock.patch(
+            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+        ):
+            exporter = CloudMonitoringMetricsExporter(
+                project_id=self.project_id, client=client
+            )
+
+        exporter.project_name = self.project_name
+
+        client.create_metric_descriptor.return_value = MetricDescriptor(
+            **{
+                "name": None,
+                "type": "custom.googleapis.com/OpenTelemetry/name",
+                "display_name": "name",
+                "description": "description",
+                "labels": [],
+                "metric_kind": "GAUGE",
+                "value_type": "INT64",
+            }
+        )
+
+        aggregator = ValueObserverAggregator()
+        aggregator.checkpoint = aggregator._TYPE(1, 1, 1, 1, 1)
+        aggregator.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        exporter.export(
+            [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
+        )
+
+        series1 = TimeSeries()
+        series1.metric.type = "custom.googleapis.com/OpenTelemetry/name"
+        point = series1.points.add()
+        point.value.int64_value = 1
+        point.interval.end_time.seconds = WRITE_INTERVAL + 1
+        point.interval.end_time.nanos = 0
+        point.interval.start_time.seconds = WRITE_INTERVAL + 1
+        point.interval.start_time.nanos = 0
+        client.create_time_series.assert_has_calls(
+            [mock.call(self.project_name, [series1])]
         )
 
     def test_stateless_times(self):
