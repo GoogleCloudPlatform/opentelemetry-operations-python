@@ -1,3 +1,4 @@
+import logging
 import os
 
 import requests
@@ -8,6 +9,8 @@ _GCP_METADATA_URL = (
     "http://metadata.google.internal/computeMetadata/v1/?recursive=true"
 )
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
+
+logger = logging.getLogger(__name__)
 
 
 def _get_google_metadata_and_common_attributes():
@@ -85,7 +88,14 @@ def get_gke_resources():
 # We need to first check if it matches the criteria for being a GKE_CONTAINER
 # before falling back and checking if its a GCE_INSTANCE.
 # This list should be sorted from most specialized to least specialized.
-_RESOURCE_FINDERS = [get_gke_resources, get_gce_resources]
+_RESOURCE_FINDERS = [
+    ("gke_container", get_gke_resources),
+    ("gce_instance", get_gce_resources),
+]
+
+
+class NoGoogleResourcesFound(Exception):
+    pass
 
 
 class GoogleCloudResourceDetector(ResourceDetector):
@@ -97,13 +107,20 @@ class GoogleCloudResourceDetector(ResourceDetector):
     def detect(self) -> "Resource":
         if not self.cached:
             self.cached = True
-            for resource_finder in _RESOURCE_FINDERS:
+            for resource_type, resource_finder in _RESOURCE_FINDERS:
                 try:
                     found_resources = resource_finder()
                 # pylint: disable=broad-except
-                except Exception:
+                except Exception as ex:
+                    logger.warning(
+                        "Exception %s occured attempting %s resource detection",
+                        ex,
+                        resource_type,
+                    )
                     found_resources = None
                 if found_resources:
                     self.gcp_resources = found_resources
                     break
+        if not self.gcp_resources:
+            raise NoGoogleResourcesFound()
         return Resource(self.gcp_resources)
