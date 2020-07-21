@@ -399,16 +399,16 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
         )
 
-        series1 = TimeSeries()
-        series1.metric.type = "custom.googleapis.com/OpenTelemetry/name"
-        point = series1.points.add()
+        series = TimeSeries()
+        series.metric.type = "custom.googleapis.com/OpenTelemetry/name"
+        point = series.points.add()
         point.value.int64_value = 5
         point.interval.end_time.seconds = WRITE_INTERVAL + 1
         point.interval.end_time.nanos = 0
         point.interval.start_time.seconds = WRITE_INTERVAL + 1
         point.interval.start_time.nanos = 0
         client.create_time_series.assert_has_calls(
-            [mock.call(self.project_name, [series1])]
+            [mock.call(self.project_name, [series])]
         )
 
     def test_stateless_times(self):
