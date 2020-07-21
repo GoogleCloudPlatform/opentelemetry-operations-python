@@ -393,7 +393,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         aggregator = ValueObserverAggregator()
-        aggregator.checkpoint = aggregator._TYPE(1, 1, 1, 1, 1)
+        aggregator.checkpoint = aggregator._TYPE(1, 2, 3, 4, 5)
         aggregator.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
         exporter.export(
             [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
@@ -402,7 +402,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         series1 = TimeSeries()
         series1.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         point = series1.points.add()
-        point.value.int64_value = 1
+        point.value.int64_value = 5
         point.interval.end_time.seconds = WRITE_INTERVAL + 1
         point.interval.end_time.nanos = 0
         point.interval.start_time.seconds = WRITE_INTERVAL + 1
