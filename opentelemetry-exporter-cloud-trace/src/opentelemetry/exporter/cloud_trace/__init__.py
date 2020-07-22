@@ -97,18 +97,12 @@ class CloudTraceSpanExporter(SpanExporter):
         See: https://cloud.google.com/trace/docs/reference/v2/rest/v2/projects.traces/batchWrite
 
         Args:
-            spans: Tuple of spans to export
+            spans: Sequence of spans to export
         """
-        cloud_trace_spans = []
-        for span in self._translate_to_cloud_trace(spans):
-            try:
-                cloud_trace_spans.append(self.client.create_span(**span))
-            # pylint: disable=broad-except
-            except Exception as ex:
-                logger.error("Error when creating span %s", span, exc_info=ex)
         try:
             self.client.batch_write_spans(
-                "projects/{}".format(self.project_id), cloud_trace_spans,
+                "projects/{}".format(self.project_id),
+                self._translate_to_cloud_trace(spans),
             )
         # pylint: disable=broad-except
         except Exception as ex:
@@ -123,7 +117,7 @@ class CloudTraceSpanExporter(SpanExporter):
         """Translate the spans to Cloud Trace format.
 
         Args:
-            spans: Tuple of spans to convert
+            spans: Sequence of spans to convert
         """
 
         cloud_trace_spans = []
