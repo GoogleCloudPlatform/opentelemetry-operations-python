@@ -247,10 +247,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                     NANOS_PER_SECOND,
                 )
         else:
-            (
-                point.interval.start_time.seconds,
-                point.interval.start_time.nanos,
-            ) = (seconds, nanos)
+            point.interval.start_time.seconds = seconds
+            point.interval.start_time.nanos = nanos
 
         self._last_updated[
             updated_key
