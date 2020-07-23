@@ -20,6 +20,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.tools.resource_detector import (
     _GCP_METADATA_URL,
     GoogleCloudResourceDetector,
+    NoGoogleResourcesFound,
     get_gce_resources,
     get_gke_resources,
 )
@@ -265,3 +266,9 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
                 }
             ),
         )
+
+    def test_no_resources_found(self, getter):
+        # If no Google resources were found, we throw an exception
+        getter.return_value.json.side_effect = Exception
+        resource_finder = GoogleCloudResourceDetector()
+        self.assertRaises(NoGoogleResourcesFound, resource_finder.detect)
