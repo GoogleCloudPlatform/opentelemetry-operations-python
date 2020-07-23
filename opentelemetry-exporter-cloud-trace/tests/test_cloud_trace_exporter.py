@@ -161,8 +161,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
         exporter.export(span_datas)
 
-        client.create_span.assert_called_with(**cloud_trace_spans)
-        self.assertTrue(client.create_span.called)
+        self.assertTrue(client.batch_write_spans.called)
+        client.batch_write_spans.assert_called_with(
+            "projects/{}".format(self.project_id), [cloud_trace_spans]
+        )
 
     def test_extract_status(self):
         self.assertIsNone(_extract_status(None))
