@@ -1,0 +1,7 @@
+-c dev-constraints.txt
+Sphinx
+sphinx-autodoc-typehints
+opentelemetry-api
+opentelemetry-sdk
+./opentelemetry-exporter-cloud-monitoring/
+./opentelemetry-exporter-cloud-trace/
