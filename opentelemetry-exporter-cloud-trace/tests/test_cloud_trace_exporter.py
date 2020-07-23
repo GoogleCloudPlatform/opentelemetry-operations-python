@@ -315,6 +315,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 span_id=int(span_id, 16),
                 is_remote=False,
             ),
+            attributes=None,
         )
         self.assertEqual(
             _extract_links([link]),
