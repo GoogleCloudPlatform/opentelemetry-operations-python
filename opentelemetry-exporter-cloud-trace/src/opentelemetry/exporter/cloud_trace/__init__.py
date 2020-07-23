@@ -97,18 +97,12 @@ class CloudTraceSpanExporter(SpanExporter):
         See: https://cloud.google.com/trace/docs/reference/v2/rest/v2/projects.traces/batchWrite
 
         Args:
-            spans: Tuple of spans to export
+            spans: Sequence of spans to export
         """
-        cloud_trace_spans = []
-        for span in self._translate_to_cloud_trace(spans):
-            try:
-                cloud_trace_spans.append(self.client.create_span(**span))
-            # pylint: disable=broad-except
-            except Exception as ex:
-                logger.error("Error when creating span %s", span, exc_info=ex)
         try:
             self.client.batch_write_spans(
-                "projects/{}".format(self.project_id), cloud_trace_spans,
+                "projects/{}".format(self.project_id),
+                self._translate_to_cloud_trace(spans),
             )
         # pylint: disable=broad-except
         except Exception as ex:
@@ -123,7 +117,7 @@ class CloudTraceSpanExporter(SpanExporter):
         """Translate the spans to Cloud Trace format.
 
         Args:
-            spans: Tuple of spans to convert
+            spans: Sequence of spans to convert
         """
 
         cloud_trace_spans = []
@@ -235,7 +229,8 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
         dropped_links = len(links) - MAX_NUM_LINKS
         links = links[:MAX_NUM_LINKS]
     for link in links:
-        if len(link.attributes) > MAX_LINK_ATTRS:
+        link_attributes = link.attributes or {}
+        if len(link_attributes) > MAX_LINK_ATTRS:
             logger.warning(
                 "Link has more then %s attributes, some will be truncated",
                 MAX_LINK_ATTRS,
@@ -248,7 +243,7 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
                 "span_id": span_id,
                 "type": "TYPE_UNSPECIFIED",
                 "attributes": _extract_attributes(
-                    link.attributes, MAX_LINK_ATTRS
+                    link_attributes, MAX_LINK_ATTRS
                 ),
             }
         )
