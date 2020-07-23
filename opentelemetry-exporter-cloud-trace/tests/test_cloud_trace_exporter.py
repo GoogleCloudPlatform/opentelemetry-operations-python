@@ -47,6 +47,7 @@ from opentelemetry.trace.status import Status as SpanStatus
 from opentelemetry.trace.status import StatusCanonicalCode
 
 
+# pylint: disable=too-many-public-methods
 class TestCloudTraceSpanExporter(unittest.TestCase):
     def setUp(self):
         self.client_patcher = mock.patch(
@@ -76,6 +77,16 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 "int_key": AttributeValue(int_value=123),
             }
         )
+        self.agent_code = _format_attribute_value(
+            "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
+                _strip_characters(
+                    pkg_resources.get_distribution("opentelemetry-sdk").version
+                ),
+                _strip_characters(cloud_trace_version),
+            )
+        )
+        self.example_trace_id = "6e0c63257de34c92bf9efcd03927272e"
+        self.example_span_id = "95bb5edabd45950f"
 
     def tearDown(self):
         self.client_patcher.stop()
@@ -92,8 +103,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.project_id, self.project_id)
 
     def test_export(self):
-        trace_id = "6e0c63257de34c92bf9efcd03927272e"
-        span_id = "95bb5edabd45950f"
         resource_info = Resource(
             {
                 "cloud.account.id": 123,
@@ -107,8 +116,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             Span(
                 name="span_name",
                 context=SpanContext(
-                    trace_id=int(trace_id, 16),
-                    span_id=int(span_id, 16),
+                    trace_id=int(self.example_trace_id, 16),
+                    span_id=int(self.example_span_id, 16),
                     is_remote=False,
                 ),
                 parent=None,
@@ -120,9 +129,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
         cloud_trace_spans = {
             "name": "projects/{}/traces/{}/spans/{}".format(
-                self.project_id, trace_id, span_id
+                self.project_id, self.example_trace_id, self.example_span_id
             ),
-            "span_id": span_id,
+            "span_id": self.example_span_id,
             "parent_span_id": None,
             "display_name": TruncatableString(
                 value="span_name", truncated_byte_count=0
@@ -136,16 +145,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                     "g.co/r/gce_instance/project_id": _format_attribute_value(
                         "123"
                     ),
-                    "g.co/agent": _format_attribute_value(
-                        "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
-                            _strip_characters(
-                                pkg_resources.get_distribution(
-                                    "opentelemetry-sdk"
-                                ).version
-                            ),
-                            _strip_characters(cloud_trace_version),
-                        )
-                    ),
+                    "g.co/agent": self.agent_code,
                     "attr_key": _format_attribute_value("attr_value"),
                 }
             ),
@@ -167,12 +167,16 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "projects/{}".format(self.project_id), [cloud_trace_spans]
         )
 
-    def test_extract_status(self):
+    def test_extract_none_status(self):
         self.assertIsNone(_extract_status(None))
+
+    def test_extract_status_code(self):
         self.assertEqual(
             _extract_status(SpanStatus(canonical_code=StatusCanonicalCode.OK)),
             Status(details=None, code=0),
         )
+
+    def test_extract_status_code_and_desc(self):
         self.assertEqual(
             _extract_status(
                 SpanStatus(
@@ -183,28 +187,110 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             Status(details=None, code=2, message="error_desc"),
         )
 
-    def test_extract_attributes(self):
+    def test_extract_empty_attributes(self):
         self.assertEqual(
-            _extract_attributes({}, 4), ProtoSpan.Attributes(attribute_map={})
-        )
-        self.assertEqual(
-            _extract_attributes(self.attributes_variety_pack, 4),
-            self.extracted_attributes_variety_pack,
-        )
-        # Test ignoring attributes with illegal value type
-        self.assertEqual(
-            _extract_attributes({"illegal_attribute_value": dict()}, 4),
-            ProtoSpan.Attributes(attribute_map={}, dropped_attributes_count=1),
+            _extract_attributes({}, num_attrs_limit=4),
+            ProtoSpan.Attributes(attribute_map={}),
         )
 
+    def test_extract_variety_of_attributes(self):
+        self.assertEqual(
+            _extract_attributes(
+                self.attributes_variety_pack, num_attrs_limit=4
+            ),
+            self.extracted_attributes_variety_pack,
+        )
+
+    def test_ignore_invalid_attributes(self):
+        self.assertEqual(
+            _extract_attributes(
+                {"illegal_attribute_value": dict(), "legal_attribute": 3},
+                num_attrs_limit=4,
+            ),
+            ProtoSpan.Attributes(
+                attribute_map={"legal_attribute": AttributeValue(int_value=3)},
+                dropped_attributes_count=1,
+            ),
+        )
+
+    def test_too_many_attributes(self):
         too_many_attrs = {}
         for attr_key in range(5):
             too_many_attrs[str(attr_key)] = 0
-        proto_attrs = _extract_attributes(too_many_attrs, 4)
+        proto_attrs = _extract_attributes(too_many_attrs, num_attrs_limit=4)
         self.assertEqual(proto_attrs.dropped_attributes_count, 1)
 
-    def test_extract_events(self):
+    def test_add_agent_attribute(self):
+        self.assertEqual(
+            _extract_attributes({}, num_attrs_limit=4, add_agent_attr=True),
+            ProtoSpan.Attributes(
+                attribute_map={"g.co/agent": self.agent_code},
+                dropped_attributes_count=0,
+            ),
+        )
+
+    def test_agent_attribute_priority(self):
+        # Drop existing attributes in favor of the agent attribute
+        self.assertEqual(
+            _extract_attributes(
+                {"attribute_key": "attr_value"},
+                num_attrs_limit=1,
+                add_agent_attr=True,
+            ),
+            ProtoSpan.Attributes(
+                attribute_map={"g.co/agent": self.agent_code},
+                dropped_attributes_count=1,
+            ),
+        )
+
+    def test_extract_empty_events(self):
         self.assertIsNone(_extract_events([]))
+
+    def test_too_many_events(self):
+        time_in_ns = 1589919268850900051
+        time_in_ms_and_ns = {"seconds": 1589919268, "nanos": 850899968}
+        event = Event(name="event", timestamp=time_in_ns, attributes={})
+        too_many_events = [event] * (MAX_NUM_EVENTS + 5)
+        self.assertEqual(
+            _extract_events(too_many_events),
+            ProtoSpan.TimeEvents(
+                time_event=[
+                    {
+                        "time": time_in_ms_and_ns,
+                        "annotation": {
+                            "description": TruncatableString(value="event",),
+                            "attributes": {},
+                        },
+                    },
+                ]
+                * MAX_NUM_EVENTS,
+                dropped_annotations_count=len(too_many_events)
+                - MAX_NUM_EVENTS,
+            ),
+        )
+
+    def test_too_many_event_attributes(self):
+        time_in_ns = 1589919268850900051
+        event_attrs = {}
+        for attr_key in range(MAX_EVENT_ATTRS + 5):
+            event_attrs[str(attr_key)] = 0
+        proto_events = _extract_events(
+            [Event(name="a", attributes=event_attrs, timestamp=time_in_ns)]
+        )
+        self.assertEqual(
+            len(
+                proto_events.time_event[0].annotation.attributes.attribute_map
+            ),
+            MAX_EVENT_ATTRS,
+        )
+        self.assertEqual(
+            proto_events.time_event[
+                0
+            ].annotation.attributes.dropped_attributes_count,
+            len(event_attrs) - MAX_EVENT_ATTRS,
+        )
+
+    def test_extract_multiple_events(self):
         time_in_ns1 = 1589919268850900051
         time_in_ms_and_ns1 = Timestamp(seconds=1589919268, nanos=850900051)
         time_in_ns2 = 1589919438550020326
@@ -247,14 +333,15 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
-    def test_extract_links(self):
+    def test_extract_empty_links(self):
         self.assertIsNone(_extract_links([]))
-        trace_id = "6e0c63257de34c92bf9efcd03927272e"
+
+    def test_extract_multiple_links(self):
         span_id1 = "95bb5edabd45950f"
         span_id2 = "b6b86ad2915c9ddc"
         link1 = Link(
             context=SpanContext(
-                trace_id=int(trace_id, 16),
+                trace_id=int(self.example_trace_id, 16),
                 span_id=int(span_id1, 16),
                 is_remote=False,
             ),
@@ -262,7 +349,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
         link2 = Link(
             context=SpanContext(
-                trace_id=int(trace_id, 16),
+                trace_id=int(self.example_trace_id, 16),
                 span_id=int(span_id1, 16),
                 is_remote=False,
             ),
@@ -270,7 +357,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
         link3 = Link(
             context=SpanContext(
-                trace_id=int(trace_id, 16),
+                trace_id=int(self.example_trace_id, 16),
                 span_id=int(span_id2, 16),
                 is_remote=False,
             ),
@@ -281,19 +368,19 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ProtoSpan.Links(
                 link=[
                     {
-                        "trace_id": trace_id,
+                        "trace_id": self.example_trace_id,
                         "span_id": span_id1,
                         "type": "TYPE_UNSPECIFIED",
                         "attributes": ProtoSpan.Attributes(attribute_map={}),
                     },
                     {
-                        "trace_id": trace_id,
+                        "trace_id": self.example_trace_id,
                         "span_id": span_id1,
                         "type": "TYPE_UNSPECIFIED",
                         "attributes": self.extracted_attributes_variety_pack,
                     },
                     {
-                        "trace_id": trace_id,
+                        "trace_id": self.example_trace_id,
                         "span_id": span_id2,
                         "type": "TYPE_UNSPECIFIED",
                         "attributes": {
@@ -308,12 +395,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
     def test_extract_link_with_none_attribute(self):
-        trace_id = "6e0c63257de34c92bf9efcd03927272e"
-        span_id = "95bb5edabd45950f"
         link = Link(
             context=SpanContext(
-                trace_id=int(trace_id, 16),
-                span_id=int(span_id, 16),
+                trace_id=int(self.example_trace_id, 16),
+                span_id=int(self.example_span_id, 16),
                 is_remote=False,
             ),
             attributes=None,
@@ -323,13 +408,57 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ProtoSpan.Links(
                 link=[
                     {
-                        "trace_id": trace_id,
-                        "span_id": span_id,
+                        "trace_id": self.example_trace_id,
+                        "span_id": self.example_span_id,
                         "type": "TYPE_UNSPECIFIED",
                         "attributes": ProtoSpan.Attributes(attribute_map={}),
                     },
                 ]
             ),
+        )
+
+    def test_too_many_links(self):
+        link = Link(
+            context=SpanContext(
+                trace_id=int(self.example_trace_id, 16),
+                span_id=int(self.example_span_id, 16),
+                is_remote=False,
+            ),
+            attributes={},
+        )
+        too_many_links = [link] * (MAX_NUM_LINKS + 5)
+        self.assertEqual(
+            _extract_links(too_many_links),
+            ProtoSpan.Links(
+                link=[
+                    {
+                        "trace_id": self.example_trace_id,
+                        "span_id": self.example_span_id,
+                        "type": "TYPE_UNSPECIFIED",
+                        "attributes": {},
+                    }
+                ]
+                * MAX_NUM_LINKS,
+                dropped_links_count=len(too_many_links) - MAX_NUM_LINKS,
+            ),
+        )
+
+    def test_too_many_link_attributes(self):
+        link_attrs = {}
+        for attr_key in range(MAX_LINK_ATTRS + 1):
+            link_attrs[str(attr_key)] = 0
+        attr_link = Link(
+            context=SpanContext(
+                trace_id=int(self.example_trace_id, 16),
+                span_id=int(self.example_span_id, 16),
+                is_remote=False,
+            ),
+            attributes=link_attrs,
+        )
+
+        proto_link = _extract_links([attr_link])
+        self.assertEqual(
+            len(proto_link.link[0].attributes.attribute_map), MAX_LINK_ATTRS
         )
 
     def test_extract_empty_resources(self):
@@ -393,7 +522,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertEqual(_extract_resources(resource), {})
 
     # pylint:disable=too-many-locals
-    def test_truncate(self):
+    def test_truncate_string(self):
         """Cloud Trace API imposes limits on the length of many things,
         e.g. strings, number of events, number of attributes. We truncate
         these things before sending it to the API as an optimization.
@@ -401,11 +530,12 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         str_300 = "a" * 300
         str_256 = "a" * 256
         str_128 = "a" * 128
-        self.assertEqual(_truncate_str("aaaa", 1), ("a", 3))
-        self.assertEqual(_truncate_str("aaaa", 5), ("aaaa", 0))
-        self.assertEqual(_truncate_str("aaaa", 4), ("aaaa", 0))
-        self.assertEqual(_truncate_str("中文翻译", 4), ("中", 9))
+        self.assertEqual(_truncate_str("aaaa", limit=1), ("a", 3))
+        self.assertEqual(_truncate_str("aaaa", limit=5), ("aaaa", 0))
+        self.assertEqual(_truncate_str("aaaa", limit=4), ("aaaa", 0))
+        self.assertEqual(_truncate_str("中文翻译", limit=4), ("中", 9))
 
+        # Test truncation of string attribute values
         self.assertEqual(
             _format_attribute_value(str_300),
             AttributeValue(
@@ -415,8 +545,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
+        # Test truncation of attribute keys
         self.assertEqual(
-            _extract_attributes({str_300: str_300}, 4),
+            _extract_attributes({str_300: str_300}, num_attrs_limit=4),
             ProtoSpan.Attributes(
                 attribute_map={
                     str_128: AttributeValue(
@@ -428,6 +559,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
+        # Test truncation of event name
         time_in_ns1 = 1589919268850900051
         proto_timestamp = Timestamp(seconds=1589919268, nanos=850900051)
         event1 = Event(name=str_300, attributes={}, timestamp=time_in_ns1)
@@ -446,85 +578,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                     },
                 ]
             ),
-        )
-
-        trace_id = "6e0c63257de34c92bf9efcd03927272e"
-        span_id = "95bb5edabd45950f"
-        link = Link(
-            context=SpanContext(
-                trace_id=int(trace_id, 16),
-                span_id=int(span_id, 16),
-                is_remote=False,
-            ),
-            attributes={},
-        )
-        too_many_links = [link] * (MAX_NUM_LINKS + 1)
-        self.assertEqual(
-            _extract_links(too_many_links),
-            ProtoSpan.Links(
-                link=[
-                    {
-                        "trace_id": trace_id,
-                        "span_id": span_id,
-                        "type": "TYPE_UNSPECIFIED",
-                        "attributes": {},
-                    }
-                ]
-                * MAX_NUM_LINKS,
-                dropped_links_count=len(too_many_links) - MAX_NUM_LINKS,
-            ),
-        )
-
-        link_attrs = {}
-        for attr_key in range(MAX_LINK_ATTRS + 1):
-            link_attrs[str(attr_key)] = 0
-        attr_link = Link(
-            context=SpanContext(
-                trace_id=int(trace_id, 16),
-                span_id=int(span_id, 16),
-                is_remote=False,
-            ),
-            attributes=link_attrs,
-        )
-
-        proto_link = _extract_links([attr_link])
-        self.assertEqual(
-            len(proto_link.link[0].attributes.attribute_map), MAX_LINK_ATTRS
-        )
-
-        too_many_events = [event1] * (MAX_NUM_EVENTS + 1)
-        self.assertEqual(
-            _extract_events(too_many_events),
-            ProtoSpan.TimeEvents(
-                time_event=[
-                    {
-                        "time": proto_timestamp,
-                        "annotation": {
-                            "description": TruncatableString(
-                                value=str_256, truncated_byte_count=300 - 256
-                            ),
-                            "attributes": {},
-                        },
-                    },
-                ]
-                * MAX_NUM_EVENTS,
-                dropped_annotations_count=len(too_many_events)
-                - MAX_NUM_EVENTS,
-            ),
-        )
-
-        time_in_ns1 = 1589919268850900051
-        event_attrs = {}
-        for attr_key in range(MAX_EVENT_ATTRS + 1):
-            event_attrs[str(attr_key)] = 0
-        proto_events = _extract_events(
-            [Event(name="a", attributes=event_attrs, timestamp=time_in_ns1)]
-        )
-        self.assertEqual(
-            len(
-                proto_events.time_event[0].annotation.attributes.attribute_map
-            ),
-            MAX_EVENT_ATTRS,
         )
 
     def test_strip_characters(self):
