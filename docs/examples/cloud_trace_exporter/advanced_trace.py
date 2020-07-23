@@ -25,12 +25,17 @@ with tracer.start_as_current_span("foo_with_event") as current_span:
 
 # Adding links to spans
 with tracer.start_as_current_span("link_target") as link_target:
+    # Creates a span "span_with_link" and a link from
+    # "span_with_link" -> "link_target"
     with tracer.start_as_current_span(
         "span_with_link", links=[Link(link_target.context)]
     ):
         pass
+    # Creates a span "span_with_link" and a link from
+    # "span_with_link" -> "link_target". This link also has the attribute
+    # {"link_attr": "string"}
     with tracer.start_as_current_span(
-        "span_with_link_and_attributes",
+        "span_with_link_and_link_attributes",
         links=[Link(link_target.context, attributes={"link_attr": "string"})],
     ):
         pass
