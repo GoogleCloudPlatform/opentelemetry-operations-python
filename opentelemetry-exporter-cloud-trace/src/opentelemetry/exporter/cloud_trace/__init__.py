@@ -235,8 +235,7 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
         dropped_links = len(links) - MAX_NUM_LINKS
         links = links[:MAX_NUM_LINKS]
     for link in links:
-        link_attributes = link.attributes or {}
-        if len(link_attributes) > MAX_LINK_ATTRS:
+        if len(link.attributes) > MAX_LINK_ATTRS:
             logger.warning(
                 "Link has more then %s attributes, some will be truncated",
                 MAX_LINK_ATTRS,
@@ -249,7 +248,7 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
                 "span_id": span_id,
                 "type": "TYPE_UNSPECIFIED",
                 "attributes": _extract_attributes(
-                    link_attributes, MAX_LINK_ATTRS
+                    link.attributes, MAX_LINK_ATTRS
                 ),
             }
         )

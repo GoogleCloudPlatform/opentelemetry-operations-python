@@ -304,30 +304,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
-    def test_extract_link_with_none_attribute(self):
-        trace_id = "6e0c63257de34c92bf9efcd03927272e"
-        span_id = "95bb5edabd45950f"
-        link = Link(
-            context=SpanContext(
-                trace_id=int(trace_id, 16),
-                span_id=int(span_id, 16),
-                is_remote=False,
-            ),
-        )
-        self.assertEqual(
-            _extract_links([link]),
-            ProtoSpan.Links(
-                link=[
-                    {
-                        "trace_id": trace_id,
-                        "span_id": span_id,
-                        "type": "TYPE_UNSPECIFIED",
-                        "attributes": ProtoSpan.Attributes(attribute_map={}),
-                    },
-                ]
-            ),
-        )
-
     def test_extract_empty_resources(self):
         self.assertEqual(_extract_resources(Resource.create_empty()), {})
 
