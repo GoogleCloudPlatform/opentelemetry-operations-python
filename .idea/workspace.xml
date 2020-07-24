@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:connor" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:og" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="0024285c-1649-41c1-ad4c-c3bb13cd24d9" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests/test_cloud_trace_exporter.py" beforeDir="false" afterPath="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests/test_cloud_trace_exporter.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1ejEtHRGviQiQITXmtOQpnuW2U2" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python&#10;GitIgnore" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/examples/cloud_trace_exporter" />
+      <recent name="$PROJECT_DIR$/docs/examples/tools/cloud_trace_propagator" />
+      <recent name="$PROJECT_DIR$/docs/examples/tools/cloud_resource_detector" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.basic_metrics">
+    <configuration name="advanced_trace" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="opentelemetry-operations-python" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/docs/examples/cloud_trace_exporter" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/docs/examples/cloud_trace_exporter/advanced_trace.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="basic_metrics" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="opentelemetry-operations-python" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/docs/examples/cloud_monitoring" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/docs/examples/cloud_monitoring/basic_metrics.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="basic_trace" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="opentelemetry-operations-python" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/docs/examples/cloud_trace_exporter" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/docs/examples/cloud_trace_exporter/basic_trace.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_export" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="opentelemetry-operations-python" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_parameters" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_export&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest in test_cloud_trace_exporter.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="opentelemetry-operations-python" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_parameters" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests/test_cloud_trace_exporter.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.basic_metrics" />
+        <item itemvalue="Python.basic_trace" />
+        <item itemvalue="Python.advanced_trace" />
+        <item itemvalue="Python tests.pytest in test_cloud_trace_exporter.py" />
+        <item itemvalue="Python tests.pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_export" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="0024285c-1649-41c1-ad4c-c3bb13cd24d9" name="Default Changelist" comment="" />
+      <created>1594826814043</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1594826814043</updated>
+      <workItem from="1594826817772" duration="8686000" />
+      <workItem from="1594920600445" duration="27229000" />
+      <workItem from="1595279650478" duration="35889000" />
+      <workItem from="1595601916185" duration="9931000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="99" y="100" width="2362" height="1201" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog" timestamp="1595534427938">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="99" y="92" width="2362" height="1201" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog/0.0.2560.1320@0.0.2560.1320" timestamp="1595009166941" />
+    <state x="99" y="100" width="2362" height="1201" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog/0.0.2560.1400@0.0.2560.1400" timestamp="1595534427938" />
+    <state x="1059" y="461" width="426" height="490" key="FileChooserDialogImpl" timestamp="1595541770495">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1059" y="435" key="FileChooserDialogImpl/0.0.2560.1320@0.0.2560.1320" timestamp="1594916049267" />
+    <state x="1059" y="461" width="426" height="490" key="FileChooserDialogImpl/0.0.2560.1400@0.0.2560.1400" timestamp="1595541770495" />
+    <state x="472" y="0" width="1608" height="1400" key="FileDocumentManager.FileCacheConflict" timestamp="1595613685950">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="472" y="0" width="1608" height="1400" key="FileDocumentManager.FileCacheConflict/0.0.2560.1400@0.0.2560.1400" timestamp="1595613685950" />
+    <state width="2518" height="236" key="GridCell.Tab.0.bottom" timestamp="1595620109811">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1494" height="230" key="GridCell.Tab.0.bottom/0.0.1536.744@0.0.1536.744" timestamp="1595471562436" />
+    <state width="1494" height="236" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1595619359798" />
+    <state width="2518" height="479" key="GridCell.Tab.0.bottom/0.0.2560.1320@0.0.2560.1320" timestamp="1595612377203" />
+    <state width="2518" height="236" key="GridCell.Tab.0.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1595620109811" />
+    <state width="2518" height="236" key="GridCell.Tab.0.center" timestamp="1595620109810">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1494" height="230" key="GridCell.Tab.0.center/0.0.1536.744@0.0.1536.744" timestamp="1595471562436" />
+    <state width="1494" height="236" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1595619359796" />
+    <state width="2518" height="479" key="GridCell.Tab.0.center/0.0.2560.1320@0.0.2560.1320" timestamp="1595612377202" />
+    <state width="2518" height="236" key="GridCell.Tab.0.center/0.0.2560.1400@0.0.2560.1400" timestamp="1595620109810" />
+    <state width="2518" height="236" key="GridCell.Tab.0.left" timestamp="1595620109810">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1494" height="230" key="GridCell.Tab.0.left/0.0.1536.744@0.0.1536.744" timestamp="1595471562435" />
+    <state width="1494" height="236" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1595619359795" />
+    <state width="2518" height="479" key="GridCell.Tab.0.left/0.0.2560.1320@0.0.2560.1320" timestamp="1595612377202" />
+    <state width="2518" height="236" key="GridCell.Tab.0.left/0.0.2560.1400@0.0.2560.1400" timestamp="1595620109810" />
+    <state width="2518" height="236" key="GridCell.Tab.0.right" timestamp="1595620109811">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1494" height="230" key="GridCell.Tab.0.right/0.0.1536.744@0.0.1536.744" timestamp="1595471562436" />
+    <state width="1494" height="236" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1595619359796" />
+    <state width="2518" height="479" key="GridCell.Tab.0.right/0.0.2560.1320@0.0.2560.1320" timestamp="1595612377202" />
+    <state width="2518" height="236" key="GridCell.Tab.0.right/0.0.2560.1400@0.0.2560.1400" timestamp="1595620109811" />
+    <state width="2518" height="512" key="GridCell.Tab.1.bottom" timestamp="1595616465907">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2518" height="479" key="GridCell.Tab.1.bottom/0.0.2560.1320@0.0.2560.1320" timestamp="1595612378439" />
+    <state width="2518" height="512" key="GridCell.Tab.1.bottom/0.0.2560.1400@0.0.2560.1400" timestamp="1595616465907" />
+    <state width="2518" height="512" key="GridCell.Tab.1.center" timestamp="1595616465906">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2518" height="479" key="GridCell.Tab.1.center/0.0.2560.1320@0.0.2560.1320" timestamp="1595612378438" />
+    <state width="2518" height="512" key="GridCell.Tab.1.center/0.0.2560.1400@0.0.2560.1400" timestamp="1595616465906" />
+    <state width="2518" height="512" key="GridCell.Tab.1.left" timestamp="1595616465906">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2518" height="479" key="GridCell.Tab.1.left/0.0.2560.1320@0.0.2560.1320" timestamp="1595612378438" />
+    <state width="2518" height="512" key="GridCell.Tab.1.left/0.0.2560.1400@0.0.2560.1400" timestamp="1595616465906" />
+    <state width="2518" height="512" key="GridCell.Tab.1.right" timestamp="1595616465907">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="2518" height="479" key="GridCell.Tab.1.right/0.0.2560.1320@0.0.2560.1320" timestamp="1595612378438" />
+    <state width="2518" height="512" key="GridCell.Tab.1.right/0.0.2560.1400@0.0.2560.1400" timestamp="1595616465907" />
+    <state x="776" y="335" width="1600" height="730" key="SettingsEditor" timestamp="1595026197236">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="776" y="335" width="1600" height="730" key="SettingsEditor/0.0.2560.1400@0.0.2560.1400" timestamp="1595026197236" />
+    <state width="1281" height="700" key="XDebugger.FullValuePopup" timestamp="1595616412945">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state width="1281" height="660" key="XDebugger.FullValuePopup/0.0.2560.1320@0.0.2560.1320" timestamp="1595535128542" />
+    <state width="1281" height="700" key="XDebugger.FullValuePopup/0.0.2560.1400@0.0.2560.1400" timestamp="1595616412945" />
+    <state x="894" y="321" width="764" height="685" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1595611112779">
+      <screen x="0" y="0" width="2560" height="1320" />
+    </state>
+    <state x="894" y="321" width="764" height="685" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.2560.1320@0.0.2560.1320" timestamp="1595611112779" />
+    <state x="1056" y="576" width="755" height="572" key="find.popup" timestamp="1595616259776">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1056" y="543" width="660" height="540" key="find.popup/0.0.2560.1320@0.0.2560.1320" timestamp="1595611108112" />
+    <state x="1056" y="576" width="755" height="572" key="find.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1595616259776" />
+    <state x="566" y="188" width="672" height="400" key="search.everywhere.popup" timestamp="1595619265409">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="566" y="170" width="672" height="361" key="search.everywhere.popup/0.0.1536.744@0.0.1536.744" timestamp="1595471171990" />
+    <state x="566" y="188" width="672" height="400" key="search.everywhere.popup/0.0.1536.824@0.0.1536.824" timestamp="1595619265409" />
+    <state x="943" y="301" width="672" height="640" key="search.everywhere.popup/0.0.2560.1320@0.0.2560.1320" timestamp="1595611079683" />
+    <state x="943" y="319" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1595605664913" />
+    <state x="1005" y="615" width="542" height="176" key="vcs.readOnlyHandler.ReadOnlyStatusDialog" timestamp="1595021915168">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1005" y="615" width="542" height="176" key="vcs.readOnlyHandler.ReadOnlyStatusDialog/0.0.2560.1400@0.0.2560.1400" timestamp="1595021915168" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests/test_gcp_resource_detector.py</url>
+          <line>249</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/docs/examples/tools/cloud_trace_propagator/server.py</url>
+          <line>48</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/docs/examples/cloud_trace_exporter/basic_trace.py</url>
+          <line>14</line>
+          <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../opentelemetry-python/opentelemetry-api/src/opentelemetry/trace/__init__.py</url>
+          <line>148</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests/test_cloud_trace_exporter.py</url>
+          <line>567</line>
+          <option name="timeStamp" value="46" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="tests">
+        <watch expression="event.timestamp" language="Python" />
+      </configuration>
+      <configuration name="PythonConfigurationType">
+        <watch expression="dir(current_span)" language="Python" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$server.coverage" NAME="server Coverage Results" MODIFIED="1595257176669" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/tools/cloud_trace_propagator" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_in_test_cloud_trace_exporter_py.coverage" NAME="pytest in test_cloud_trace_exporter.py Coverage Results" MODIFIED="1595616800260" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGoogleCloudResourceDetector_test_resource_finding_fallback.coverage" NAME="pytest for test_gcp_resource_detector.TestGoogleCloudResourceDetector.test_resource_finding_fallback Coverage Results" MODIFIED="1595007110014" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGKEResourceFinder_test_missing_namespace_file.coverage" NAME="pytest for test_gcp_resource_detector.TestGKEResourceFinder.test_missing_namespace_file Coverage Results" MODIFIED="1595006777593" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$scratch_58.coverage" NAME="scratch_58 Coverage Results" MODIFIED="1595609983699" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$resource_detector.coverage" NAME="resource_detector_trace Coverage Results" MODIFIED="1595257809316" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/tools/cloud_resource_detector" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_monitoring_TestCloudMonitoringMetricsExporter_test_get_value_observer_metric_descriptor.coverage" NAME="pytest for test_cloud_monitoring.TestCloudMonitoringMetricsExporter.test_get_value_observer_metric_descriptor Coverage Results" MODIFIED="1595346416455" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-monitoring/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_extract_link_with_none_attributes.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_extract_link_with_none_attributes Coverage Results" MODIFIED="1595441966541" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$Unittests_in_test_gcp_resource_detector_py.coverage" NAME="Unittests in test_gcp_resource_detector.py Coverage Results" MODIFIED="1595002669789" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_drop_too_many_event_attributes.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_drop_too_many_event_attributes Coverage Results" MODIFIED="1595535184772" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$basic_trace.coverage" NAME="basic_trace Coverage Results" MODIFIED="1595619276789" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/cloud_trace_exporter" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_add_agent_attribute.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_add_agent_attribute Coverage Results" MODIFIED="1595534712481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGKEResourceFinder_test_finding_gke_resources.coverage" NAME="pytest for test_gcp_resource_detector.TestGKEResourceFinder.test_finding_gke_resources Coverage Results" MODIFIED="1595002000192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_agent_attribute_priority.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_agent_attribute_priority Coverage Results" MODIFIED="1595612867410" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGKEResourceFinder_test_exception_while_finding_gke_resources.coverage" NAME="pytest for test_gcp_resource_detector.TestGKEResourceFinder.test_exception_while_finding_gke_resources Coverage Results" MODIFIED="1595007022740" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$client.coverage" NAME="client Coverage Results" MODIFIED="1595257280210" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/tools/cloud_trace_propagator" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_export.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_export Coverage Results" MODIFIED="1595612876984" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGoogleCloudResourceDetector_test_no_resources_found.coverage" NAME="pytest for test_gcp_resource_detector.TestGoogleCloudResourceDetector.test_no_resources_found Coverage Results" MODIFIED="1595270599011" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGKEResourceFinder_test_environment_empty_strings.coverage" NAME="pytest for test_gcp_resource_detector.TestGKEResourceFinder.test_environment_empty_strings Coverage Results" MODIFIED="1595002487238" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_monitoring_TestCloudMonitoringMetricsExporter_test_export_value_observer.coverage" NAME="pytest for test_cloud_monitoring.TestCloudMonitoringMetricsExporter.test_export_value_observer Coverage Results" MODIFIED="1595346287798" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-monitoring/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$scratch_57.coverage" NAME="scratch_57 Coverage Results" MODIFIED="1595026597872" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$Unittests_for_test_gcp_resource_detector_TestGCEResourceFinder_test_finding_gce_resources.coverage" NAME="Unittests for test_gcp_resource_detector.TestGCEResourceFinder.test_finding_gce_resources Coverage Results" MODIFIED="1594826894339" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$Unittests_for_test_gcp_resource_detector_TestGoogleCloudResourceDetector.coverage" NAME="Unittests for test_gcp_resource_detector.TestGoogleCloudResourceDetector Coverage Results" MODIFIED="1594827187770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_extract_status_code.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_extract_status_code Coverage Results" MODIFIED="1595533997982" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGoogleCloudResourceDetector_test_exception_while_finding_gke_resources.coverage" NAME="pytest for test_gcp_resource_detector.TestGoogleCloudResourceDetector.test_exception_while_finding_gke_resources Coverage Results" MODIFIED="1595007101711" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_extract_multiple_events.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_extract_multiple_events Coverage Results" MODIFIED="1595612375496" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_cloud_trace_exporter_TestCloudTraceSpanExporter_test_extract_too_many_events.coverage" NAME="pytest for test_cloud_trace_exporter.TestCloudTraceSpanExporter.test_extract_too_many_events Coverage Results" MODIFIED="1595535020869" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$scratch_60.coverage" NAME="scratch_60 Coverage Results" MODIFIED="1595541231667" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$resource_detector_metrics.coverage" NAME="resource_detector_metrics Coverage Results" MODIFIED="1595257801520" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/tools/cloud_resource_detector" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$basic_metrics.coverage" NAME="basic_metrics Coverage Results" MODIFIED="1595619359786" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/cloud_monitoring" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_in_test_gcp_resource_detector_py.coverage" NAME="pytest in test_gcp_resource_detector.py Coverage Results" MODIFIED="1595365678204" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$Unittests_for_test_gcp_resource_detector_TestGKEResourceFinder.coverage" NAME="Unittests for test_gcp_resource_detector.TestGKEResourceFinder Coverage Results" MODIFIED="1595001780510" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$advanced_trace.coverage" NAME="advanced_trace Coverage Results" MODIFIED="1595619230384" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/cloud_trace_exporter" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$pytest_for_test_gcp_resource_detector_TestGKEResourceFinder_test_missing_container_name.coverage" NAME="pytest for test_gcp_resource_detector.TestGKEResourceFinder.test_missing_container_name Coverage Results" MODIFIED="1595006453631" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/opentelemetry-exporter-cloud-trace/tests" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$more_trace.coverage" NAME="more_trace Coverage Results" MODIFIED="1595441671975" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/docs/examples/cloud_trace_exporter" />
+    <SUITE FILE_PATH="coverage/opentelemetry_operations_python$scratch_59.coverage" NAME="scratch_59 Coverage Results" MODIFIED="1595451561363" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
+  </component>
+</project>

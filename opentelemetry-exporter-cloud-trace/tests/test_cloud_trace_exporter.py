@@ -87,6 +87,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
         self.example_trace_id = "6e0c63257de34c92bf9efcd03927272e"
         self.example_span_id = "95bb5edabd45950f"
+        self.example_time_in_ns = 1589919268850900051
+        self.example_time_stamp = Timestamp(
+            seconds=1589919268, nanos=850900051
+        )
 
     def tearDown(self):
         self.client_patcher.stop()
@@ -247,16 +251,16 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertIsNone(_extract_events([]))
 
     def test_too_many_events(self):
-        time_in_ns = 1589919268850900051
-        time_in_ms_and_ns = {"seconds": 1589919268, "nanos": 850899968}
-        event = Event(name="event", timestamp=time_in_ns, attributes={})
+        event = Event(
+            name="event", timestamp=self.example_time_in_ns, attributes={}
+        )
         too_many_events = [event] * (MAX_NUM_EVENTS + 5)
         self.assertEqual(
             _extract_events(too_many_events),
             ProtoSpan.TimeEvents(
                 time_event=[
                     {
-                        "time": time_in_ms_and_ns,
+                        "time": self.example_time_stamp,
                         "annotation": {
                             "description": TruncatableString(value="event",),
                             "attributes": {},
@@ -270,12 +274,17 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
     def test_too_many_event_attributes(self):
-        time_in_ns = 1589919268850900051
         event_attrs = {}
         for attr_key in range(MAX_EVENT_ATTRS + 5):
             event_attrs[str(attr_key)] = 0
         proto_events = _extract_events(
-            [Event(name="a", attributes=event_attrs, timestamp=time_in_ns)]
+            [
+                Event(
+                    name="a",
+                    attributes=event_attrs,
+                    timestamp=self.example_time_in_ns,
+                )
+            ]
         )
         self.assertEqual(
             len(
@@ -291,26 +300,22 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
     def test_extract_multiple_events(self):
-        time_in_ns1 = 1589919268850900051
-        time_in_ms_and_ns1 = Timestamp(seconds=1589919268, nanos=850900051)
-        time_in_ns2 = 1589919438550020326
-        time_in_ms_and_ns2 = Timestamp(seconds=1589919438, nanos=550020326)
         event1 = Event(
             name="event1",
             attributes=self.attributes_variety_pack,
-            timestamp=time_in_ns1,
+            timestamp=self.example_time_in_ns,
         )
         event2 = Event(
             name="event2",
             attributes={"illegal_attr_value": dict()},
-            timestamp=time_in_ns2,
+            timestamp=1589919438550020326,
         )
         self.assertEqual(
             _extract_events([event1, event2]),
             ProtoSpan.TimeEvents(
                 time_event=[
                     {
-                        "time": time_in_ms_and_ns1,
+                        "time": self.example_time_stamp,
                         "annotation": {
                             "description": TruncatableString(
                                 value="event1", truncated_byte_count=0
@@ -319,7 +324,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         },
                     },
                     {
-                        "time": time_in_ms_and_ns2,
+                        "time": Timestamp(seconds=1589919438, nanos=550020326),
                         "annotation": {
                             "description": TruncatableString(
                                 value="event2", truncated_byte_count=0
@@ -496,6 +501,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertRaises(KeyError, _extract_resources, resource)
 
     def test_extract_unsupported_gcp_resources(self):
+        # Unsupported gcp resources will be ignored
         resource = Resource(
             labels={
                 "cloud.account.id": "123",
@@ -521,7 +527,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
         self.assertEqual(_extract_resources(resource), {})
 
-    # pylint:disable=too-many-locals
     def test_truncate_string(self):
         """Cloud Trace API imposes limits on the length of many things,
         e.g. strings, number of events, number of attributes. We truncate
@@ -560,15 +565,15 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
         # Test truncation of event name
-        time_in_ns1 = 1589919268850900051
-        proto_timestamp = Timestamp(seconds=1589919268, nanos=850900051)
-        event1 = Event(name=str_300, attributes={}, timestamp=time_in_ns1)
+        event1 = Event(
+            name=str_300, attributes={}, timestamp=self.example_time_in_ns
+        )
         self.assertEqual(
             _extract_events([event1]),
             ProtoSpan.TimeEvents(
                 time_event=[
                     {
-                        "time": proto_timestamp,
+                        "time": self.example_time_stamp,
                         "annotation": {
                             "description": TruncatableString(
                                 value=str_256, truncated_byte_count=300 - 256
