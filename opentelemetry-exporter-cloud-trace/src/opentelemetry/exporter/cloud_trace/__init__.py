@@ -182,7 +182,7 @@ def _get_time_from_ns(nanoseconds: int) -> Dict:
     nanoseconds"""
     if not nanoseconds:
         return None
-    seconds, nanos = divmod(nanoseconds, 1e9)
+    seconds, nanos = divmod(nanoseconds, 10 ** 9)
     return {"seconds": int(seconds), "nanos": int(nanos)}
 
 
