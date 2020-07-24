@@ -91,6 +91,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.example_time_stamp = Timestamp(
             seconds=1589919268, nanos=850900051
         )
+        self.str_300 = "a" * 300
+        self.str_256 = "a" * 256
+        self.str_128 = "a" * 128
 
     def tearDown(self):
         self.client_patcher.stop()
@@ -532,41 +535,40 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         e.g. strings, number of events, number of attributes. We truncate
         these things before sending it to the API as an optimization.
         """
-        str_300 = "a" * 300
-        str_256 = "a" * 256
-        str_128 = "a" * 128
         self.assertEqual(_truncate_str("aaaa", limit=1), ("a", 3))
         self.assertEqual(_truncate_str("aaaa", limit=5), ("aaaa", 0))
         self.assertEqual(_truncate_str("aaaa", limit=4), ("aaaa", 0))
         self.assertEqual(_truncate_str("中文翻译", limit=4), ("中", 9))
 
-        # Test truncation of string attribute values
+    def test_attribute_value_truncation(self):
         self.assertEqual(
-            _format_attribute_value(str_300),
+            _format_attribute_value(self.str_300),
             AttributeValue(
                 string_value=TruncatableString(
-                    value=str_256, truncated_byte_count=300 - 256
+                    value=self.str_256, truncated_byte_count=300 - 256
                 )
             ),
         )
 
-        # Test truncation of attribute keys
+    def test_attribute_key_truncation(self):
         self.assertEqual(
-            _extract_attributes({str_300: str_300}, num_attrs_limit=4),
+            _extract_attributes(
+                {self.str_300: "attr_value"}, num_attrs_limit=4
+            ),
             ProtoSpan.Attributes(
                 attribute_map={
-                    str_128: AttributeValue(
+                    self.str_128: AttributeValue(
                         string_value=TruncatableString(
-                            value=str_256, truncated_byte_count=300 - 256
+                            value="attr_value", truncated_byte_count=0
                         )
                     )
                 }
             ),
         )
 
-        # Test truncation of event name
+    def test_event_name_truncation(self):
         event1 = Event(
-            name=str_300, attributes={}, timestamp=self.example_time_in_ns
+            name=self.str_300, attributes={}, timestamp=self.example_time_in_ns
         )
         self.assertEqual(
             _extract_events([event1]),
@@ -576,7 +578,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         "time": self.example_time_stamp,
                         "annotation": {
                             "description": TruncatableString(
-                                value=str_256, truncated_byte_count=300 - 256
+                                value=self.str_256,
+                                truncated_byte_count=300 - 256,
                             ),
                             "attributes": {},
                         },
