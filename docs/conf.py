@@ -30,6 +30,8 @@ author = "Google"
 extensions = [
     # API doc generation
     "sphinx.ext.autodoc",
+    # Automatically generate autodoc API docs
+    "sphinx.ext.autosummary",
     # Support for google-style docstrings
     "sphinx.ext.napoleon",
     # Infer types from hints instead of docstrings
@@ -52,6 +54,8 @@ intersphinx_mapping = {
         None,
     ),
 }
+
+autosummary_generate = True  # automatically generate autodoc stubs
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
