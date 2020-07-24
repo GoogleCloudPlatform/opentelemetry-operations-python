@@ -29,6 +29,15 @@ takes place on `Github
    examples/**
 
 
+.. toctree::
+   :hidden:
+
+   apireference
+
+:ref:`apireference`
+
+
+
 Indices and tables
 ==================
 

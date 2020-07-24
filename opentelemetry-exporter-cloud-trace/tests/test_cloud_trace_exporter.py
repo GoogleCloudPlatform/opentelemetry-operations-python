@@ -19,6 +19,7 @@ import pkg_resources
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
+from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace import (
     MAX_EVENT_ATTRS,
@@ -205,9 +206,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_extract_events(self):
         self.assertIsNone(_extract_events([]))
         time_in_ns1 = 1589919268850900051
-        time_in_ms_and_ns1 = {"seconds": 1589919268, "nanos": 850899968}
+        time_in_ms_and_ns1 = Timestamp(seconds=1589919268, nanos=850900051)
         time_in_ns2 = 1589919438550020326
-        time_in_ms_and_ns2 = {"seconds": 1589919438, "nanos": 550020352}
+        time_in_ms_and_ns2 = Timestamp(seconds=1589919438, nanos=550020326)
         event1 = Event(
             name="event1",
             attributes=self.attributes_variety_pack,
@@ -301,6 +302,31 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                             },
                             "dropped_attributes_count": 1,
                         },
+                    },
+                ]
+            ),
+        )
+
+    def test_extract_link_with_none_attribute(self):
+        trace_id = "6e0c63257de34c92bf9efcd03927272e"
+        span_id = "95bb5edabd45950f"
+        link = Link(
+            context=SpanContext(
+                trace_id=int(trace_id, 16),
+                span_id=int(span_id, 16),
+                is_remote=False,
+            ),
+            attributes=None,
+        )
+        self.assertEqual(
+            _extract_links([link]),
+            ProtoSpan.Links(
+                link=[
+                    {
+                        "trace_id": trace_id,
+                        "span_id": span_id,
+                        "type": "TYPE_UNSPECIFIED",
+                        "attributes": ProtoSpan.Attributes(attribute_map={}),
                     },
                 ]
             ),
@@ -403,14 +429,14 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
         time_in_ns1 = 1589919268850900051
-        time_in_ms_and_ns1 = {"seconds": 1589919268, "nanos": 850899968}
+        proto_timestamp = Timestamp(seconds=1589919268, nanos=850900051)
         event1 = Event(name=str_300, attributes={}, timestamp=time_in_ns1)
         self.assertEqual(
             _extract_events([event1]),
             ProtoSpan.TimeEvents(
                 time_event=[
                     {
-                        "time": time_in_ms_and_ns1,
+                        "time": proto_timestamp,
                         "annotation": {
                             "description": TruncatableString(
                                 value=str_256, truncated_byte_count=300 - 256
@@ -472,7 +498,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ProtoSpan.TimeEvents(
                 time_event=[
                     {
-                        "time": time_in_ms_and_ns1,
+                        "time": proto_timestamp,
                         "annotation": {
                             "description": TruncatableString(
                                 value=str_256, truncated_byte_count=300 - 256
