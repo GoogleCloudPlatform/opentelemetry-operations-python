@@ -250,6 +250,32 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
+    def test_attribute_value_truncation(self):
+        self.assertEqual(
+            _format_attribute_value(self.str_300),
+            AttributeValue(
+                string_value=TruncatableString(
+                    value=self.str_256, truncated_byte_count=300 - 256
+                )
+            ),
+        )
+
+    def test_attribute_key_truncation(self):
+        self.assertEqual(
+            _extract_attributes(
+                {self.str_300: "attr_value"}, num_attrs_limit=4
+            ),
+            ProtoSpan.Attributes(
+                attribute_map={
+                    self.str_128: AttributeValue(
+                        string_value=TruncatableString(
+                            value="attr_value", truncated_byte_count=0
+                        )
+                    )
+                }
+            ),
+        )
+
     def test_extract_empty_events(self):
         self.assertIsNone(_extract_events([]))
 
@@ -335,6 +361,28 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                             "attributes": ProtoSpan.Attributes(
                                 attribute_map={}, dropped_attributes_count=1
                             ),
+                        },
+                    },
+                ]
+            ),
+        )
+
+    def test_event_name_truncation(self):
+        event1 = Event(
+            name=self.str_300, attributes={}, timestamp=self.example_time_in_ns
+        )
+        self.assertEqual(
+            _extract_events([event1]),
+            ProtoSpan.TimeEvents(
+                time_event=[
+                    {
+                        "time": self.example_time_stamp,
+                        "annotation": {
+                            "description": TruncatableString(
+                                value=self.str_256,
+                                truncated_byte_count=300 - 256,
+                            ),
+                            "attributes": {},
                         },
                     },
                 ]
@@ -539,54 +587,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertEqual(_truncate_str("aaaa", limit=5), ("aaaa", 0))
         self.assertEqual(_truncate_str("aaaa", limit=4), ("aaaa", 0))
         self.assertEqual(_truncate_str("中文翻译", limit=4), ("中", 9))
-
-    def test_attribute_value_truncation(self):
-        self.assertEqual(
-            _format_attribute_value(self.str_300),
-            AttributeValue(
-                string_value=TruncatableString(
-                    value=self.str_256, truncated_byte_count=300 - 256
-                )
-            ),
-        )
-
-    def test_attribute_key_truncation(self):
-        self.assertEqual(
-            _extract_attributes(
-                {self.str_300: "attr_value"}, num_attrs_limit=4
-            ),
-            ProtoSpan.Attributes(
-                attribute_map={
-                    self.str_128: AttributeValue(
-                        string_value=TruncatableString(
-                            value="attr_value", truncated_byte_count=0
-                        )
-                    )
-                }
-            ),
-        )
-
-    def test_event_name_truncation(self):
-        event1 = Event(
-            name=self.str_300, attributes={}, timestamp=self.example_time_in_ns
-        )
-        self.assertEqual(
-            _extract_events([event1]),
-            ProtoSpan.TimeEvents(
-                time_event=[
-                    {
-                        "time": self.example_time_stamp,
-                        "annotation": {
-                            "description": TruncatableString(
-                                value=self.str_256,
-                                truncated_byte_count=300 - 256,
-                            ),
-                            "attributes": {},
-                        },
-                    },
-                ]
-            ),
-        )
 
     def test_strip_characters(self):
         self.assertEqual("0.10.0", _strip_characters("0.10.0b"))
