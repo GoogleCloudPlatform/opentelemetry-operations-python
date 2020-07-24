@@ -178,7 +178,7 @@ class CloudTraceSpanExporter(SpanExporter):
         pass
 
 
-def _get_time_from_ns(nanoseconds: int) -> Dict:
+def _get_time_from_ns(nanoseconds: int) -> Optional[Timestamp]:
     """Given epoch nanoseconds, split into epoch milliseconds and remaining
     nanoseconds"""
     if not nanoseconds:
