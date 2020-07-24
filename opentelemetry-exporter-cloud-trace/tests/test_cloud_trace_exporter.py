@@ -206,9 +206,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_extract_events(self):
         self.assertIsNone(_extract_events([]))
         time_in_ns1 = 1589919268850900051
-        time_in_ms_and_ns1 = {"seconds": 1589919268, "nanos": 850900051}
+        time_in_ms_and_ns1 = Timestamp(seconds=1589919268, nanos=850900051)
         time_in_ns2 = 1589919438550020326
-        time_in_ms_and_ns2 = {"seconds": 1589919438, "nanos": 550020326}
+        time_in_ms_and_ns2 = Timestamp(seconds=1589919438, nanos=550020326)
         event1 = Event(
             name="event1",
             attributes=self.attributes_variety_pack,
