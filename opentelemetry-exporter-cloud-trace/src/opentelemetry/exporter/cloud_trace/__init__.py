@@ -50,6 +50,7 @@ from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
+from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace.version import (
     __version__ as cloud_trace_version,
@@ -177,13 +178,15 @@ class CloudTraceSpanExporter(SpanExporter):
         pass
 
 
-def _get_time_from_ns(nanoseconds: int) -> Dict:
+def _get_time_from_ns(nanoseconds: int) -> Optional[Timestamp]:
     """Given epoch nanoseconds, split into epoch milliseconds and remaining
     nanoseconds"""
     if not nanoseconds:
         return None
-    seconds, nanos = divmod(nanoseconds, 1e9)
-    return {"seconds": int(seconds), "nanos": int(nanos)}
+    ts = Timestamp()
+    # pylint: disable=no-member
+    ts.FromNanoseconds(nanoseconds)
+    return ts
 
 
 def _get_truncatable_str_object(str_to_convert: str, max_length: int):

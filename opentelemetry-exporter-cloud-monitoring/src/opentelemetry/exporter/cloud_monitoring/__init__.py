@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
-NANOS_PER_SECOND = int(1e9)
+NANOS_PER_SECOND = 10 ** 9
 
 OT_RESOURCE_LABEL_TO_GCP = {
     "gce_instance": {
