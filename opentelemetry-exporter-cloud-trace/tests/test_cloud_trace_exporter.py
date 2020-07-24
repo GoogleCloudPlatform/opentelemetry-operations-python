@@ -19,6 +19,7 @@ import pkg_resources
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
+from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace import (
     MAX_EVENT_ATTRS,
@@ -428,14 +429,14 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
         time_in_ns1 = 1589919268850900051
-        time_in_ms_and_ns1 = {"seconds": 1589919268, "nanos": 850900051}
+        proto_timestamp = Timestamp(seconds=1589919268, nanos=850900051)
         event1 = Event(name=str_300, attributes={}, timestamp=time_in_ns1)
         self.assertEqual(
             _extract_events([event1]),
             ProtoSpan.TimeEvents(
                 time_event=[
                     {
-                        "time": time_in_ms_and_ns1,
+                        "time": proto_timestamp,
                         "annotation": {
                             "description": TruncatableString(
                                 value=str_256, truncated_byte_count=300 - 256
@@ -497,7 +498,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ProtoSpan.TimeEvents(
                 time_event=[
                     {
-                        "time": time_in_ms_and_ns1,
+                        "time": proto_timestamp,
                         "annotation": {
                             "description": TruncatableString(
                                 value=str_256, truncated_byte_count=300 - 256
