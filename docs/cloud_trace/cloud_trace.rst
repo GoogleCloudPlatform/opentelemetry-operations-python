@@ -1,0 +1,11 @@
+OpenTelemetry Cloud Trace Exporter
+==================================
+
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace
+
+.. automodule:: opentelemetry.exporter.cloud_trace
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:

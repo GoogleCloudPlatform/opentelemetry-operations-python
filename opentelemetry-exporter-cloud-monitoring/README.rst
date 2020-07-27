@@ -1,6 +1,9 @@
 OpenTelemetry Cloud Monitoring Exporters
 ========================================
 
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-cloud-monitoring.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-cloud-monitoring
+
 This library provides classes for exporting metrics data to Google Cloud Monitoring.
 
 Installation

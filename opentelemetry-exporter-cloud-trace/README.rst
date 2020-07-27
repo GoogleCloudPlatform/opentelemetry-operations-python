@@ -1,6 +1,9 @@
 OpenTelemetry Cloud Trace Exporters
 ===================================
 
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace
+
 This library provides classes for exporting trace data to Google Cloud Trace.
 
 Installation

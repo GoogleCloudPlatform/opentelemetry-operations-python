@@ -50,6 +50,7 @@ from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
+from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace.version import (
     __version__ as cloud_trace_version,
@@ -97,18 +98,12 @@ class CloudTraceSpanExporter(SpanExporter):
         See: https://cloud.google.com/trace/docs/reference/v2/rest/v2/projects.traces/batchWrite
 
         Args:
-            spans: Tuple of spans to export
+            spans: Sequence of spans to export
         """
-        cloud_trace_spans = []
-        for span in self._translate_to_cloud_trace(spans):
-            try:
-                cloud_trace_spans.append(self.client.create_span(**span))
-            # pylint: disable=broad-except
-            except Exception as ex:
-                logger.error("Error when creating span %s", span, exc_info=ex)
         try:
             self.client.batch_write_spans(
-                "projects/{}".format(self.project_id), cloud_trace_spans,
+                "projects/{}".format(self.project_id),
+                self._translate_to_cloud_trace(spans),
             )
         # pylint: disable=broad-except
         except Exception as ex:
@@ -123,7 +118,7 @@ class CloudTraceSpanExporter(SpanExporter):
         """Translate the spans to Cloud Trace format.
 
         Args:
-            spans: Tuple of spans to convert
+            spans: Sequence of spans to convert
         """
 
         cloud_trace_spans = []
@@ -183,13 +178,15 @@ class CloudTraceSpanExporter(SpanExporter):
         pass
 
 
-def _get_time_from_ns(nanoseconds: int) -> Dict:
+def _get_time_from_ns(nanoseconds: int) -> Optional[Timestamp]:
     """Given epoch nanoseconds, split into epoch milliseconds and remaining
     nanoseconds"""
     if not nanoseconds:
         return None
-    seconds, nanos = divmod(nanoseconds, 1e9)
-    return {"seconds": int(seconds), "nanos": int(nanos)}
+    ts = Timestamp()
+    # pylint: disable=no-member
+    ts.FromNanoseconds(nanoseconds)
+    return ts
 
 
 def _get_truncatable_str_object(str_to_convert: str, max_length: int):
@@ -235,7 +232,8 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
         dropped_links = len(links) - MAX_NUM_LINKS
         links = links[:MAX_NUM_LINKS]
     for link in links:
-        if len(link.attributes) > MAX_LINK_ATTRS:
+        link_attributes = link.attributes or {}
+        if len(link_attributes) > MAX_LINK_ATTRS:
             logger.warning(
                 "Link has more then %s attributes, some will be truncated",
                 MAX_LINK_ATTRS,
@@ -248,7 +246,7 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
                 "span_id": span_id,
                 "type": "TYPE_UNSPECIFIED",
                 "attributes": _extract_attributes(
-                    link.attributes, MAX_LINK_ATTRS
+                    link_attributes, MAX_LINK_ATTRS
                 ),
             }
         )
@@ -303,10 +301,19 @@ def _strip_characters(ot_version):
 
 OT_RESOURCE_LABEL_TO_GCP = {
     "gce_instance": {
-        "cloud.account.id": "project_id",
         "host.id": "instance_id",
+        "cloud.account.id": "project_id",
         "cloud.zone": "zone",
-    }
+    },
+    "gke_container": {
+        "k8s.cluster.name": "cluster_name",
+        "k8s.namespace.name": "namespace_id",
+        "k8s.pod.name": "pod_id",
+        "host.id": "instance_id",
+        "container.name": "container_name",
+        "cloud.account.id": "project_id",
+        "cloud.zone": "zone",
+    },
 }
 
 
