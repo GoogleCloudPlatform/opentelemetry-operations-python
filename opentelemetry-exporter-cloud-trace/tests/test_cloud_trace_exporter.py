@@ -49,6 +49,15 @@ from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint: disable=too-many-public-methods
 class TestCloudTraceSpanExporter(unittest.TestCase):
+    def setUp(self):
+        self.client_patcher = mock.patch(
+            "opentelemetry.exporter.cloud_trace.TraceServiceClient"
+        )
+        self.client_patcher.start()
+
+    def tearDown(self):
+        self.client_patcher.stop()
+
     @classmethod
     def setUpClass(cls):
         cls.project_id = "PROJECT"
