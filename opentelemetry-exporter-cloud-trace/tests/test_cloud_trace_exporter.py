@@ -49,19 +49,20 @@ from opentelemetry.trace.status import StatusCanonicalCode
 
 # pylint: disable=too-many-public-methods
 class TestCloudTraceSpanExporter(unittest.TestCase):
-    def setUp(self):
-        self.client_patcher = mock.patch(
+    @classmethod
+    def setUpClass(cls):
+        cls.client_patcher = mock.patch(
             "opentelemetry.exporter.cloud_trace.TraceServiceClient"
         )
-        self.client_patcher.start()
-        self.project_id = "PROJECT"
-        self.attributes_variety_pack = {
+        cls.client_patcher.start()
+        cls.project_id = "PROJECT"
+        cls.attributes_variety_pack = {
             "str_key": "str_value",
             "bool_key": False,
             "double_key": 1.421,
             "int_key": 123,
         }
-        self.extracted_attributes_variety_pack = ProtoSpan.Attributes(
+        cls.extracted_attributes_variety_pack = ProtoSpan.Attributes(
             attribute_map={
                 "str_key": AttributeValue(
                     string_value=TruncatableString(
@@ -77,7 +78,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 "int_key": AttributeValue(int_value=123),
             }
         )
-        self.agent_code = _format_attribute_value(
+        cls.agent_code = _format_attribute_value(
             "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
                 _strip_characters(
                     pkg_resources.get_distribution("opentelemetry-sdk").version
@@ -85,16 +86,17 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 _strip_characters(cloud_trace_version),
             )
         )
-        self.example_trace_id = "6e0c63257de34c92bf9efcd03927272e"
-        self.example_span_id = "95bb5edabd45950f"
-        self.example_time_in_ns = 1589919268850900051
-        self.example_time_stamp = _get_time_from_ns(self.example_time_in_ns)
-        self.str_300 = "a" * 300
-        self.str_256 = "a" * 256
-        self.str_128 = "a" * 128
+        cls.example_trace_id = "6e0c63257de34c92bf9efcd03927272e"
+        cls.example_span_id = "95bb5edabd45950f"
+        cls.example_time_in_ns = 1589919268850900051
+        cls.example_time_stamp = _get_time_from_ns(cls.example_time_in_ns)
+        cls.str_300 = "a" * 300
+        cls.str_256 = "a" * 256
+        cls.str_128 = "a" * 128
 
-    def tearDown(self):
-        self.client_patcher.stop()
+    @classmethod
+    def tearDownClass(cls):
+        cls.client_patcher.stop()
 
     def test_constructor_default(self):
         exporter = CloudTraceSpanExporter(self.project_id)
