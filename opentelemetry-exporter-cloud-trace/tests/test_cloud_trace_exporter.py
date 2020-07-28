@@ -19,7 +19,6 @@ import pkg_resources
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
-from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace import (
     MAX_EVENT_ATTRS,
@@ -33,6 +32,7 @@ from opentelemetry.exporter.cloud_trace import (
     _extract_resources,
     _extract_status,
     _format_attribute_value,
+    _get_time_from_ns,
     _strip_characters,
     _truncate_str,
 )
@@ -88,8 +88,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.example_trace_id = "6e0c63257de34c92bf9efcd03927272e"
         self.example_span_id = "95bb5edabd45950f"
         self.example_time_in_ns = 1589919268850900051
-        self.example_time_stamp = Timestamp()
-        self.example_time_stamp.FromNanoseconds(self. example_time_in_ns)
+        self.example_time_stamp = _get_time_from_ns(self.example_time_in_ns)
         self.str_300 = "a" * 300
         self.str_256 = "a" * 256
         self.str_128 = "a" * 128
@@ -333,10 +332,11 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             attributes=self.attributes_variety_pack,
             timestamp=self.example_time_in_ns,
         )
+        event2_nanos = 1589919438550020326
         event2 = Event(
             name="event2",
             attributes={"illegal_attr_value": dict()},
-            timestamp=1589919438550020326,
+            timestamp=event2_nanos,
         )
         self.assertEqual(
             _extract_events([event1, event2]),
@@ -352,7 +352,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         },
                     },
                     {
-                        "time": Timestamp(seconds=1589919438, nanos=550020326),
+                        "time": _get_time_from_ns(event2_nanos),
                         "annotation": {
                             "description": TruncatableString(
                                 value="event2", truncated_byte_count=0
