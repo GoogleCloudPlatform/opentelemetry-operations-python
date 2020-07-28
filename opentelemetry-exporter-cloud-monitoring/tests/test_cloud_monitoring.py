@@ -70,15 +70,6 @@ class MockMetric:
 
 
 class TestCloudMonitoringMetricsExporter(unittest.TestCase):
-    def setUp(self):
-        self.client_patcher = mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.MetricServiceClient"
-        )
-        self.client_patcher.start()
-
-    def tearDown(self) -> None:
-        self.client_patcher.stop()
-
     @classmethod
     def setUpClass(cls):
         cls.project_id = "PROJECT"
