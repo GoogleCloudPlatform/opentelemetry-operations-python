@@ -75,11 +75,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             "opentelemetry.exporter.cloud_monitoring.MetricServiceClient"
         )
         self.client_patcher.start()
-        self.project_id = "PROJECT"
-        self.project_name = "PROJECT_NAME"
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.client_patcher.stop()
+
+    @classmethod
+    def setUpClass(cls):
+        cls.project_id = "PROJECT"
+        cls.project_name = "PROJECT_NAME"
 
     def test_constructor_default(self):
         exporter = CloudMonitoringMetricsExporter(self.project_id)
