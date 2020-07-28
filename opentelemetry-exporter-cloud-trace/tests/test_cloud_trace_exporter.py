@@ -88,9 +88,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.example_trace_id = "6e0c63257de34c92bf9efcd03927272e"
         self.example_span_id = "95bb5edabd45950f"
         self.example_time_in_ns = 1589919268850900051
-        self.example_time_stamp = Timestamp(
-            seconds=1589919268, nanos=850900051
-        )
+        self.example_time_stamp = Timestamp()
+        self.example_time_stamp.FromNanoseconds(self. example_time_in_ns)
         self.str_300 = "a" * 300
         self.str_256 = "a" * 256
         self.str_128 = "a" * 128
