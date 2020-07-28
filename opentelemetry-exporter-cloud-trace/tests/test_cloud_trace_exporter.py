@@ -211,7 +211,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_ignore_invalid_attributes(self):
         self.assertEqual(
             _extract_attributes(
-                {"illegal_attribute_value": dict(), "legal_attribute": 3},
+                {"illegal_attribute_value": {}, "legal_attribute": 3},
                 num_attrs_limit=4,
             ),
             ProtoSpan.Attributes(
