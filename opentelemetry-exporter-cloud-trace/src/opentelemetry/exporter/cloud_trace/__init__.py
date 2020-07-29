@@ -368,7 +368,6 @@ def _extract_attributes(
 
 
 def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
-
     if isinstance(value, bool):
         value_type = "bool_value"
     elif isinstance(value, int):
@@ -382,7 +381,7 @@ def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
     elif isinstance(value, collections.Sequence):
         value_type = "string_value"
         value = _get_truncatable_str_object(
-            "[" + ",".join([str(x) for x in value]) + "]", 256
+            ",".join([str(x) for x in value]), 256
         )
     else:
         logger.warning(
