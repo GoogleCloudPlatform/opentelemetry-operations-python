@@ -8,6 +8,10 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from opentelemetry.google.constants import (
+    NANOS_PER_SECOND,
+    OT_RESOURCE_LABEL_TO_GCP,
+)
 from opentelemetry.sdk.metrics import UpDownCounter
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
@@ -25,24 +29,6 @@ logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
-NANOS_PER_SECOND = 10 ** 9
-
-OT_RESOURCE_LABEL_TO_GCP = {
-    "gce_instance": {
-        "host.id": "instance_id",
-        "cloud.account.id": "project_id",
-        "cloud.zone": "zone",
-    },
-    "gke_container": {
-        "k8s.cluster.name": "cluster_name",
-        "k8s.namespace.name": "namespace_id",
-        "k8s.pod.name": "pod_id",
-        "host.id": "instance_id",
-        "container.name": "container_name",
-        "cloud.account.id": "project_id",
-        "cloud.zone": "zone",
-    },
-}
 
 
 # pylint is unable to resolve members of protobuf objects

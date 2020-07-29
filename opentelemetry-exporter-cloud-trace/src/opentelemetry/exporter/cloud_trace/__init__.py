@@ -55,6 +55,7 @@ from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace.version import (
     __version__ as cloud_trace_version,
 )
+from opentelemetry.google.constants import OT_RESOURCE_LABEL_TO_GCP
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
@@ -297,24 +298,6 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 
 def _strip_characters(ot_version):
     return "".join(filter(lambda x: x.isdigit() or x == ".", ot_version))
-
-
-OT_RESOURCE_LABEL_TO_GCP = {
-    "gce_instance": {
-        "host.id": "instance_id",
-        "cloud.account.id": "project_id",
-        "cloud.zone": "zone",
-    },
-    "gke_container": {
-        "k8s.cluster.name": "cluster_name",
-        "k8s.namespace.name": "namespace_id",
-        "k8s.pod.name": "pod_id",
-        "host.id": "instance_id",
-        "container.name": "container_name",
-        "cloud.account.id": "project_id",
-        "cloud.zone": "zone",
-    },
-}
 
 
 def _extract_resources(resource: Resource) -> Dict[str, str]:
