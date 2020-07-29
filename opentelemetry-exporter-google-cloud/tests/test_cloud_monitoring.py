@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import unittest
+from collections import OrderedDict
 from unittest import mock
 
 from google.api.label_pb2 import LabelDescriptor
@@ -28,6 +29,7 @@ from opentelemetry.exporter.cloud_monitoring import (
 )
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
+    HistogramAggregator,
     SumAggregator,
     ValueObserverAggregator,
 )
@@ -410,6 +412,59 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.interval.end_time.nanos = 0
         point.interval.start_time.seconds = WRITE_INTERVAL + 1
         point.interval.start_time.nanos = 0
+        client.create_time_series.assert_has_calls(
+            [mock.call(self.project_name, [series])]
+        )
+
+    def test_export_histogram(self):
+        client = mock.Mock()
+
+        with mock.patch(
+            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+        ):
+            exporter = CloudMonitoringMetricsExporter(
+                project_id=self.project_id, client=client
+            )
+
+        exporter.project_name = self.project_name
+
+        client.create_metric_descriptor.return_value = MetricDescriptor(
+            **{
+                "name": None,
+                "type": "custom.googleapis.com/OpenTelemetry/name",
+                "display_name": "name",
+                "description": "description",
+                "labels": [],
+                "metric_kind": "CUMULATIVE",
+                "value_type": "DISTRIBUTION",
+            }
+        )
+
+        aggregator = HistogramAggregator(config={"bounds": [2, 4, 6]})
+        aggregator.checkpoint = OrderedDict([(2, 1), (4, 2), (6, 4), (">", 3)])
+        aggregator.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        exporter.export(
+            [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
+        )
+
+        series = TimeSeries()
+        series.metric.type = "custom.googleapis.com/OpenTelemetry/name"
+        point = {
+            "interval": {
+                "start_time": {"seconds": 1},
+                "end_time": {"seconds": 11},
+            },
+            "value": {
+                "distribution_value": {
+                    "count": 10,
+                    "bucket_options": {
+                        "explicit_buckets": {"bounds": [2.0, 4.0, 6.0]}
+                    },
+                    "bucket_counts": [1, 2, 4, 3],
+                }
+            },
+        }
+        series.points.add(**point)
         client.create_time_series.assert_has_calls(
             [mock.call(self.project_name, [series])]
         )

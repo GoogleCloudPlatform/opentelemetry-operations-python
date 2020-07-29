@@ -1,13 +1,18 @@
 import logging
 import random
+from datetime import datetime
 from typing import Optional, Sequence
 
 import google.auth
+from google.api.distribution_pb2 import Distribution
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from google.cloud.monitoring_v3.proto.span_context_pb2 import SpanContext
+from google.protobuf.any_pb2 import Any
+from google.protobuf.timestamp_pb2 import Timestamp
 from opentelemetry.sdk.metrics import UpDownCounter
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
@@ -15,10 +20,15 @@ from opentelemetry.sdk.metrics.export import (
     MetricsExportResult,
 )
 from opentelemetry.sdk.metrics.export.aggregate import (
+    HistogramAggregator,
     SumAggregator,
     ValueObserverAggregator,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.trace.span import (
+    get_hexadecimal_span_id,
+    get_hexadecimal_trace_id,
+)
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -186,6 +196,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
         elif isinstance(record.aggregator, ValueObserverAggregator):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
+        elif isinstance(record.aggregator, HistogramAggregator):
+            descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
         else:
             logger.warning(
                 "Unsupported instrument/aggregator combo, types %s and %s, ignoring it",
@@ -193,10 +205,14 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 type(record.aggregator).__name__,
             )
             return None
-        if instrument.value_type == int:
+
+        if isinstance(record.aggregator, HistogramAggregator):
+            descriptor["value_type"] = MetricDescriptor.ValueType.DISTRIBUTION
+        elif instrument.value_type == int:
             descriptor["value_type"] = MetricDescriptor.ValueType.INT64
         elif instrument.value_type == float:
             descriptor["value_type"] = MetricDescriptor.ValueType.DOUBLE
+
         proto_descriptor = MetricDescriptor(**descriptor)
         try:
             descriptor = self.client.create_metric_descriptor(
@@ -213,7 +229,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self._metric_descriptors[descriptor_type] = descriptor
         return descriptor
 
-    def _set_start_end_times(self, point, record, metric_descriptor):
+    def _set_start_end_times(self, point_dict, record, metric_descriptor):
         updated_key = (metric_descriptor.type, record.labels)
         seconds, nanos = divmod(
             record.aggregator.last_update_timestamp, NANOS_PER_SECOND
@@ -229,33 +245,36 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             ):
                 # The aggregation has not reset since the exporter
                 # has started up, so that is the start time
-                point.interval.start_time.seconds = (
-                    self._exporter_start_time_seconds
-                )
-                point.interval.start_time.nanos = (
-                    self._exporter_start_time_nanos
-                )
+                point_dict["interval"]["start_time"] = {
+                    "seconds": self._exporter_start_time_seconds,
+                    "nanos": self._exporter_start_time_nanos,
+                }
             else:
                 # The aggregation reset the last time it was exported
                 # Add 1ms to guarantee there is no overlap from the previous export
                 # (see https://cloud.google.com/monitoring/api/ref_v3/rpc/google.monitoring.v3#timeinterval)
-                (
-                    point.interval.start_time.seconds,
-                    point.interval.start_time.nanos,
-                ) = divmod(
+                (start_seconds, start_nanos,) = divmod(
                     self._last_updated[updated_key] + int(1e6),
                     NANOS_PER_SECOND,
                 )
+                point_dict["interval"]["start_time"] = {
+                    "seconds": start_seconds,
+                    "nanos": start_nanos,
+                }
         else:
-            point.interval.start_time.seconds = seconds
-            point.interval.start_time.nanos = nanos
+            point_dict["interval"]["start_time"] = {
+                "seconds": seconds,
+                "nanos": nanos,
+            }
 
         self._last_updated[
             updated_key
         ] = record.aggregator.last_update_timestamp
 
-        point.interval.end_time.seconds = seconds
-        point.interval.end_time.nanos = nanos
+        point_dict["interval"]["end_time"] = {
+            "seconds": seconds,
+            "nanos": nanos,
+        }
 
     def export(
         self, metric_records: Sequence[MetricRecord]
@@ -264,6 +283,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         for record in metric_records:
             instrument = record.instrument
             metric_descriptor = self._get_metric_descriptor(record)
+            print(metric_descriptor)
             if not metric_descriptor:
                 continue
             series = TimeSeries(
@@ -280,16 +300,75 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                     UNIQUE_IDENTIFIER_KEY
                 ] = self.unique_identifier
 
-            point = series.points.add()
-            if isinstance(record.aggregator, SumAggregator):
-                data_point = record.aggregator.checkpoint
-            elif isinstance(record.aggregator, ValueObserverAggregator):
-                data_point = record.aggregator.checkpoint.last
+            point_dict = {"interval": {}}
 
-            if instrument.value_type == int:
-                point.value.int64_value = data_point
-            elif instrument.value_type == float:
-                point.value.double_value = data_point
+            if isinstance(record.aggregator, HistogramAggregator):
+                count = sum(record.aggregator.checkpoint.values())
+                buckets = list(record.aggregator.checkpoint.items())
+
+                point_dict["value"] = {
+                    "distribution_value": Distribution(
+                        count=count,
+                        bucket_counts=[bucket[1] for bucket in buckets],
+                        bucket_options={
+                            "explicit_buckets": {
+                                # don't put in > bucket
+                                "bounds": [
+                                    bucket[0] for bucket in buckets[:-1]
+                                ]
+                            }
+                        },
+                        # exemplars=[
+                        #     {
+                        #         "value": exemplar.value,
+                        #         "timestamp": Timestamp(
+                        #             seconds=int(exemplar.timestamp // 1e9),
+                        #             nanos=int(exemplar.timestamp % 1e9),
+                        #         ),
+                        #         "attachments": [
+                        #             {
+                        #                 "value": SpanContext(
+                        #                     span_name="projects/{}/traces/{}/spans/{}".format(
+                        #                         self.project_id,
+                        #                         get_hexadecimal_trace_id(
+                        #                             exemplar.trace_id
+                        #                         ),
+                        #                         get_hexadecimal_span_id(
+                        #                             exemplar.span_id
+                        #                         ),
+                        #                     )
+                        #                 ).SerializePartialToString(),
+                        #                 "type_url": "type.googleapis.com/google.monitoring.v3.SpanContext",
+                        #             }
+                        #         ]
+                        #         if exemplar.trace_id
+                        #         else [],
+                        #     }
+                        #     for exemplar in record.aggregator.checkpoint_exemplars
+                        # ],
+                    )
+                }
+            else:
+                if isinstance(record.aggregator, SumAggregator):
+                    data_point = record.aggregator.checkpoint
+                elif isinstance(record.aggregator, ValueObserverAggregator):
+                    data_point = record.aggregator.checkpoint.last
+                elif (
+                    metric_descriptor.value_type
+                    == MetricDescriptor.ValueType.INT64
+                ):
+                    data_point = record.aggregator.checkpoint
+
+                elif (
+                    metric_descriptor.value_type
+                    == MetricDescriptor.ValueType.DOUBLE
+                ):
+                    data_point = record.aggregator.checkpoint
+
+                if instrument.value_type == int:
+                    point_dict["value"] = {"int64_value": data_point}
+                elif instrument.value_type == float:
+                    point_dict["value"] = {"double_value": data_point}
 
             seconds = (
                 record.aggregator.last_update_timestamp // NANOS_PER_SECOND
@@ -302,7 +381,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             last_updated_time_seconds = last_updated_time // NANOS_PER_SECOND
             if seconds <= last_updated_time_seconds + WRITE_INTERVAL:
                 continue
-            self._set_start_end_times(point, record, metric_descriptor)
+
+            self._set_start_end_times(point_dict, record, metric_descriptor)
+            series.points.add(**point_dict)
             all_series.append(series)
         try:
             self._batch_write(all_series)
