@@ -261,6 +261,40 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
         )
 
+    def test_list_attribute_value(self):
+        self.assertEqual(
+            _format_attribute_value(("one", "two")),
+            AttributeValue(
+                string_value=TruncatableString(
+                    value="[one,two]", truncated_byte_count=0
+                )
+            ),
+        )
+        self.assertEqual(
+            _format_attribute_value([True]),
+            AttributeValue(
+                string_value=TruncatableString(
+                    value="[True]", truncated_byte_count=0
+                )
+            ),
+        )
+        self.assertEqual(
+            _format_attribute_value((2, 5)),
+            AttributeValue(
+                string_value=TruncatableString(
+                    value="[2,5]", truncated_byte_count=0
+                )
+            ),
+        )
+        self.assertEqual(
+            _format_attribute_value([2.0, 0.5, 4.55]),
+            AttributeValue(
+                string_value=TruncatableString(
+                    value="[2.0,0.5,4.55]", truncated_byte_count=0
+                )
+            ),
+        )
+
     def test_attribute_key_truncation(self):
         self.assertEqual(
             _extract_attributes(
