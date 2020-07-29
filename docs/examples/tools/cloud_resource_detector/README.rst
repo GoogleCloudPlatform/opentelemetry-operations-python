@@ -55,7 +55,7 @@ You need to manually pass in some information via the `Downward API <https://kub
 to enable GKE resource detection. Your kubernetes config file should look
 something like this (passing in NAMESPACE, CONTAINER_NAME, POD_NAME)
 
-.. code-block:: sh
+.. code-block:: yaml
 
     apiVersion: "apps/v1"
     kind: "Deployment"
