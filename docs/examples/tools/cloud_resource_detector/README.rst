@@ -44,3 +44,50 @@ After running the metrics example:
     * You can filter by resource info and change the graphical output here as well.
 
 Or, if you ran the tracing example, you can go to `Cloud Trace overview <https://console.cloud.google.com/traces/list>`_ to see the results.
+
+
+Troubleshooting
+--------------------------
+
+gke_container resources are not being detected or exported:
+###########################################################
+You need to manually pass in some information via the `Downward API <https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/>`_
+to enable GKE resource detection. Your kubernetes config file should look
+something like this (passing in NAMESPACE, CONTAINER_NAME, POD_NAME)
+
+.. code-block:: sh
+
+    apiVersion: "apps/v1"
+    kind: "Deployment"
+    metadata:
+      name: "food-find"
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: "food-find"
+      template:
+        metadata:
+          labels:
+            app: "food-find"
+        spec:
+          terminationGracePeriodSeconds: 30
+          containers:
+          - name: "food-finder"
+            image: "gcr.io/aaxue-gke/food-finder:v1"
+            imagePullPolicy: "Always"
+            env:
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: CONTAINER_NAME
+                  value: "food-finder"
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+            ports:
+            - containerPort: 8080
+          hostNetwork: true
+          dnsPolicy: Default
