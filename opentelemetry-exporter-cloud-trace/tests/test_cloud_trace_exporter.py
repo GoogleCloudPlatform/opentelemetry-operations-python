@@ -266,7 +266,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             _format_attribute_value(("one", "two")),
             AttributeValue(
                 string_value=TruncatableString(
-                    value="[one,two]", truncated_byte_count=0
+                    value="one,two", truncated_byte_count=0
                 )
             ),
         )
@@ -274,7 +274,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             _format_attribute_value([True]),
             AttributeValue(
                 string_value=TruncatableString(
-                    value="[True]", truncated_byte_count=0
+                    value="True", truncated_byte_count=0
                 )
             ),
         )
@@ -282,7 +282,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             _format_attribute_value((2, 5)),
             AttributeValue(
                 string_value=TruncatableString(
-                    value="[2,5]", truncated_byte_count=0
+                    value="2,5", truncated_byte_count=0
                 )
             ),
         )
@@ -290,7 +290,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             _format_attribute_value([2.0, 0.5, 4.55]),
             AttributeValue(
                 string_value=TruncatableString(
-                    value="[2.0,0.5,4.55]", truncated_byte_count=0
+                    value="2.0,0.5,4.55", truncated_byte_count=0
                 )
             ),
         )
