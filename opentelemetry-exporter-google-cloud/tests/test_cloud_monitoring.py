@@ -21,6 +21,7 @@ from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from google.cloud.monitoring_v3.proto.span_context_pb2 import SpanContext
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
     NANOS_PER_SECOND,
@@ -34,6 +35,7 @@ from opentelemetry.sdk.metrics.export.aggregate import (
     SumAggregator,
     ValueObserverAggregator,
 )
+from opentelemetry.sdk.metrics.export.exemplars import Exemplar
 from opentelemetry.sdk.resources import Resource
 
 
@@ -450,8 +452,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        aggregator = HistogramAggregator(config={"bounds": [2, 4, 6]})
+        aggregator = HistogramAggregator(
+            config={"bounds": [2, 4, 6], "num_exemplars": 2}
+        )
         aggregator.checkpoint = OrderedDict([(2, 1), (4, 2), (6, 4), (">", 3)])
+        aggregator.checkpoint_exemplars = [
+            Exemplar(1, 1, span_id=1, trace_id=1),
+            Exemplar(2, 2),
+        ]
         aggregator.last_update_timestamp = (
             WRITE_INTERVAL + 1
         ) * NANOS_PER_SECOND
@@ -473,6 +481,25 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                         "explicit_buckets": {"bounds": [2.0, 4.0, 6.0]}
                     },
                     "bucket_counts": [1, 2, 4, 3],
+                    "exemplars": [
+                        {
+                            "value": 1.0,
+                            "timestamp": {"nanos": 1},
+                            "attachments": [
+                                {
+                                    "type_url": "type.googleapis.com/google.monitoring.v3.SpanContext",
+                                    "value": SpanContext(
+                                        span_name="projects/PROJECT/traces/00000000000000000000000000000001/spans/0000000000000001"
+                                    ).SerializePartialToString(),
+                                }
+                            ],
+                        },
+                        {
+                            "value": 2.0,
+                            "timestamp": {"nanos": 2},
+                            "attachments": [],
+                        },
+                    ],
                 }
             },
         }

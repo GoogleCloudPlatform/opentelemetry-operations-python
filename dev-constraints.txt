@@ -10,5 +10,5 @@ Sphinx==3.1.2
 # development before GA. After GA, we will build against specific releases.
 # Bump the commit frequently during development whenever you are missing
 # changes from upstream.
--e git+https://github.com/open-telemetry/opentelemetry-python.git@81025e1e159dc341d96a7c90df8f6e7b26e1cb90#egg=opentelemetry-api&subdirectory=opentelemetry-api
--e git+https://github.com/open-telemetry/opentelemetry-python.git@81025e1e159dc341d96a7c90df8f6e7b26e1cb90#egg=opentelemetry-sdk&subdirectory=opentelemetry-sdk
+-e git+https://github.com/open-telemetry/opentelemetry-python.git@a4047059311d9f5e8eae5efa4db41c0f007ba6f2#egg=opentelemetry-api&subdirectory=opentelemetry-api
+-e git+https://github.com/open-telemetry/opentelemetry-python.git@a4047059311d9f5e8eae5efa4db41c0f007ba6f2#egg=opentelemetry-sdk&subdirectory=opentelemetry-sdk

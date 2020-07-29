@@ -10,6 +10,9 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from google.cloud.monitoring_v3.proto.span_context_pb2 import SpanContext
+from google.protobuf.any_pb2 import Any
+from google.protobuf.timestamp_pb2 import Timestamp
 from opentelemetry.sdk.metrics import UpDownCounter
 from opentelemetry.sdk.metrics.export import (
     MetricRecord,
@@ -22,6 +25,10 @@ from opentelemetry.sdk.metrics.export.aggregate import (
     ValueObserverAggregator,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.trace.span import (
+    get_hexadecimal_span_id,
+    get_hexadecimal_trace_id,
+)
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -269,6 +276,39 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             "nanos": nanos,
         }
 
+    def _translate_exemplars(self, exemplars):
+        translated_exemplars = []
+        for exemplar in exemplars:
+            attachments = []
+            if exemplar.trace_id:
+                # TODO: Pass dropped labels
+                # see https://cloud.google.com/monitoring/api/ref_v3/rest/v3/TypedValue#Exemplar,
+                # https://github.com/googleapis/google-cloud-dotnet/blob/master/apis/Google.Cloud.Monitoring.V3/Google.Cloud.Monitoring.V3/DroppedLabels.cs
+                attachments.append(
+                    {
+                        "value": SpanContext(
+                            span_name="projects/{}/traces/{}/spans/{}".format(
+                                self.project_id,
+                                get_hexadecimal_trace_id(exemplar.trace_id),
+                                get_hexadecimal_span_id(exemplar.span_id),
+                            )
+                        ).SerializePartialToString(),
+                        "type_url": "type.googleapis.com/google.monitoring.v3.SpanContext",
+                    }
+                )
+
+            translated_exemplars.append(
+                {
+                    "value": exemplar.value,
+                    "timestamp": Timestamp(
+                        seconds=int(exemplar.timestamp // 1e9),
+                        nanos=int(exemplar.timestamp % 1e9),
+                    ),
+                    "attachments": attachments if exemplar.trace_id else [],
+                }
+            )
+        return translated_exemplars
+
     def export(
         self, metric_records: Sequence[MetricRecord]
     ) -> "MetricsExportResult":
@@ -308,6 +348,9 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                                 "bounds": bucket_bounds[:-1]
                             }
                         },
+                        exemplars=self._translate_exemplars(
+                            record.aggregator.checkpoint_exemplars
+                        ),
                     )
                 }
             else:
