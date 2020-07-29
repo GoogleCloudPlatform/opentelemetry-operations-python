@@ -53,7 +53,7 @@ gke_container resources are not being detected or exported:
 ###########################################################
 You need to manually pass in some information via the `Downward API <https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/>`_
 to enable GKE resource detection. Your kubernetes config file should look
-something like this (passing in NAMESPACE, CONTAINER_NAME, POD_NAME)
+something like this (passing in ``NAMESPACE``, ``CONTAINER_NAME``, ``POD_NAME``)
 
 .. code-block:: sh
 
