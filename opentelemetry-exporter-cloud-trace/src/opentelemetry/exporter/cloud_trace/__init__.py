@@ -40,6 +40,7 @@ API
 ---
 """
 
+import collections
 import logging
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -377,10 +378,15 @@ def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
     elif isinstance(value, float):
         value_type = "string_value"
         value = _get_truncatable_str_object("{:0.4f}".format(value), 256)
+    elif isinstance(value, collections.Sequence):
+        value_type = "string_value"
+        value = _get_truncatable_str_object(
+            ",".join(str(x) for x in value), 256
+        )
     else:
         logger.warning(
             "ignoring attribute value %s of type %s. Values type must be one "
-            "of bool, int, string or float",
+            "of bool, int, string or float, or a sequence of these",
             value,
             type(value),
         )
