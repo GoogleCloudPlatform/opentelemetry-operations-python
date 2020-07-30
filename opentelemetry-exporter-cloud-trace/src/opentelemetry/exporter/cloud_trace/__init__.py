@@ -40,6 +40,7 @@ API
 ---
 """
 
+import collections
 import logging
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -318,14 +319,15 @@ OT_RESOURCE_LABEL_TO_GCP = {
 
 
 def _extract_resources(resource: Resource) -> Dict[str, str]:
-    if resource.labels.get("cloud.provider") != "gcp":
+    resource_labels = resource.labels
+    if resource_labels.get("cloud.provider") != "gcp":
         return {}
-    resource_type = resource.labels["gcp.resource_type"]
+    resource_type = resource_labels["gcp.resource_type"]
     if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
         return {}
     return {
         "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
-            resource.labels[ot_resource_key]
+            resource_labels[ot_resource_key]
         )
         for ot_resource_key, gcp_resource_key in OT_RESOURCE_LABEL_TO_GCP[
             resource_type
@@ -376,10 +378,15 @@ def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
     elif isinstance(value, float):
         value_type = "string_value"
         value = _get_truncatable_str_object("{:0.4f}".format(value), 256)
+    elif isinstance(value, collections.Sequence):
+        value_type = "string_value"
+        value = _get_truncatable_str_object(
+            ",".join(str(x) for x in value), 256
+        )
     else:
         logger.warning(
             "ignoring attribute value %s of type %s. Values type must be one "
-            "of bool, int, string or float",
+            "of bool, int, string or float, or a sequence of these",
             value,
             type(value),
         )

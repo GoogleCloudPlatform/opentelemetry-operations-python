@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint disable=no-name-in-module
+
 import socket
 import subprocess
 import unittest
@@ -41,7 +43,7 @@ class BaseExporterIntegrationTest(unittest.TestCase):
         sock.close()
 
         # Start the mock server.
-        args = ["mock_server-x64-linux-v0-alpha", "-address", self.address]
+        args = ["mock_server-x64-linux-v1-alpha", "-address", self.address]
         self.mock_server_process = subprocess.Popen(
             args, stderr=subprocess.PIPE
         )

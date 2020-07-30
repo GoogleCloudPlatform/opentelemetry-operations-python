@@ -37,7 +37,7 @@ class BaseExporterIntegrationTest(unittest.TestCase):
         sock.close()
 
         # Start the mock server.
-        args = ["mock_server-x64-linux-v0-alpha", "-address", self.address]
+        args = ["mock_server-x64-linux-v1-alpha", "-address", self.address]
         self.mock_server_process = subprocess.Popen(
             args, stderr=subprocess.PIPE
         )
