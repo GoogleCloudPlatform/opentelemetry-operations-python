@@ -24,10 +24,12 @@ from google.cloud.monitoring_v3.gapic.transports import (
     metric_service_grpc_transport,
 )
 from opentelemetry.exporter.cloud_monitoring import (
+    WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
-from tests.test_cloud_monitoring import MockMetric, UnsupportedAggregator
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from tests.test_cloud_monitoring import MockMetric
 
 
 # TODO: #46
@@ -43,7 +45,7 @@ class BaseExporterIntegrationTest(unittest.TestCase):
         sock.close()
 
         # Start the mock server.
-        args = ["mock_server-x64-linux-v1-alpha", "-address", self.address]
+        args = ["mock_server", "-address", self.address]
         self.mock_server_process = subprocess.Popen(
             args, stderr=subprocess.PIPE
         )
@@ -65,14 +67,13 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
         exporter = CloudMonitoringMetricsExporter(
             self.project_id, client=client
         )
+
+        sum_agg = SumAggregator()
+        sum_agg.checkpoint = 1
+        sum_agg.last_update_timestamp = (WRITE_INTERVAL + 2) * int(1e9)
+
         result = exporter.export(
-            [
-                MetricRecord(
-                    MockMetric(),
-                    (("label1", "value1"),),
-                    UnsupportedAggregator(),
-                )
-            ]
+            [MetricRecord(MockMetric(), (("label1", "value1"),), sum_agg,)]
         )
 
         self.assertEqual(result, MetricsExportResult.SUCCESS)
