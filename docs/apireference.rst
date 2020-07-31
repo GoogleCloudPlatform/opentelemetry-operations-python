@@ -13,6 +13,7 @@ API Reference
 
       opentelemetry.exporter
       opentelemetry.tools
+      opentelemetry.google
 
 
 
@@ -23,3 +24,4 @@ API Reference
 
    _autosummary/opentelemetry.exporter
    _autosummary/opentelemetry.tools
+   _autosummary/opentelemetry.google

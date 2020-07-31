@@ -36,9 +36,7 @@ from opentelemetry.exporter.cloud_trace import (
     _strip_characters,
     _truncate_str,
 )
-from opentelemetry.exporter.cloud_trace.version import (
-    __version__ as cloud_trace_version,
-)
+from opentelemetry.google.version import __version__ as google_ext_version
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span
@@ -88,7 +86,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 _strip_characters(
                     pkg_resources.get_distribution("opentelemetry-sdk").version
                 ),
-                _strip_characters(cloud_trace_version),
+                _strip_characters(google_ext_version),
             )
         )
         cls.example_trace_id = "6e0c63257de34c92bf9efcd03927272e"
