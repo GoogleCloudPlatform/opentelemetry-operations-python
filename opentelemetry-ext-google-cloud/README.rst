@@ -4,6 +4,10 @@ OpenTelemetry Google Cloud Integration
 .. image:: https://badge.fury.io/py/opentelemetry-ext-google-cloud.svg
     :target: https://badge.fury.io/py/opentelemetry-ext-google-cloud
 
+.. image:: https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest
+    :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 This library provides support for:
 
 - Exporting traces to Google Cloud Trace
@@ -14,7 +18,7 @@ This library provides support for:
 Installation
 ------------
 
-::
+.. code:: bash
 
     pip install opentelemetry-ext-google-cloud
 

@@ -6,10 +6,21 @@
 Welcome to Google Cloud OpenTelemetry's documentation!
 ======================================================
 
+.. image:: https://badge.fury.io/py/opentelemetry-ext-google-cloud.svg
+    :target: https://badge.fury.io/py/opentelemetry-ext-google-cloud
+
 This documentation describes OpenTelemetry Python exporters, propagators, and
 resource detectors for Google Cloud Platform. Development for these packages
 takes place on `Github
 <https://github.com/GoogleCloudPlatform/opentelemetry-operations-python>`_.
+
+Installation
+------------
+
+.. code-block:: bash
+
+    pip install opentelemetry-ext-google-cloud
+
 
 .. toctree::
    :maxdepth: 1
