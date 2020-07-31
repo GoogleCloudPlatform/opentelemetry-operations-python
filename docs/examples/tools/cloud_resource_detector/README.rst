@@ -22,8 +22,7 @@ To use this feature you first need to:
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-exporter-cloud-trace
-    pip install opentelemetry-exporter-cloud-monitoring
+    pip install opentelemetry-ext-google-cloud
 
 * Run an example on the Google tool of your choice
 
