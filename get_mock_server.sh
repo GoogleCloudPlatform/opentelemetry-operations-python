@@ -1,9 +1,10 @@
 #!/bin/bash
 VERSION=v1-alpha
-if ! [ -e $1/mock_server-x64-linux-$VERSION ]; then
-  curl -L -o $1/mock_server-x64-linux-$VERSION https://github.com/googleinterns/cloud-operations-api-mock/releases/download/$VERSION/mock_server-x64-linux-$VERSION
-  chmod +x $1/mock_server-x64-linux-$VERSION
+BINARY=mock_server-x64-linux-$VERSION
+if ! [ -e $1/$BINARY ]; then
+  curl -L -o $1/$BINARY https://github.com/googleinterns/cloud-operations-api-mock/releases/download/$VERSION/$BINARY
+  chmod +x $1/$BINARY
 fi
 
-ln -sf $1/mock_server-x64-linux-$VERSION $1/mock_server
+ln -sf $1/$BINARY $1/mock_server
 

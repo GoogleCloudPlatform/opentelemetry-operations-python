@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint disable=no-name-in-module
 
 import socket
 import subprocess
@@ -24,12 +23,13 @@ from google.cloud.monitoring_v3.gapic.transports import (
     metric_service_grpc_transport,
 )
 from opentelemetry.exporter.cloud_monitoring import (
+    NANOS_PER_SECOND,
     WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
+from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
-from tests.test_cloud_monitoring import MockMetric
 
 
 # TODO: #46
@@ -62,18 +62,25 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
         transport = metric_service_grpc_transport.MetricServiceGrpcTransport(
             channel=channel
         )
-        client = MetricServiceClient(transport=transport)
-
         exporter = CloudMonitoringMetricsExporter(
-            self.project_id, client=client
+            self.project_id, client=MetricServiceClient(transport=transport)
+        )
+
+        meter = metrics.MeterProvider().get_meter(__name__)
+        counter = meter.create_metric(
+            name="name",
+            description="desc",
+            unit="1",
+            value_type=int,
+            metric_type=metrics.Counter,
         )
 
         sum_agg = SumAggregator()
         sum_agg.checkpoint = 1
-        sum_agg.last_update_timestamp = (WRITE_INTERVAL + 2) * int(1e9)
+        sum_agg.last_update_timestamp = (WRITE_INTERVAL + 2) * NANOS_PER_SECOND
 
         result = exporter.export(
-            [MetricRecord(MockMetric(), (("label1", "value1"),), sum_agg,)]
+            [MetricRecord(counter, labels=(), aggregator=sum_agg,)]
         )
 
         self.assertEqual(result, MetricsExportResult.SUCCESS)
