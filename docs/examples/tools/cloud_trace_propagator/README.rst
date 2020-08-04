@@ -18,7 +18,7 @@ To use this feature you first need to:
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-ext-google-cloud
+    pip install opentelemetry-exporter-google-cloud
 
 * Create a server that uses the Cloud Trace header
 

@@ -36,7 +36,9 @@ from opentelemetry.exporter.cloud_trace import (
     _strip_characters,
     _truncate_str,
 )
-from opentelemetry.google.version import __version__ as google_ext_version
+from opentelemetry.exporter.google.version import (
+    __version__ as google_ext_version,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span
