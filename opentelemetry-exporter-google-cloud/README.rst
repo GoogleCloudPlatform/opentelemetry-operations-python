@@ -1,8 +1,8 @@
 OpenTelemetry Google Cloud Integration
 ======================================
 
-.. image:: https://badge.fury.io/py/opentelemetry-ext-google-cloud.svg
-    :target: https://badge.fury.io/py/opentelemetry-ext-google-cloud
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-google-cloud.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-google-cloud
 
 .. image:: https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
@@ -20,7 +20,7 @@ Installation
 
 .. code:: bash
 
-    pip install opentelemetry-ext-google-cloud
+    pip install opentelemetry-exporter-google-cloud
 
 Usage
 -----

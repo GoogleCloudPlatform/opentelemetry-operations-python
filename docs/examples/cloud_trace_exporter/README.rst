@@ -18,7 +18,7 @@ To use this exporter you first need to:
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
-    pip install opentelemetry-ext-google-cloud
+    pip install opentelemetry-exporter-google-cloud
 
 * Run a basic example locally
 

@@ -58,10 +58,10 @@ This project supports python versions 3.4 to 3.8. To run tests, use `tox`:
 # List all tox environments
 tox -l
 
-# Run python3.8 tests
-tox -e py38-ci-test-ext-google-cloud
+# Run python3.8 exporter tests
+tox -e py38-ci-test-exporter-google-cloud
 
-# Run all python3.8 unit tests in parallel
+# Run all python3.8 tests in parallel
 tox -f py38-test -pauto
 
 # All checks that run in continuous integration use the "ci" factor, which
