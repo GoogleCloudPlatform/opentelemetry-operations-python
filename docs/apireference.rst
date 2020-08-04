@@ -12,8 +12,8 @@ API Reference
       :recursive:
 
       opentelemetry.exporter
+      opentelemetry.exporter.google
       opentelemetry.tools
-      opentelemetry.google
 
 
 
@@ -23,5 +23,5 @@ API Reference
    :name: apireference
 
    _autosummary/opentelemetry.exporter
+   _autosummary/opentelemetry.exporter.google
    _autosummary/opentelemetry.tools
-   _autosummary/opentelemetry.google

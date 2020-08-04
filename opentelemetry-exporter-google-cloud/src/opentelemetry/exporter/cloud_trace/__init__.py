@@ -53,7 +53,9 @@ from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc.status_pb2 import Status
-from opentelemetry.google.version import __version__ as google_ext_version
+from opentelemetry.exporter.google.version import (
+    __version__ as google_ext_version,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
