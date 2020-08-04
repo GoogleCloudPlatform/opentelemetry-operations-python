@@ -23,6 +23,7 @@ To use this feature you first need to:
     pip install opentelemetry-api
     pip install opentelemetry-sdk
     pip install opentelemetry-exporter-google-cloud
+    pip install opentelemetry-tools-google-cloud
 
 * Run an example on the Google tool of your choice
 

@@ -12,8 +12,10 @@ This library provides support for:
 
 - Exporting traces to Google Cloud Trace
 - Exporting metrics to Google Cloud Monitoring
-- Detecting GCP resources like GCE, GKE, etc.
-- Propagating trace context in the legacy Google Cloud format
+
+For resource detection and GCP trace context propagation, see
+`opentelemetry-tools-google-cloud
+<https://pypi.org/project/opentelemetry-tools-google-cloud/>`_.
 
 Installation
 ------------

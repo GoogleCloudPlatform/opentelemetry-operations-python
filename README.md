@@ -1,6 +1,7 @@
 # Open-Telemetry Operations Exporters for Python
 
 [![Documentation Status](https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest)](https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest)
+<!-- todo add pypi badges here -->
 
 Provides OpenTelemetry Python exporters, propagators, and resource detectors
 for Google Cloud Platform.
