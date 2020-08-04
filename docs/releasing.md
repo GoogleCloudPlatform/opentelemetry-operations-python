@@ -1,0 +1,146 @@
+Releasing - For Maintainers only <!-- omit in toc --> 
+================
+
+The release process is:
+
+- [Checkout a clean repo](#checkout-a-clean-repo)
+- [Run release script](#run-release-script)
+- [Open and merge a PR](#open-and-merge-a-pr)
+- [Create a release tag and update stable tag](#create-a-release-tag-and-update-stable-tag)
+- [Push to PyPI](#push-to-pypi)
+
+Here is an [example PR
+#55](<https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/55>)
+and an [example tag
+v0.11b0](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/tag/v0.11b0):
+
+## Checkout a clean repo
+
+Optional, but `release.py` runs `git clean -fdx` which will delete any temporary
+files in the checkout.
+
+```bash
+git clone \
+    https://github.com/GoogleCloudPlatform/opentelemetry-operations-python.git \
+    opentelemetry-operations-python-release
+cd opentelemetry-operations-python-release
+git remote add fork git@github.com:$GH_USERNAME/opentelemetry-operations-python.git
+```
+
+## Run release script
+
+Run the `release.py` script which creates two commits in a new release
+branch. The script does the following:
+
+> Creates two commits in a new release branch (create new branch first). The first
+> commit (a) updates the changelogs for the new release_version, and updates
+> version.py files to the new release_version. This will be the tagged release
+> commit. The second commit (b) updates the version.py file to the
+> new_dev_version.
+
+This workflow guarantees that there won't be any commits between (a) and (b)
+in the master branch history, as long as you merge with "Rebase and merge".
+
+To create a release at version `0.11b1` which depends on
+`opentelemetry-(api|sdk)==0.11b0`, and then update package versions in the
+repository to `0.12.dev0`:
+
+```bash
+./release.py \
+    --release_version 0.11b1 \
+    --new_dev_version 0.12.dev0 \
+    --ot_version "==0.11b0"
+```
+
+## Open and merge a PR
+
+You will now have the new branch `release-pr/0.11b1` checked out with the two
+commits. Push them to your fork and create a PR:
+
+```bash
+git push --set-upstream fork release-pr/0.11b1
+# if you have GH cli installed, or create the PR regularly
+gh pr create -f -d
+```
+
+- **Make sure you review the the commits in the PR INDIVIDUALLY.** The first
+commit (a) will be tagged as the release in the next step, so it needs to be
+correct.
+- After review, **merge your PR with ["Rebase and
+merge"](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-merges#rebase-and-merge-your-pull-request-commits)
+on github.** This is crucial; if you use the regular "Squash and merge", you
+will not have the two sequential commits you need to create a release tag.
+
+## Create a release tag and update stable tag
+
+TODO: incorporate these steps into `releasing.py`.
+
+Now, [create a
+release](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/new)
+with:
+
+- Tag version of `v` + `--new_dev_version` you used above -
+**pointing at the first commit (a)** that was merged into master. For the
+example PR listed above, that creates release
+[`v0.11b0@4ad9ccd`](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/tag/v0.11b0).
+- In description, paste a changelog for the packages. I used this (probably
+buggy) small script for the example PR's tag:
+
+  ```bash
+  for cl in opentelemetry-*/CHANGELOG.md; do
+      echo "# `dirname $cl`"
+      pcregrep "## Version 0\.11b0[\s\S]+?\K^-[\s\S]+?(?=(##|\Z))" $cl
+  done
+  ```
+
+Once the release tag is created, create a permanent branch (for later fixes)
+at that commit (a), and also move the `stable` tag to point to the same
+commit.
+
+```bash
+# pull in the new release tag
+git fetch origin
+
+# create branch and move stable
+git branch release/0.11b0 v0.11b0
+git tag -d stable
+git tag stable v0.11b0
+
+# push
+git push --set-upstream origin release/0.11b0 stable
+```
+
+## Push to PyPI
+
+TODO: incorporate these steps into `releasing.py`.
+
+Finally, publish the packages. Use PyPI user
+[`google_opentelemetry`](https://pypi.org/user/google_opentelemetry/),
+consulting internal docs for how to get a login token.
+
+```bash
+git clean -fdx
+python3 -m venv venv
+source venv/bin/activate
+pip install -U pip wheel twine
+
+# Build the packages
+for setup_file in opentelemetry-*/setup.py; do
+    pushd `dirname $setup_file`
+    # to be safe
+    rm -rf dist/ build/
+    python setup.py sdist bdist_wheel
+    popd
+done
+
+# See what was built
+ls opentelemetry-*/dist/*
+
+# First, publish to https://test.pypi.org/ to make sure everything goes
+# correctly.
+twine upload -r testpypi opentelemetry-*/dist/*
+
+# Go check the packages look correct on test pypi. If all is good, upload to
+# pypi
+twine upload opentelemetry-*/dist/*
+```
