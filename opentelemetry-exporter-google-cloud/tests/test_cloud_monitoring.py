@@ -23,6 +23,7 @@ from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
+    NANOS_PER_SECOND,
     UNIQUE_IDENTIFIER_KEY,
     WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
@@ -228,7 +229,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         client = mock.Mock()
 
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client
@@ -276,7 +278,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_one = SumAggregator()
         sum_agg_one.checkpoint = 1
-        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        sum_agg_one.last_update_timestamp = (
+            WRITE_INTERVAL + 1
+        ) * NANOS_PER_SECOND
         exporter.export(
             [
                 MetricRecord(
@@ -327,7 +331,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_two = SumAggregator()
         sum_agg_two.checkpoint = 1
-        sum_agg_two.last_update_timestamp = (WRITE_INTERVAL + 2) * int(1e9)
+        sum_agg_two.last_update_timestamp = (
+            WRITE_INTERVAL + 2
+        ) * NANOS_PER_SECOND
         exporter.export(
             [
                 MetricRecord(
@@ -377,7 +383,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         client = mock.Mock()
 
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client
@@ -399,7 +406,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         aggregator = ValueObserverAggregator()
         aggregator.checkpoint = aggregator._TYPE(1, 2, 3, 4, 5)
-        aggregator.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        aggregator.last_update_timestamp = (
+            WRITE_INTERVAL + 1
+        ) * NANOS_PER_SECOND
         exporter.export(
             [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
         )
@@ -420,7 +429,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         client = mock.Mock()
 
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client
@@ -442,7 +452,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         aggregator = HistogramAggregator(config={"bounds": [2, 4, 6]})
         aggregator.checkpoint = OrderedDict([(2, 1), (4, 2), (6, 4), (">", 3)])
-        aggregator.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        aggregator.last_update_timestamp = (
+            WRITE_INTERVAL + 1
+        ) * NANOS_PER_SECOND
         exporter.export(
             [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
         )
@@ -472,7 +484,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
     def test_stateless_times(self):
         client = mock.Mock()
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client,
@@ -496,7 +509,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         agg = SumAggregator()
         agg.checkpoint = 1
-        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * NANOS_PER_SECOND
 
         metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
 
@@ -517,7 +530,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             WRITE_INTERVAL + 1,
         )
 
-        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * int(1e9)
+        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * NANOS_PER_SECOND
 
         metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
 
