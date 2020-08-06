@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=v1-alpha
+VERSION=v2-alpha
 BINARY=mock_server-x64-linux-$VERSION
 if ! [ -e $1/$BINARY ]; then
   curl -L -o $1/$BINARY https://github.com/googleinterns/cloud-operations-api-mock/releases/download/$VERSION/$BINARY

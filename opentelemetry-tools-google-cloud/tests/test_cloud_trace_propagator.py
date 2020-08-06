@@ -17,7 +17,7 @@ import unittest
 
 import opentelemetry.trace as trace
 from opentelemetry.context import get_current
-from opentelemetry.exporter.cloud_trace.cloud_trace_propagator import (
+from opentelemetry.tools.cloud_trace_propagator import (
     _TRACE_CONTEXT_HEADER_NAME,
     CloudTraceFormatPropagator,
 )

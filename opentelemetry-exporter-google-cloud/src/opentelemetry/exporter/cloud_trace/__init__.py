@@ -53,8 +53,8 @@ from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc.status_pb2 import Status
-from opentelemetry.exporter.cloud_trace.version import (
-    __version__ as cloud_trace_version,
+from opentelemetry.exporter.google.version import (
+    __version__ as google_ext_version,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
@@ -357,7 +357,7 @@ def _extract_attributes(
                 _strip_characters(
                     pkg_resources.get_distribution("opentelemetry-sdk").version
                 ),
-                _strip_characters(cloud_trace_version),
+                _strip_characters(google_ext_version),
             )
         )
     return ProtoSpan.Attributes(
