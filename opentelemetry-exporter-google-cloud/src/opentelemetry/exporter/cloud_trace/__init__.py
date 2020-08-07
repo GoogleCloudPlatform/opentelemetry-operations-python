@@ -168,6 +168,7 @@ class CloudTraceSpanExporter(SpanExporter):
                     "links": _extract_links(span.links),
                     "status": _extract_status(span.status),
                     "time_events": _extract_events(span.events),
+                    "span_kind": _extract_span_kind(span.kind),
                 }
             )
             # TODO: Leverage more of the Cloud Trace API, e.g.
@@ -293,6 +294,23 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
         time_event=logs,
         dropped_annotations_count=dropped_annontations,
         dropped_message_events_count=0,
+    )
+
+
+# pylint: disable=no-member
+SPAN_KIND_MAPPING = {
+    trace_api.SpanKind.INTERNAL: ProtoSpan.SpanKind.INTERNAL,
+    trace_api.SpanKind.CLIENT: ProtoSpan.SpanKind.CLIENT,
+    trace_api.SpanKind.SERVER: ProtoSpan.SpanKind.SERVER,
+    trace_api.SpanKind.PRODUCER: ProtoSpan.SpanKind.PRODUCER,
+    trace_api.SpanKind.CONSUMER: ProtoSpan.SpanKind.CONSUMER,
+}
+
+
+# pylint: disable=no-member
+def _extract_span_kind(span_kind: trace_api.SpanKind) -> ProtoSpan.SpanKind:
+    return SPAN_KIND_MAPPING.get(
+        span_kind, ProtoSpan.SpanKind.SPAN_KIND_UNSPECIFIED
     )
 
 
