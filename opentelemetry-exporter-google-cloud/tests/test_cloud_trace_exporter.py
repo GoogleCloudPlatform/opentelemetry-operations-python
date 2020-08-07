@@ -30,6 +30,7 @@ from opentelemetry.exporter.cloud_trace import (
     _extract_events,
     _extract_links,
     _extract_resources,
+    _extract_span_kind,
     _extract_status,
     _format_attribute_value,
     _get_time_from_ns,
@@ -162,6 +163,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "time_events": None,
             "start_time": None,
             "end_time": None,
+            # pylint: disable=no-member
+            "span_kind": ProtoSpan.SpanKind.INTERNAL,
         }
 
         client = mock.Mock()
@@ -630,3 +633,24 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertEqual("3.1.0", _strip_characters("3.1.0beta"))
         self.assertEqual("4.2.0", _strip_characters("4b.2rc.0a"))
         self.assertEqual("6.20.15", _strip_characters("b6.20.15"))
+
+    # pylint: disable=no-member
+    def test_extract_span_kind(self):
+        self.assertEqual(
+            _extract_span_kind(SpanKind.INTERNAL), ProtoSpan.SpanKind.INTERNAL
+        )
+        self.assertEqual(
+            _extract_span_kind(SpanKind.CLIENT), ProtoSpan.SpanKind.CLIENT
+        )
+        self.assertEqual(
+            _extract_span_kind(SpanKind.SERVER), ProtoSpan.SpanKind.SERVER
+        )
+        self.assertEqual(
+            _extract_span_kind(SpanKind.CONSUMER), ProtoSpan.SpanKind.CONSUMER
+        )
+        self.assertEqual(
+            _extract_span_kind(SpanKind.PRODUCER), ProtoSpan.SpanKind.PRODUCER
+        )
+        self.assertEqual(
+            _extract_span_kind(-1), ProtoSpan.SpanKind.SPAN_KIND_UNSPECIFIED
+        )
