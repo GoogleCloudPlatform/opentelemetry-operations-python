@@ -298,18 +298,20 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 
 
 # pylint: disable=no-member
+SPAN_KIND_MAPPING = {
+    trace_api.SpanKind.INTERNAL: ProtoSpan.SpanKind.INTERNAL,
+    trace_api.SpanKind.CLIENT: ProtoSpan.SpanKind.CLIENT,
+    trace_api.SpanKind.SERVER: ProtoSpan.SpanKind.SERVER,
+    trace_api.SpanKind.PRODUCER: ProtoSpan.SpanKind.PRODUCER,
+    trace_api.SpanKind.CONSUMER: ProtoSpan.SpanKind.CONSUMER,
+}
+
+
+# pylint: disable=no-member
 def _extract_span_kind(span_kind: trace_api.SpanKind) -> ProtoSpan.SpanKind:
-    if span_kind == trace_api.SpanKind.INTERNAL:
-        return ProtoSpan.SpanKind.INTERNAL
-    if span_kind == trace_api.SpanKind.SERVER:
-        return ProtoSpan.SpanKind.SERVER
-    if span_kind == trace_api.SpanKind.CLIENT:
-        return ProtoSpan.SpanKind.CLIENT
-    if span_kind == trace_api.SpanKind.PRODUCER:
-        return ProtoSpan.SpanKind.PRODUCER
-    if span_kind == trace_api.SpanKind.CONSUMER:
-        return ProtoSpan.SpanKind.CONSUMER
-    return ProtoSpan.SpanKind.SPAN_KIND_UNSPECIFIED
+    return SPAN_KIND_MAPPING.get(
+        span_kind, ProtoSpan.SpanKind.SPAN_KIND_UNSPECIFIED
+    )
 
 
 def _strip_characters(ot_version):
