@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import unittest
+from collections import OrderedDict
 from unittest import mock
 
 from google.api.label_pb2 import LabelDescriptor
@@ -22,12 +23,14 @@ from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
+    NANOS_PER_SECOND,
     UNIQUE_IDENTIFIER_KEY,
     WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
+    HistogramAggregator,
     SumAggregator,
     ValueObserverAggregator,
 )
@@ -226,7 +229,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         client = mock.Mock()
 
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client
@@ -274,7 +278,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_one = SumAggregator()
         sum_agg_one.checkpoint = 1
-        sum_agg_one.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        sum_agg_one.last_update_timestamp = (
+            WRITE_INTERVAL + 1
+        ) * NANOS_PER_SECOND
         exporter.export(
             [
                 MetricRecord(
@@ -325,7 +331,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_two = SumAggregator()
         sum_agg_two.checkpoint = 1
-        sum_agg_two.last_update_timestamp = (WRITE_INTERVAL + 2) * int(1e9)
+        sum_agg_two.last_update_timestamp = (
+            WRITE_INTERVAL + 2
+        ) * NANOS_PER_SECOND
         exporter.export(
             [
                 MetricRecord(
@@ -375,7 +383,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         client = mock.Mock()
 
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client
@@ -397,7 +406,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         aggregator = ValueObserverAggregator()
         aggregator.checkpoint = aggregator._TYPE(1, 2, 3, 4, 5)
-        aggregator.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        aggregator.last_update_timestamp = (
+            WRITE_INTERVAL + 1
+        ) * NANOS_PER_SECOND
         exporter.export(
             [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
         )
@@ -414,10 +425,67 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             [mock.call(self.project_name, [series])]
         )
 
+    def test_export_histogram(self):
+        client = mock.Mock()
+
+        with mock.patch(
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
+        ):
+            exporter = CloudMonitoringMetricsExporter(
+                project_id=self.project_id, client=client
+            )
+
+        exporter.project_name = self.project_name
+
+        client.create_metric_descriptor.return_value = MetricDescriptor(
+            **{
+                "name": None,
+                "type": "custom.googleapis.com/OpenTelemetry/name",
+                "display_name": "name",
+                "description": "description",
+                "labels": [],
+                "metric_kind": "CUMULATIVE",
+                "value_type": "DISTRIBUTION",
+            }
+        )
+
+        aggregator = HistogramAggregator(config={"bounds": [2, 4, 6]})
+        aggregator.checkpoint = OrderedDict([(2, 1), (4, 2), (6, 4), (">", 3)])
+        aggregator.last_update_timestamp = (
+            WRITE_INTERVAL + 1
+        ) * NANOS_PER_SECOND
+        exporter.export(
+            [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
+        )
+
+        series = TimeSeries()
+        series.metric.type = "custom.googleapis.com/OpenTelemetry/name"
+        point = {
+            "interval": {
+                "start_time": {"seconds": 1},
+                "end_time": {"seconds": 11},
+            },
+            "value": {
+                "distribution_value": {
+                    "count": 10,
+                    "bucket_options": {
+                        "explicit_buckets": {"bounds": [2.0, 4.0, 6.0]}
+                    },
+                    "bucket_counts": [1, 2, 4, 3],
+                }
+            },
+        }
+        series.points.add(**point)
+        client.create_time_series.assert_has_calls(
+            [mock.call(self.project_name, [series])]
+        )
+
     def test_stateless_times(self):
         client = mock.Mock()
         with mock.patch(
-            "opentelemetry.exporter.cloud_monitoring.time_ns", lambda: int(1e9)
+            "opentelemetry.exporter.cloud_monitoring.time_ns",
+            lambda: NANOS_PER_SECOND,
         ):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id, client=client,
@@ -441,7 +509,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         agg = SumAggregator()
         agg.checkpoint = 1
-        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * int(1e9)
+        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * NANOS_PER_SECOND
 
         metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
 
@@ -462,7 +530,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             WRITE_INTERVAL + 1,
         )
 
-        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * int(1e9)
+        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * NANOS_PER_SECOND
 
         metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
 
