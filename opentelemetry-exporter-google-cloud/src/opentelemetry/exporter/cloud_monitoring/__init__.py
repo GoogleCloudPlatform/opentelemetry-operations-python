@@ -1,6 +1,5 @@
 import logging
 import random
-from datetime import datetime
 from typing import Optional, Sequence
 
 import google.auth
@@ -149,7 +148,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         )
         if descriptor_type in self._metric_descriptors:
             return self._metric_descriptors[descriptor_type]
-        descriptor = {
+
+        descriptor = {  # type: ignore[var-annotated] # TODO #56
             "name": None,
             "type": descriptor_type,
             "display_name": instrument.name,
@@ -158,15 +158,15 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         }
         for key, value in record.labels:
             if isinstance(value, str):
-                descriptor["labels"].append(
+                descriptor["labels"].append(  # type: ignore[union-attr] # TODO #56
                     LabelDescriptor(key=key, value_type="STRING")
                 )
             elif isinstance(value, bool):
-                descriptor["labels"].append(
+                descriptor["labels"].append(  # type: ignore[union-attr] # TODO #56
                     LabelDescriptor(key=key, value_type="BOOL")
                 )
             elif isinstance(value, int):
-                descriptor["labels"].append(
+                descriptor["labels"].append(  # type: ignore[union-attr] # TODO #56
                     LabelDescriptor(key=key, value_type="INT64")
                 )
             else:
@@ -176,7 +176,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 )
 
         if self.unique_identifier:
-            descriptor["labels"].append(
+            descriptor["labels"].append(  # type: ignore[union-attr] # TODO #56
                 LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
             )
 
@@ -292,7 +292,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                     UNIQUE_IDENTIFIER_KEY
                 ] = self.unique_identifier
 
-            point_dict = {"interval": {}}
+            point_dict = {"interval": {}}  # type: ignore[var-annotated] # TODO #56
 
             if isinstance(record.aggregator, HistogramAggregator):
                 bucket_bounds = list(record.aggregator.checkpoint.keys())

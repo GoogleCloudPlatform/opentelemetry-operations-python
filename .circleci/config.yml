@@ -38,6 +38,14 @@ commands:
           key: *key_full
           paths:
             - ~/.cache/pip
+  store_test_results_command:
+    description: Upload test-results directory
+    steps:
+      - store_test_results:
+          path: .test-results/test-results
+      - store_artifacts:
+          path: .test-results/test-results
+
 
   setup:
     description: Checkout code and install tox
@@ -48,8 +56,6 @@ commands:
 jobs:
   lint:
     executor: dev_python
-    docker:
-      - image: circleci/python:3.8
     steps:
       - setup
       - run_with_pip_cache:
@@ -74,6 +80,17 @@ jobs:
           path: docs/_build/html
           destination: docs-html
 
+  mypy:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - setup
+      - run_with_pip_cache:
+          cache_key_base: mypy-python3.8
+          steps:
+            - run: tox -e mypy-ci
+      - store_test_results_command
+
   tests:
     parameters:
       python3_minor:
@@ -93,11 +110,7 @@ jobs:
                   -s false
                   -pauto
                   -f py3<< parameters.python3_minor >>-ci
-                  -- '--junitxml=../test-results/$TOX_ENV_NAME/junit.xml'
-      - store_test_results:
-          path: test-results
-      - store_artifacts:
-          path: test-results
+      - store_test_results_command
 
 workflows:
   version: 2
@@ -105,6 +118,7 @@ workflows:
     jobs:
       - lint
       - docs
+      - mypy
       - tests:
           name: tests-python3.<< matrix.python3_minor >>
           matrix:
