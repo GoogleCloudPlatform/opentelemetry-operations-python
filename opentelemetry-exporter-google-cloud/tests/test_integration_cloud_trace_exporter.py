@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import socket
-import subprocess
-import unittest
-
 import grpc
 from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.gapic.transports import trace_service_grpc_transport
@@ -25,27 +21,7 @@ from opentelemetry.sdk.trace.export import Span, SpanExportResult
 from opentelemetry.trace import SpanContext, SpanKind
 from opentelemetry.util import time_ns
 
-
-class BaseExporterIntegrationTest(unittest.TestCase):
-    def setUp(self):
-        self.project_id = "TEST-PROJECT"
-
-        # Find a free port to spin up our server at.
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(("localhost", 0))
-        self.address = "localhost:" + str(sock.getsockname()[1])
-        sock.close()
-
-        # Start the mock server.
-        args = ["mock_server", "-address", self.address]
-        self.mock_server_process = subprocess.Popen(
-            args, stderr=subprocess.PIPE
-        )
-        # Block until the mock server starts (it will output the address after starting).
-        self.mock_server_process.stderr.readline()
-
-    def tearDown(self):
-        self.mock_server_process.kill()
+from test_common import BaseExporterIntegrationTest
 
 
 class TestCloudTraceSpanExporter(BaseExporterIntegrationTest):
