@@ -88,8 +88,10 @@ buggy) small script for the example PR's tag:
 
   ```bash
   for cl in opentelemetry-*/CHANGELOG.md; do
-      echo "# `dirname $cl`"
-      pcregrep "## Version 0\.11b0[\s\S]+?\K^-[\s\S]+?(?=(##|\Z))" $cl
+      if cl_entries=`pcregrep -M -o1 "^## Version 0\.10b0$\n\n^Released.*\n\n((?:- [\s\S]+?)*?)(?=(\s+##|\Z))" $cl`
+      then
+          echo -e "# `dirname $cl`\n$cl_entries"
+      fi
   done
   ```
 
