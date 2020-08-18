@@ -120,9 +120,13 @@ TODO: incorporate these steps into `releasing.py`.
 
 Finally, publish the packages. Use PyPI user
 [`google_opentelemetry`](https://pypi.org/user/google_opentelemetry/),
-consulting internal docs for how to get a login token.
+consulting internal docs for how to get login credentials.
 
 ```bash
+# make sure you're checked out to the release tag created before
+git checkout v0.11b0
+
+# clean and create fresh venv
 git clean -fdx
 python3 -m venv venv
 source venv/bin/activate
@@ -137,11 +141,12 @@ for setup_file in opentelemetry-*/setup.py; do
     popd
 done
 
-# See what was built
-ls opentelemetry-*/dist/*
+# See what was built and verify
+twine check opentelemetry-*/dist/*
 
 # First, publish to https://test.pypi.org/ to make sure everything goes
-# correctly.
+# correctly. Consult internal docs for populating TWINE_USERNAME and
+# TWINE_PASSWORD environment variables.
 twine upload -r testpypi opentelemetry-*/dist/*
 
 # Go check the packages look correct on test pypi. If all is good, upload to
