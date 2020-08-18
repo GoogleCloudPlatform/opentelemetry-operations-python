@@ -106,7 +106,9 @@ git fetch origin
 # create branch and move stable
 git branch release/0.11b0 v0.11b0
 git tag -d stable
+git push origin :refs/tags/stable
 git tag stable v0.11b0
+git push --tags
 
 # push
 git push --set-upstream origin release/0.11b0 stable
