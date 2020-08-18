@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+## Version 0.12b0
+
+Released 2020-08-17
+
 - Add spankind support for trace exporter
   ([#58](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/58))
-
 
 ## Version 0.11b0
 
