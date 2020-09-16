@@ -17,7 +17,7 @@ import opentelemetry.ext.requests
 import requests
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.propagators import set_global_httptextformat
+from opentelemetry.propagators import set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.tools.cloud_trace_propagator import (
@@ -34,7 +34,7 @@ trace.get_tracer_provider().add_span_processor(
 )
 
 # Using the X-Cloud-Trace-Context header
-set_global_httptextformat(CloudTraceFormatPropagator())
+set_global_textmap(CloudTraceFormatPropagator())
 
 tracer = trace.get_tracer(__name__)
 with tracer.start_as_current_span("client_span"):
