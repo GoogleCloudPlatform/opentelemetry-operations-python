@@ -18,7 +18,7 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import httptextformat
+from opentelemetry.trace.propagation import textmap
 from opentelemetry.trace.span import (
     SpanContext,
     TraceFlags,
@@ -30,7 +30,7 @@ _TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 
 
-class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
+class CloudTraceFormatPropagator(textmap.TextMapPropagator):
     """This class is for injecting into a carrier the SpanContext in Google
     Cloud format, or extracting the SpanContext from a carrier using Google
     Cloud format.
@@ -38,10 +38,8 @@ class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
 
     def extract(
         self,
-        get_from_carrier: httptextformat.Getter[
-            httptextformat.HTTPTextFormatT
-        ],
-        carrier: httptextformat.HTTPTextFormatT,
+        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         header = get_from_carrier(carrier, _TRACE_CONTEXT_HEADER_NAME)
@@ -72,8 +70,8 @@ class CloudTraceFormatPropagator(httptextformat.HTTPTextFormat):
 
     def inject(
         self,
-        set_in_carrier: httptextformat.Setter[httptextformat.HTTPTextFormatT],
-        carrier: httptextformat.HTTPTextFormatT,
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context)

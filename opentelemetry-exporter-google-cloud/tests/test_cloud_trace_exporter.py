@@ -561,7 +561,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_extract_well_formed_resources(self):
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": 123,
                 "host.id": "host",
                 "cloud.zone": "US",
@@ -582,7 +582,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         # This resource doesn't have all the fields required for a gce_instance
         # Specifically its missing "host.id", "cloud.zone", "cloud.account.id"
         resource = Resource(
-            labels={
+            attributes={
                 "gcp.resource_type": "gce_instance",
                 "cloud.provider": "gcp",
             }
@@ -593,7 +593,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_extract_unsupported_gcp_resources(self):
         # Unsupported gcp resources will be ignored
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": "123",
                 "host.id": "host",
                 "extra_info": "extra",
@@ -607,7 +607,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_extract_unsupported_provider_resources(self):
         # Resources with currently unsupported providers will be ignored
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": "123",
                 "host.id": "host",
                 "extra_info": "extra",

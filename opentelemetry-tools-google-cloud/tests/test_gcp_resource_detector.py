@@ -187,7 +187,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         self.assertEqual(
             found_resources,
             Resource(
-                labels={
+                attributes={
                     "host.id": "instance_id",
                     "cloud.provider": "gcp",
                     "cloud.account.id": "project_id",
@@ -204,7 +204,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         self.assertEqual(
             found_resources,
             Resource(
-                labels={
+                attributes={
                     "host.id": "instance_id",
                     "cloud.provider": "gcp",
                     "cloud.account.id": "project_id",
@@ -229,7 +229,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         self.assertEqual(
             found_resources,
             Resource(
-                labels={
+                attributes={
                     "cloud.account.id": "project_id",
                     "k8s.cluster.name": "cluster_name",
                     "k8s.namespace.name": "namespace",
@@ -257,7 +257,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         self.assertEqual(
             found_resources,
             Resource(
-                labels={
+                attributes={
                     "host.id": "instance_id",
                     "cloud.provider": "gcp",
                     "cloud.account.id": "project_id",
