@@ -361,7 +361,7 @@ def _extract_attributes(
     """Convert span.attributes to dict."""
     attributes_dict = BoundedDict(num_attrs_limit)
     invalid_value_dropped_count = 0
-    for key, value in attrs.items():
+    for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
         value = _format_attribute_value(value)
 
