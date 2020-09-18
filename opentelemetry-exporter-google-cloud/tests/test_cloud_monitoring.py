@@ -265,7 +265,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": 123,
                 "host.id": "host",
                 "cloud.zone": "US",
@@ -611,7 +611,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             exporter._get_monitored_resource(Resource.create_empty())
         )
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": 123,
                 "host.id": "host",
                 "cloud.zone": "US",
@@ -630,7 +630,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": "123",
                 "host.id": "host",
                 "extra_info": "extra",
@@ -643,7 +643,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         self.assertRaises(KeyError, exporter._get_monitored_resource, resource)
 
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": "123",
                 "host.id": "host",
                 "extra_info": "extra",
@@ -655,7 +655,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         self.assertIsNone(exporter._get_monitored_resource(resource))
 
         resource = Resource(
-            labels={
+            attributes={
                 "cloud.account.id": "123",
                 "host.id": "host",
                 "extra_info": "extra",

@@ -146,7 +146,7 @@ class CloudTraceSpanExporter(SpanExporter):
                 )
 
             # Span does not support a MonitoredResource object. We put the
-            # information into labels instead.
+            # information into attributes instead.
             resources_and_attrs = _extract_resources(span.resource)
             resources_and_attrs.update(span.attributes)
 
@@ -318,7 +318,7 @@ def _strip_characters(ot_version):
     return "".join(filter(lambda x: x.isdigit() or x == ".", ot_version))
 
 
-OT_RESOURCE_LABEL_TO_GCP = {
+OT_RESOURCE_ATTRIBUTE_TO_GCP = {
     "gce_instance": {
         "host.id": "instance_id",
         "cloud.account.id": "project_id",
@@ -337,17 +337,17 @@ OT_RESOURCE_LABEL_TO_GCP = {
 
 
 def _extract_resources(resource: Resource) -> Dict[str, str]:
-    resource_labels = resource.labels
-    if resource_labels.get("cloud.provider") != "gcp":
+    resource_attributes = resource.attributes
+    if resource_attributes.get("cloud.provider") != "gcp":
         return {}
-    resource_type = resource_labels["gcp.resource_type"]
-    if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
+    resource_type = resource_attributes["gcp.resource_type"]
+    if resource_type not in OT_RESOURCE_ATTRIBUTE_TO_GCP:
         return {}
     return {
         "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
-            resource_labels[ot_resource_key]
+            resource_attributes[ot_resource_key]
         )
-        for ot_resource_key, gcp_resource_key in OT_RESOURCE_LABEL_TO_GCP[
+        for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
             resource_type
         ].items()
     }

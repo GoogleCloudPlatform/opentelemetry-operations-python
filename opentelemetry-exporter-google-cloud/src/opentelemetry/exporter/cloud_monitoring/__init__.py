@@ -101,16 +101,16 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         Args:
             series: ProtoBuf TimeSeries
         """
-        resource_labels = resource.labels
-        if resource_labels.get("cloud.provider") != "gcp":
+        resource_attributes = resource.attributes
+        if resource_attributes.get("cloud.provider") != "gcp":
             return None
-        resource_type = resource_labels["gcp.resource_type"]
+        resource_type = resource_attributes["gcp.resource_type"]
         if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
             return None
         return MonitoredResource(
             type=resource_type,
             labels={
-                gcp_label: str(resource_labels[ot_label])
+                gcp_label: str(resource_attributes[ot_label])
                 for ot_label, gcp_label in OT_RESOURCE_LABEL_TO_GCP[
                     resource_type
                 ].items()
