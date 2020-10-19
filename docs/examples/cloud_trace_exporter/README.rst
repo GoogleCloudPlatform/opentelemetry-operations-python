@@ -26,7 +26,7 @@ To use this exporter you first need to:
     :language: python
     :lines: 1-
 
-* Run a more advanced example that uses features like attributes, events and links
+* Run a more advanced example that uses features like attributes, events, links, and batching
 
 .. literalinclude:: advanced_trace.py
     :language: python
@@ -67,7 +67,7 @@ Try upgrading pip
 
     pip install --upgrade pip
 
-``pip install grcpio`` has been known to hang when you aren't using an upgraded version.
+``pip install grcpio`` may take a long time compiling C extensions when there is no wheel available for your platform, gRPC version, and Python version.
 
 ImportError: No module named opentelemetry
 ##########################################
@@ -82,3 +82,21 @@ returns ``Python 2.X.X`` try calling
 .. code-block:: sh
 
     python3 basic_trace.py
+
+
+Exporting is slow or making the program slow
+############################################
+:class:`opentelemetry.sdk.trace.export.SimpleExportSpanProcessor` will slow
+down your program because it exports spans synchronously, one-by-one as they
+finish, without any batching. It should only be used for testing or
+debugging.
+
+Instead, use :class:`opentelemetry.sdk.trace.export.BatchExportSpanProcessor`
+(with the default parameters) which buffers spans and sends them in batches
+in a background thread.
+
+.. code-block:: python
+
+    trace.get_tracer_provider().add_span_processor(
+        BatchExportSpanProcessor(cloud_trace_exporter)
+    )
