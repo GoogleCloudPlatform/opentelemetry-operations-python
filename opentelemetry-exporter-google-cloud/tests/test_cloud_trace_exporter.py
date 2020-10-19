@@ -42,7 +42,7 @@ from opentelemetry.exporter.google.version import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
-from opentelemetry.sdk.trace.export import Span
+from opentelemetry.sdk.trace import _Span as Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status as SpanStatus
 from opentelemetry.trace.status import StatusCanonicalCode

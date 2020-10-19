@@ -125,7 +125,7 @@ class CloudTraceSpanExporter(SpanExporter):
         cloud_trace_spans = []
 
         for span in spans:
-            ctx = span.get_context()
+            ctx = span.get_span_context()
             trace_id = get_hexadecimal_trace_id(ctx.trace_id)
             span_id = get_hexadecimal_span_id(ctx.span_id)
             span_name = "projects/{}/traces/{}/spans/{}".format(

@@ -75,7 +75,7 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context)
-        span_context = span.get_context()
+        span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 

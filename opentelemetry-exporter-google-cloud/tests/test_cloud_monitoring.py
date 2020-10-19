@@ -140,12 +140,20 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         self.assertIsNone(
             exporter._get_metric_descriptor(
-                MetricRecord(MockMetric(), (), UnsupportedAggregator())
+                MetricRecord(
+                    MockMetric(),
+                    (),
+                    UnsupportedAggregator(),
+                    Resource.create_empty(),
+                )
             )
         )
 
         record = MetricRecord(
-            MockMetric(), (("label1", "value1"),), SumAggregator(),
+            MockMetric(),
+            (("label1", "value1"),),
+            SumAggregator(),
+            Resource.create_empty(),
         )
         metric_descriptor = exporter._get_metric_descriptor(record)
         client.create_metric_descriptor.assert_called_with(
@@ -181,6 +189,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     ("label4", False),
                 ),
                 SumAggregator(),
+                Resource.create_empty(),
             )
         )
         client.create_metric_descriptor.assert_called_with(
@@ -208,7 +217,12 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             project_id=self.project_id, client=client
         )
         exporter.project_name = self.project_name
-        record = MetricRecord(MockMetric(), (), ValueObserverAggregator(),)
+        record = MetricRecord(
+            MockMetric(),
+            (),
+            ValueObserverAggregator(),
+            Resource.create_empty(),
+        )
         exporter._get_metric_descriptor(record)
         client.create_metric_descriptor.assert_called_with(
             self.project_name,
@@ -244,6 +258,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     MockMetric(),
                     (("label1", "value1"),),
                     UnsupportedAggregator(),
+                    Resource.create_empty(),
                 )
             ]
         )
@@ -287,11 +302,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     MockMetric(meter=MockMeter(resource=resource)),
                     (("label1", "value1"), ("label2", 1),),
                     sum_agg_one,
+                    Resource.create_empty(),
                 ),
                 MetricRecord(
                     MockMetric(meter=MockMeter(resource=resource)),
                     (("label1", "value2"), ("label2", 2),),
                     sum_agg_one,
+                    Resource.create_empty(),
                 ),
             ]
         )
@@ -340,11 +357,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     MockMetric(),
                     (("label1", "value1"), ("label2", 1),),
                     sum_agg_two,
+                    Resource.create_empty(),
                 ),
                 MetricRecord(
                     MockMetric(),
                     (("label1", "value2"), ("label2", 2),),
                     sum_agg_two,
+                    Resource.create_empty(),
                 ),
             ]
         )
@@ -358,6 +377,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
                     MockMetric(),
                     (("label1", "changed_label"), ("label2", 2),),
                     sum_agg_two,
+                    Resource.create_empty(),
                 ),
             ]
         )
@@ -410,7 +430,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             WRITE_INTERVAL + 1
         ) * NANOS_PER_SECOND
         exporter.export(
-            [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
+            [
+                MetricRecord(
+                    MockMetric(meter=MockMeter()),
+                    (),
+                    aggregator,
+                    Resource.create_empty(),
+                )
+            ]
         )
 
         series = TimeSeries()
@@ -456,7 +483,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             WRITE_INTERVAL + 1
         ) * NANOS_PER_SECOND
         exporter.export(
-            [MetricRecord(MockMetric(meter=MockMeter()), (), aggregator,)]
+            [
+                MetricRecord(
+                    MockMetric(meter=MockMeter()),
+                    (),
+                    aggregator,
+                    Resource.create_empty(),
+                )
+            ]
         )
 
         series = TimeSeries()
@@ -511,7 +545,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         agg.checkpoint = 1
         agg.last_update_timestamp = (WRITE_INTERVAL + 1) * NANOS_PER_SECOND
 
-        metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
+        metric_record = MetricRecord(
+            MockMetric(stateful=False), (), agg, Resource.create_empty()
+        )
 
         exporter.export([metric_record])
 
@@ -532,7 +568,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * NANOS_PER_SECOND
 
-        metric_record = MetricRecord(MockMetric(stateful=False), (), agg)
+        metric_record = MetricRecord(
+            MockMetric(stateful=False), (), agg, Resource.create_empty()
+        )
 
         exporter.export([metric_record])
 
@@ -585,7 +623,9 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_one = SumAggregator()
         sum_agg_one.update(1)
-        metric_record = MetricRecord(MockMetric(), (), sum_agg_one,)
+        metric_record = MetricRecord(
+            MockMetric(), (), sum_agg_one, Resource.create_empty()
+        )
         exporter1.export([metric_record])
         exporter2.export([metric_record])
 

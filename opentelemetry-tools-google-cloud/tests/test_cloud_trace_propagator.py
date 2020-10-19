@@ -45,7 +45,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         """Test helper"""
         header = {_TRACE_CONTEXT_HEADER_NAME: [header_value]}
         new_context = self.propagator.extract(get_dict_value, header)
-        return trace.get_current_span(new_context).get_context()
+        return trace.get_current_span(new_context).get_span_context()
 
     def _inject(self, span=None):
         """Test helper"""
@@ -60,14 +60,14 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         header = {}
         new_context = self.propagator.extract(get_dict_value, header)
         self.assertEqual(
-            trace.get_current_span(new_context).get_context(),
-            trace.INVALID_SPAN.get_context(),
+            trace.get_current_span(new_context).get_span_context(),
+            trace.INVALID_SPAN.get_span_context(),
         )
 
     def test_empty_context_header(self):
         header = ""
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
     def test_valid_header(self):
@@ -110,77 +110,77 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
     def test_invalid_header_format(self):
         header = "invalid_header"
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o=".format(
             get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "extra_chars/{}/{};o=1".format(
             get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{}extra_chars;o=1".format(
             get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o=1extra_chars".format(
             get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/;o=1".format(
             get_hexadecimal_trace_id(self.valid_trace_id)
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "/{};o=1".format(self.valid_span_id)
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format("123", "34", "4")
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
     def test_invalid_trace_id(self):
         header = "{}/{};o={}".format(INVALID_TRACE_ID, self.valid_span_id, 1)
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
         header = "{}/{};o={}".format("0" * 32, self.valid_span_id, 1)
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "0/{};o={}".format(self.valid_span_id, 1)
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "234/{};o={}".format(self.valid_span_id, 1)
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format(self.too_long_id, self.valid_span_id, 1)
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
     def test_invalid_span_id(self):
@@ -188,28 +188,28 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
             get_hexadecimal_trace_id(self.valid_trace_id), INVALID_SPAN_ID, 1
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format(
             get_hexadecimal_trace_id(self.valid_trace_id), "0" * 16, 1
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format(
             get_hexadecimal_trace_id(self.valid_trace_id), "0", 1
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format(
             get_hexadecimal_trace_id(self.valid_trace_id), self.too_long_id, 1
         )
         self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_context()
+            self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
     def test_inject_with_no_context(self):

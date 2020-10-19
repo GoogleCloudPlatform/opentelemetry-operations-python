@@ -26,6 +26,7 @@ from opentelemetry.exporter.cloud_monitoring import (
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.resources import Resource
 
 from test_common import BaseExporterIntegrationTest
 
@@ -54,7 +55,14 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
         sum_agg.last_update_timestamp = (WRITE_INTERVAL + 2) * NANOS_PER_SECOND
 
         result = exporter.export(
-            [MetricRecord(counter, labels=(), aggregator=sum_agg,)]
+            [
+                MetricRecord(
+                    counter,
+                    labels=(),
+                    aggregator=sum_agg,
+                    resource=Resource.create_empty(),
+                )
+            ]
         )
 
         self.assertEqual(result, MetricsExportResult.SUCCESS)

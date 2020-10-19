@@ -17,7 +17,8 @@ from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.gapic.transports import trace_service_grpc_transport
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace.export import Span, SpanExportResult
+from opentelemetry.sdk.trace import _Span as Span
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import SpanContext, SpanKind
 from opentelemetry.util import time_ns
 
