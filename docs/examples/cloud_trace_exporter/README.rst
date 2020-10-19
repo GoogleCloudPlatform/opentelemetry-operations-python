@@ -67,7 +67,7 @@ Try upgrading pip
 
     pip install --upgrade pip
 
-``pip install grcpio`` may take a long time compiling C extensions when there is no wheel available for your platform, GRPC version, and python version.
+``pip install grcpio`` may take a long time compiling C extensions when there is no wheel available for your platform, gRPC version, and Python version.
 
 ImportError: No module named opentelemetry
 ##########################################
