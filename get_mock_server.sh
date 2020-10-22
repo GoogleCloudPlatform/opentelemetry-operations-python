@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# Use this envvar when testing a local mock_server binary
+if [ "$SKIP_GET_MOCK_SERVER" == "true" ]; then
+  exit
+fi
+
 VERSION=v2-alpha
 BINARY=mock_server-x64-linux-$VERSION
 if ! [ -e $1/$BINARY ]; then
@@ -7,4 +13,3 @@ if ! [ -e $1/$BINARY ]; then
 fi
 
 ln -sf $1/$BINARY $1/mock_server
-

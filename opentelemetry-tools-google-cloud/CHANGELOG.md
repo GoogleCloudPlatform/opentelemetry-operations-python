@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix breakages for opentelemetry-python v0.14b0
+  ([#79](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/79))
+
 ## Version 0.13b0
 
 Released 2020-09-17

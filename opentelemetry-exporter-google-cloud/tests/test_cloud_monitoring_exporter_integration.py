@@ -13,22 +13,24 @@
 # limitations under the License.
 
 
+import logging
+from unittest.mock import MagicMock, patch
+
 import grpc
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.gapic.transports import (
     metric_service_grpc_transport,
 )
 from opentelemetry.exporter.cloud_monitoring import (
-    NANOS_PER_SECOND,
-    WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics.export import MetricRecord, MetricsExportResult
-from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.resources import Resource
 
 from test_common import BaseExporterIntegrationTest
+
+logger = logging.getLogger(__name__)
 
 
 class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
@@ -37,32 +39,44 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
         transport = metric_service_grpc_transport.MetricServiceGrpcTransport(
             channel=channel
         )
+        client = MagicMock(wraps=MetricServiceClient(transport=transport))
         exporter = CloudMonitoringMetricsExporter(
-            self.project_id, client=MetricServiceClient(transport=transport)
+            self.project_id, client=client
         )
 
-        meter = metrics.MeterProvider().get_meter(__name__)
+        meter_provider = metrics.MeterProvider(
+            resource=Resource.create(
+                {
+                    "cloud.account.id": "some_account_id",
+                    "cloud.provider": "gcp",
+                    "cloud.zone": "us-east1-b",
+                    "host.id": 654321,
+                    "gcp.resource_type": "gce_instance",
+                }
+            )
+        )
+        meter = meter_provider.get_meter(__name__)
         counter = meter.create_metric(
-            name="name",
+            # TODO: remove "opentelemetry/" prefix which is a hack
+            # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/84
+            name="opentelemetry/name",
             description="desc",
             unit="1",
             value_type=int,
             metric_type=metrics.Counter,
         )
+        # interval doesn't matter, we don't start the thread and just run
+        # tick() instead
+        controller = PushController(meter, exporter, 10)
 
-        sum_agg = SumAggregator()
-        sum_agg.checkpoint = 1
-        sum_agg.last_update_timestamp = (WRITE_INTERVAL + 2) * NANOS_PER_SECOND
+        counter.add(10, {"env": "test"})
 
-        result = exporter.export(
-            [
-                MetricRecord(
-                    counter,
-                    labels=(),
-                    aggregator=sum_agg,
-                    resource=Resource.create_empty(),
-                )
-            ]
-        )
+        with patch(
+            "opentelemetry.exporter.cloud_monitoring.logger"
+        ) as mock_logger:
+            controller.tick()
 
-        self.assertEqual(result, MetricsExportResult.SUCCESS)
+            # run tox tests with `-- -log-cli-level=0` to see mock calls made
+            logger.debug(client.create_time_series.mock_calls)
+            mock_logger.warning.assert_not_called()
+            mock_logger.error.assert_not_called()

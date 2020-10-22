@@ -15,6 +15,7 @@
 
 import unittest
 from collections import OrderedDict
+from typing import Optional
 from unittest import mock
 
 from google.api.label_pb2 import LabelDescriptor
@@ -28,6 +29,7 @@ from opentelemetry.exporter.cloud_monitoring import (
     WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import MetricRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
     HistogramAggregator,
@@ -46,10 +48,13 @@ class MockBatcher:
         self.stateful = stateful
 
 
-class MockMeter:
-    def __init__(self, resource=Resource.create_empty(), stateful=True):
-        self.resource = resource
-        self.batcher = MockBatcher(stateful)
+def mock_meter(stateful: Optional[bool] = None):
+    # create an autospec of Meter from an instance in order to capture instance
+    # variables (meter.processor)
+    meter = MeterProvider(stateful).get_meter(__name__)
+    meter_mock = mock.create_autospec(meter, spec_set=True)
+    meter_mock.processor.stateful = meter.processor.stateful
+    return meter_mock
 
 
 class MockMetric:
@@ -64,7 +69,7 @@ class MockMetric:
         self.name = name
         self.description = description
         self.value_type = value_type
-        self.meter = meter or MockMeter(stateful=stateful)
+        self.meter = meter or mock_meter(stateful)
 
 
 # pylint: disable=protected-access
@@ -299,16 +304,16 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    MockMetric(meter=MockMeter(resource=resource)),
+                    MockMetric(meter=mock_meter()),
                     (("label1", "value1"), ("label2", 1),),
                     sum_agg_one,
-                    Resource.create_empty(),
+                    resource,
                 ),
                 MetricRecord(
-                    MockMetric(meter=MockMeter(resource=resource)),
+                    MockMetric(meter=mock_meter()),
                     (("label1", "value2"), ("label2", 2),),
                     sum_agg_one,
-                    Resource.create_empty(),
+                    resource,
                 ),
             ]
         )
@@ -318,6 +323,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         series1 = TimeSeries(resource=expected_resource)
+        series1.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
         series1.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         series1.metric.labels["label1"] = "value1"
         series1.metric.labels["label2"] = "1"
@@ -329,6 +335,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         point.interval.start_time.nanos = 0
 
         series2 = TimeSeries(resource=expected_resource)
+        series2.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
         series2.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         series2.metric.labels["label1"] = "value2"
         series2.metric.labels["label2"] = "2"
@@ -382,6 +389,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             ]
         )
         series3 = TimeSeries()
+        series3.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
         series3.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         series3.metric.labels["label1"] = "changed_label"
         series3.metric.labels["label2"] = "2"
@@ -432,7 +440,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    MockMetric(meter=MockMeter()),
+                    MockMetric(meter=mock_meter()),
                     (),
                     aggregator,
                     Resource.create_empty(),
@@ -441,6 +449,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         series = TimeSeries()
+        series.metric_kind = MetricDescriptor.MetricKind.GAUGE
         series.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         point = series.points.add()
         point.value.int64_value = 5
@@ -485,7 +494,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter.export(
             [
                 MetricRecord(
-                    MockMetric(meter=MockMeter()),
+                    MockMetric(meter=mock_meter()),
                     (),
                     aggregator,
                     Resource.create_empty(),
@@ -494,6 +503,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         series = TimeSeries()
+        series.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
         series.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         point = {
             "interval": {

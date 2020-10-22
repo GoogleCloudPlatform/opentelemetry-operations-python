@@ -16,12 +16,28 @@ class BaseExporterIntegrationTest(unittest.TestCase):
         # Start the mock server.
         args = ["mock_server", "-address", self.address]
         self.mock_server_process = subprocess.Popen(
-            args, stderr=subprocess.PIPE
+            args, stderr=subprocess.PIPE, stdout=subprocess.PIPE
         )
         # Block until the mock server starts (it will output the address after starting).
-        if self.mock_server_process.stderr is None:
-            raise RuntimeError("stderr is None")
+        if (
+            self.mock_server_process.stderr is None
+            or self.mock_server_process.stdout is None
+        ):
+            raise RuntimeError("stderr or stdout is None")
         self.mock_server_process.stderr.readline()
 
     def tearDown(self) -> None:
         self.mock_server_process.kill()
+        if (
+            self.mock_server_process.stderr is None
+            or self.mock_server_process.stdout is None
+        ):
+            raise RuntimeError("stderr or stdout is None")
+        stdout = self.mock_server_process.stdout.read().decode()
+        stderr = self.mock_server_process.stderr.read().decode()
+        if stderr or stdout:
+            self.fail(
+                "Mock server should not have had any output, got stdout:\n%s\n\nstderr:\n%s",
+                stdout,
+                stderr,
+            )
