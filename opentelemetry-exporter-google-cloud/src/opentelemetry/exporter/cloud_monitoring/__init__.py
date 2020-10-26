@@ -233,7 +233,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             == MetricDescriptor.MetricKind.CUMULATIVE
         ):
             if (
-                record.instrument.meter.batcher.stateful
+                record.instrument.meter.processor.stateful
                 or updated_key not in self._last_updated
             ):
                 # The aggregation has not reset since the exporter
@@ -279,9 +279,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             if not metric_descriptor:
                 continue
             series = TimeSeries(
-                resource=self._get_monitored_resource(
-                    record.instrument.meter.resource
-                )
+                resource=self._get_monitored_resource(record.resource),
+                # TODO: remove
+                # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/84
+                metric_kind=metric_descriptor.metric_kind,
             )
             series.metric.type = metric_descriptor.type
             for key, value in record.labels:
