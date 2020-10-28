@@ -390,8 +390,7 @@ def _key_predefined(key: str):
     result = f"/{key.replace('.','/')}"
     if result in PREDIFINED_LABELS:
         return result
-    else:
-        return key
+    return key
 
 
 def _extract_attributes(
