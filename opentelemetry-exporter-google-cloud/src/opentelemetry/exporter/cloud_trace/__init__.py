@@ -50,6 +50,7 @@ API
 
 import collections
 import logging
+import re
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
@@ -361,6 +362,39 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
     }
 
 
+PREDIFINED_LABELS = [
+    "/agent",
+    "/component",
+    "/error/message",
+    "/error/name",
+    "/http/client_city",
+    "/http/client_country",
+    "/http/client_protocol",
+    "/http/client_region",
+    "/http/host",
+    "/http/method",
+    "/http/path",
+    "/http/redirected_url",
+    "/http/request/size",
+    "/http/response/size",
+    "/http/route",
+    "/http/status_code",
+    "/http/url",
+    "/http/user_agent",
+    "/pid",
+    "/stacktrace",
+    "/tid",
+]
+
+
+def _key_predefined(key: str):
+    result = f"/{key.replace('.','/')}"
+    if result in PREDIFINED_LABELS:
+        return result
+    else:
+        return key
+
+
 def _extract_attributes(
     attrs: types.Attributes,
     num_attrs_limit: int,
@@ -371,6 +405,7 @@ def _extract_attributes(
     invalid_value_dropped_count = 0
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
+        key = _key_predefined(key)
         value = _format_attribute_value(value)
 
         if value:
