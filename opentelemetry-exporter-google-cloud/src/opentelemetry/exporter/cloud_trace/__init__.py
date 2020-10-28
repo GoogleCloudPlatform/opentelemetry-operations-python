@@ -387,7 +387,7 @@ PREDIFINED_LABELS = [
 
 
 def _key_predefined(key: str):
-    result = f"/{key.replace('.','/')}"
+    result = "/%s" % key.replace(".", "/")
     if result in PREDIFINED_LABELS:
         return result
     return key
