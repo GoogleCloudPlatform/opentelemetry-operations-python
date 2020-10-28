@@ -50,7 +50,6 @@ API
 
 import collections
 import logging
-import re
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
