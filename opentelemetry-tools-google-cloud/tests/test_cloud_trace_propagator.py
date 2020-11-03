@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import typing
 import unittest
 
 import opentelemetry.trace as trace
@@ -21,6 +20,7 @@ from opentelemetry.tools.cloud_trace_propagator import (
     _TRACE_CONTEXT_HEADER_NAME,
     CloudTraceFormatPropagator,
 )
+from opentelemetry.trace.propagation import textmap
 from opentelemetry.trace.span import (
     INVALID_SPAN_ID,
     INVALID_TRACE_ID,
@@ -29,9 +29,10 @@ from opentelemetry.trace.span import (
     get_hexadecimal_trace_id,
 )
 
+# def get_dict_value(dict_object: typing.Dict[str, str], key: str) -> str:
+#     return dict_object.get(key, "")
 
-def get_dict_value(dict_object: typing.Dict[str, str], key: str) -> str:
-    return dict_object.get(key, "")
+get_dict_value = textmap.DictGetter()
 
 
 class TestCloudTraceFormatPropagator(unittest.TestCase):

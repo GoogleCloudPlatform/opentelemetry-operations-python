@@ -105,7 +105,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         if resource_attributes.get("cloud.provider") != "gcp":
             return None
         resource_type = resource_attributes["gcp.resource_type"]
-        if resource_type not in OT_RESOURCE_LABEL_TO_GCP:
+        if (
+            not isinstance(resource_type, str)
+            or resource_type not in OT_RESOURCE_LABEL_TO_GCP
+        ):
             return None
         return MonitoredResource(
             type=resource_type,
