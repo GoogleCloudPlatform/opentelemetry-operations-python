@@ -29,10 +29,7 @@ from opentelemetry.trace.span import (
     get_hexadecimal_trace_id,
 )
 
-# def get_dict_value(dict_object: typing.Dict[str, str], key: str) -> str:
-#     return dict_object.get(key, "")
-
-get_dict_value = textmap.DictGetter()
+dict_getter = textmap.DictGetter()
 
 
 class TestCloudTraceFormatPropagator(unittest.TestCase):
@@ -45,7 +42,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
     def _extract(self, header_value):
         """Test helper"""
         header = {_TRACE_CONTEXT_HEADER_NAME: [header_value]}
-        new_context = self.propagator.extract(get_dict_value, header)
+        new_context = self.propagator.extract(dict_getter, header)
         return trace.get_current_span(new_context).get_span_context()
 
     def _inject(self, span=None):
@@ -59,7 +56,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
 
     def test_no_context_header(self):
         header = {}
-        new_context = self.propagator.extract(get_dict_value, header)
+        new_context = self.propagator.extract(dict_getter, header)
         self.assertEqual(
             trace.get_current_span(new_context).get_span_context(),
             trace.INVALID_SPAN.get_span_context(),
