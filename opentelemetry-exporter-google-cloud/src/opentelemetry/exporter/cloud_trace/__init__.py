@@ -361,36 +361,30 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
     }
 
 
-PREDIFINED_LABELS = [
-    "/agent",
-    "/component",
-    "/error/message",
-    "/error/name",
-    "/http/client_city",
-    "/http/client_country",
-    "/http/client_protocol",
-    "/http/client_region",
-    "/http/host",
-    "/http/method",
-    "/http/path",
-    "/http/redirected_url",
-    "/http/request/size",
-    "/http/response/size",
-    "/http/route",
-    "/http/status_code",
-    "/http/url",
-    "/http/user_agent",
-    "/pid",
-    "/stacktrace",
-    "/tid",
-]
-
-
-def _key_predefined(key: str):
-    result = "/%s" % key.replace(".", "/")
-    if result in PREDIFINED_LABELS:
-        return result
-    return key
+LABELS_MAPPING = {
+    # "agent": "/agent",
+    "component": "/component",
+    "error.message": "/error/message",
+    "error.name": "/error/name",
+    "http.client_city": "/http/client_city",
+    "http.client_country": "/http/client_country",
+    "http.client_protocol": "/http/client_protocol",
+    "http.client_region": "/http/client_region",
+    "http.host": "/http/host",
+    "http.method": "/http/method",
+    "http.path": "/http/path",
+    "http.redirected_url": "/http/redirected_url",
+    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#common-attributes
+    "http.request_content_length": "/http/request/size",
+    "http.response_content_length": "/http/response/size",
+    "http.route": "/http/route",
+    "http.status_code": "/http/status_code",
+    "http.url": "/http/url",
+    "http.user_agent": "/http/user_agent",
+    "pid": "/pid",
+    "stacktrace": "/stacktrace",
+    "tid": "/tid",
+}
 
 
 def _extract_attributes(
@@ -403,7 +397,8 @@ def _extract_attributes(
     invalid_value_dropped_count = 0
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
-        key = _key_predefined(key)
+        if key in LABELS_MAPPING.keys():
+            key = LABELS_MAPPING[key]
         value = _format_attribute_value(value)
 
         if value:
