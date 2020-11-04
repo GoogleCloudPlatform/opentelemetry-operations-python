@@ -38,11 +38,11 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        get_from_carrier: textmap.Getter[textmap.TextMapPropagatorT],
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        header = get_from_carrier(carrier, _TRACE_CONTEXT_HEADER_NAME)
+        header = getter.get(carrier, _TRACE_CONTEXT_HEADER_NAME)
 
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)

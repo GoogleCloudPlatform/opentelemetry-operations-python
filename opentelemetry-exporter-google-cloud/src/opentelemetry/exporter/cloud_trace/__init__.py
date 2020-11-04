@@ -173,8 +173,8 @@ class CloudTraceSpanExporter(SpanExporter):
                         MAX_SPAN_ATTRS,
                         add_agent_attr=True,
                     ),
-                    "links": _extract_links(span.links),
-                    "status": _extract_status(span.status),
+                    "links": _extract_links(span.links),  # type: ignore[has-type]
+                    "status": _extract_status(span.status),  # type: ignore[arg-type]
                     "time_events": _extract_events(span.events),
                     "span_kind": _extract_span_kind(span.kind),
                 }
@@ -220,7 +220,7 @@ def _extract_status(status: trace_api.Status) -> Optional[Status]:
     """Convert a Status object to protobuf object."""
     if not status:
         return None
-    status_dict = {"details": None, "code": status.canonical_code.value}
+    status_dict = {"details": None, "code": status.status_code.value}
 
     if status.description is not None:
         status_dict["message"] = status.description
@@ -279,7 +279,7 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
         dropped_annontations = len(events) - MAX_NUM_EVENTS
         events = events[:MAX_NUM_EVENTS]
     for event in events:
-        if len(event.attributes) > MAX_EVENT_ATTRS:
+        if event.attributes and len(event.attributes) > MAX_EVENT_ATTRS:
             logger.warning(
                 "Event %s has more then %s attributes, some will be truncated",
                 event.name,
@@ -349,7 +349,10 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
     if resource_attributes.get("cloud.provider") != "gcp":
         return {}
     resource_type = resource_attributes["gcp.resource_type"]
-    if resource_type not in OT_RESOURCE_ATTRIBUTE_TO_GCP:
+    if (
+        not isinstance(resource_type, str)
+        or resource_type not in OT_RESOURCE_ATTRIBUTE_TO_GCP
+    ):
         return {}
     return {
         "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
