@@ -56,14 +56,13 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
             )
         )
         meter = meter_provider.get_meter(__name__)
-        counter = meter.create_metric(
+        counter = meter.create_counter(
             # TODO: remove "opentelemetry/" prefix which is a hack
             # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/84
             name="opentelemetry/name",
             description="desc",
             unit="1",
             value_type=int,
-            metric_type=metrics.Counter,
         )
         # interval doesn't matter, we don't start the thread and just run
         # tick() instead

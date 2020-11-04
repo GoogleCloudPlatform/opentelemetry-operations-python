@@ -45,7 +45,7 @@ from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace import _Span as Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
 from opentelemetry.trace.status import Status as SpanStatus
-from opentelemetry.trace.status import StatusCanonicalCode
+from opentelemetry.trace.status import StatusCode
 
 
 # pylint: disable=too-many-public-methods
@@ -159,7 +159,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 }
             ),
             "links": None,
-            "status": None,
+            "status": Status(code=StatusCode.UNSET.value),
             "time_events": None,
             "start_time": None,
             "end_time": None,
@@ -183,19 +183,20 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_extract_status_code(self):
         self.assertEqual(
-            _extract_status(SpanStatus(canonical_code=StatusCanonicalCode.OK)),
-            Status(details=None, code=0),
+            _extract_status(SpanStatus(status_code=StatusCode.OK)),
+            Status(details=None, code=StatusCode.OK.value),
         )
 
     def test_extract_status_code_and_desc(self):
         self.assertEqual(
             _extract_status(
                 SpanStatus(
-                    canonical_code=StatusCanonicalCode.UNKNOWN,
-                    description="error_desc",
+                    status_code=StatusCode.UNSET, description="error_desc",
                 )
             ),
-            Status(details=None, code=2, message="error_desc"),
+            Status(
+                details=None, code=StatusCode.UNSET.value, message="error_desc"
+            ),
         )
 
     def test_extract_empty_attributes(self):
