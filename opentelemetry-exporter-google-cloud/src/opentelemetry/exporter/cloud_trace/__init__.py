@@ -365,8 +365,10 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
 
 
 LABELS_MAPPING = {
-    "error.message": "/error/message",
-    "error.name": "/error/name",
+    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/exceptions.md#attributes
+    "exception.message": "/error/message",
+    "exception.type": "/error/name",
+    "exception.stacktrace": "/stacktrace",
     # this one might be http.flavor? I'm not sure
     "http.scheme": "/http/client_protocol",
     "http.host": "/http/host",
@@ -378,8 +380,8 @@ LABELS_MAPPING = {
     "http.status_code": "/http/status_code",
     "http.url": "/http/url",
     "http.user_agent": "/http/user_agent",
-    "pid": "/pid",
-    "stacktrace": "/stacktrace",
+    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/process.md#process
+    "process.pid": "/pid",
 }
 
 
