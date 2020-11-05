@@ -84,6 +84,76 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 "int_key": AttributeValue(int_value=123),
             }
         )
+        cls.attributes_labels_mapping = {
+            "exception.message": "exception message",
+            "exception.type": "ValueError",
+            "exception.stacktrace": "exception stacktrace",
+            "http.scheme": "http",
+            "http.host": "172.19.0.4:8000",
+            "http.method": "POST",
+            "http.request_content_length": 321,
+            "http.response_content_length": 123,
+            "http.route": "/fuzzy/search",
+            "http.status_code": 200,
+            "http.url": "http://172.19.0.4:8000/fuzzy/search",
+            "http.user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+            "process.pid": 1111,
+        }
+        cls.extracted_attributes_labels_mapping = ProtoSpan.Attributes(
+            attribute_map={
+                "/error/message": AttributeValue(
+                    string_value=TruncatableString(
+                        value="exception message", truncated_byte_count=0
+                    )
+                ),
+                "/error/name": AttributeValue(
+                    string_value=TruncatableString(
+                        value="ValueError", truncated_byte_count=0
+                    )
+                ),
+                "/stacktrace": AttributeValue(
+                    string_value=TruncatableString(
+                        value="exception stacktrace", truncated_byte_count=0
+                    )
+                ),
+                "/http/client_protocol": AttributeValue(
+                    string_value=TruncatableString(
+                        value="http", truncated_byte_count=0
+                    )
+                ),
+                "/http/host": AttributeValue(
+                    string_value=TruncatableString(
+                        value="172.19.0.4:8000", truncated_byte_count=0
+                    )
+                ),
+                "/http/method": AttributeValue(
+                    string_value=TruncatableString(
+                        value="POST", truncated_byte_count=0
+                    )
+                ),
+                "/http/request/size": AttributeValue(int_value=321),
+                "/http/response/size": AttributeValue(int_value=123),
+                "/http/route": AttributeValue(
+                    string_value=TruncatableString(
+                        value="/fuzzy/search", truncated_byte_count=0
+                    )
+                ),
+                "/http/status_code": AttributeValue(int_value=200),
+                "/http/url": AttributeValue(
+                    string_value=TruncatableString(
+                        value="http://172.19.0.4:8000/fuzzy/search",
+                        truncated_byte_count=0,
+                    )
+                ),
+                "/http/user_agent": AttributeValue(
+                    string_value=TruncatableString(
+                        value="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+                        truncated_byte_count=0,
+                    )
+                ),
+                "/pid": AttributeValue(int_value=1111),
+            }
+        )
         cls.agent_code = _format_attribute_value(
             "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
                 _strip_characters(
@@ -211,6 +281,14 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 self.attributes_variety_pack, num_attrs_limit=4
             ),
             self.extracted_attributes_variety_pack,
+        )
+
+    def test_extract_label_mapping_attributes(self):
+        self.assertEqual(
+            _extract_attributes(
+                self.attributes_labels_mapping, num_attrs_limit=13
+            ),
+            self.extracted_attributes_labels_mapping,
         )
 
     def test_ignore_invalid_attributes(self):
@@ -559,41 +637,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_extract_empty_resources(self):
         self.assertEqual(_extract_resources(Resource.create_empty()), {})
-
-    def test_extract_labels_mapping(self):
-        resource = Resource(
-            attributes={
-                "exception.message": "exception message",
-                "exception.type": "ValueError",
-                "exception.stacktrace": "exception stacktrace",
-                "http.scheme": "http",
-                "http.host": "172.19.0.4:8000",
-                "http.method": "POST",
-                "http.request_content_length": 321,
-                "http.response_content_length": 123,
-                "http.route": "/fuzzy/search",
-                "http.status_code": 200,
-                "http.url": "http://172.19.0.4:8000/fuzzy/search",
-                "http.user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
-                "process.pid": 1111,
-            }
-        )
-        expected_extract = {
-            "/error/message": "exception message",
-            "/error/name": "ValueError",
-            "/stacktrace": "exception stacktrace",
-            "/http/client_protocol": "http",
-            "/http/host": "172.19.0.4:8000",
-            "/http/method": "POST",
-            "/http/request/size": "321",
-            "/http/response/size": "123",
-            "/http/route": "/fuzzy/search",
-            "/http/status_code": "200",
-            "/http/url": "http://172.19.0.4:8000/fuzzy/search",
-            "/http/user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
-            "/pid": "1111",
-        }
-        self.assertEqual(_extract_resources(resource), expected_extract)
 
     def test_extract_well_formed_resources(self):
         resource = Resource(
