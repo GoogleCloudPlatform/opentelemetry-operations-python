@@ -365,7 +365,6 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
 
 
 LABELS_MAPPING = {
-    # "agent": "/agent",
     "error.message": "/error/message",
     "error.name": "/error/name",
     "http.client_city": "/http/client_city",
