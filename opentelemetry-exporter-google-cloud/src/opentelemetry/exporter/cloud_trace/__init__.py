@@ -367,14 +367,10 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
 LABELS_MAPPING = {
     "error.message": "/error/message",
     "error.name": "/error/name",
-    "http.client_city": "/http/client_city",
-    "http.client_country": "/http/client_country",
-    "http.client_protocol": "/http/client_protocol",
-    "http.client_region": "/http/client_region",
+    # this one might be http.flavor? I'm not sure
+    "http.scheme": "/http/client_protocol",
     "http.host": "/http/host",
     "http.method": "/http/method",
-    "http.path": "/http/path",
-    "http.redirected_url": "/http/redirected_url",
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#common-attributes
     "http.request_content_length": "/http/request/size",
     "http.response_content_length": "/http/response/size",
