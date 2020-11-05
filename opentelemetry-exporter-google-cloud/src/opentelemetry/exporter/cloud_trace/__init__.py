@@ -380,7 +380,6 @@ LABELS_MAPPING = {
     "http.user_agent": "/http/user_agent",
     "pid": "/pid",
     "stacktrace": "/stacktrace",
-    "tid": "/tid",
 }
 
 
