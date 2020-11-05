@@ -560,6 +560,41 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_extract_empty_resources(self):
         self.assertEqual(_extract_resources(Resource.create_empty()), {})
 
+    def test_extract_labels_mapping(self):
+        resource = Resource(
+            attributes={
+                "exception.message": "exception message",
+                "exception.type": "ValueError",
+                "exception.stacktrace": "exception stacktrace",
+                "http.scheme": "http",
+                "http.host": "172.19.0.4:8000",
+                "http.method": "POST",
+                "http.request_content_length": 321,
+                "http.response_content_length": 123,
+                "http.route": "/fuzzy/search",
+                "http.status_code": 200,
+                "http.url": "http://172.19.0.4:8000/fuzzy/search",
+                "http.user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+                "process.pid": 1111,
+            }
+        )
+        expected_extract = {
+            "/error/message": "exception message",
+            "/error/name": "ValueError",
+            "/stacktrace": "exception stacktrace",
+            "/http/client_protocol": "http",
+            "/http/host": "172.19.0.4:8000",
+            "/http/method": "POST",
+            "/http/request/size": "321",
+            "/http/response/size": "123",
+            "/http/route": "/fuzzy/search",
+            "/http/status_code": "200",
+            "/http/url": "http://172.19.0.4:8000/fuzzy/search",
+            "/http/user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+            "/pid": "1111",
+        }
+        self.assertEqual(_extract_resources(resource), expected_extract)
+
     def test_extract_well_formed_resources(self):
         resource = Resource(
             attributes={
