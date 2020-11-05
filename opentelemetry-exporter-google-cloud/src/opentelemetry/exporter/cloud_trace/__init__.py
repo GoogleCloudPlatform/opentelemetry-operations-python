@@ -394,7 +394,7 @@ def _extract_attributes(
     invalid_value_dropped_count = 0
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
-        if key in LABELS_MAPPING.keys():
+        if key in LABELS_MAPPING:
             key = LABELS_MAPPING[key]
         value = _format_attribute_value(value)
 
