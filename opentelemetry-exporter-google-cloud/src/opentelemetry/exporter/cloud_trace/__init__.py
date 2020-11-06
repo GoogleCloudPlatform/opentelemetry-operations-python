@@ -389,7 +389,7 @@ def _extract_attributes(
     invalid_value_dropped_count = 0
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
-        if key in LABELS_MAPPING:
+        if key in LABELS_MAPPING:  # pylint: disable=consider-using-get
             key = LABELS_MAPPING[key]
         value = _format_attribute_value(value)
 
