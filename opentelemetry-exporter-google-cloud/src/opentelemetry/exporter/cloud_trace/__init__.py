@@ -364,6 +364,21 @@ def _extract_resources(resource: Resource) -> Dict[str, str]:
     }
 
 
+LABELS_MAPPING = {
+    # this one might be http.flavor? I'm not sure
+    "http.scheme": "/http/client_protocol",
+    "http.host": "/http/host",
+    "http.method": "/http/method",
+    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#common-attributes
+    "http.request_content_length": "/http/request/size",
+    "http.response_content_length": "/http/response/size",
+    "http.route": "/http/route",
+    "http.status_code": "/http/status_code",
+    "http.url": "/http/url",
+    "http.user_agent": "/http/user_agent",
+}
+
+
 def _extract_attributes(
     attrs: types.Attributes,
     num_attrs_limit: int,
@@ -374,6 +389,8 @@ def _extract_attributes(
     invalid_value_dropped_count = 0
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
+        if key in LABELS_MAPPING:  # pylint: disable=consider-using-get
+            key = LABELS_MAPPING[key]
         value = _format_attribute_value(value)
 
         if value:

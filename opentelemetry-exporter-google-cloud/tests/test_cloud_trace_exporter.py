@@ -213,6 +213,62 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             self.extracted_attributes_variety_pack,
         )
 
+    def test_extract_label_mapping_attributes(self):
+        attributes_labels_mapping = {
+            "http.scheme": "http",
+            "http.host": "172.19.0.4:8000",
+            "http.method": "POST",
+            "http.request_content_length": 321,
+            "http.response_content_length": 123,
+            "http.route": "/fuzzy/search",
+            "http.status_code": 200,
+            "http.url": "http://172.19.0.4:8000/fuzzy/search",
+            "http.user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+        }
+        extracted_attributes_labels_mapping = ProtoSpan.Attributes(
+            attribute_map={
+                "/http/client_protocol": AttributeValue(
+                    string_value=TruncatableString(
+                        value="http", truncated_byte_count=0
+                    )
+                ),
+                "/http/host": AttributeValue(
+                    string_value=TruncatableString(
+                        value="172.19.0.4:8000", truncated_byte_count=0
+                    )
+                ),
+                "/http/method": AttributeValue(
+                    string_value=TruncatableString(
+                        value="POST", truncated_byte_count=0
+                    )
+                ),
+                "/http/request/size": AttributeValue(int_value=321),
+                "/http/response/size": AttributeValue(int_value=123),
+                "/http/route": AttributeValue(
+                    string_value=TruncatableString(
+                        value="/fuzzy/search", truncated_byte_count=0
+                    )
+                ),
+                "/http/status_code": AttributeValue(int_value=200),
+                "/http/url": AttributeValue(
+                    string_value=TruncatableString(
+                        value="http://172.19.0.4:8000/fuzzy/search",
+                        truncated_byte_count=0,
+                    )
+                ),
+                "/http/user_agent": AttributeValue(
+                    string_value=TruncatableString(
+                        value="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+                        truncated_byte_count=0,
+                    )
+                ),
+            }
+        )
+        self.assertEqual(
+            _extract_attributes(attributes_labels_mapping, num_attrs_limit=9),
+            extracted_attributes_labels_mapping,
+        )
+
     def test_ignore_invalid_attributes(self):
         self.assertEqual(
             _extract_attributes(
