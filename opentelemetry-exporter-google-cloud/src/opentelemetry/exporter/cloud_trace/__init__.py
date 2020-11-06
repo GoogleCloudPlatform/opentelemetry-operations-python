@@ -376,8 +376,6 @@ LABELS_MAPPING = {
     "http.status_code": "/http/status_code",
     "http.url": "/http/url",
     "http.user_agent": "/http/user_agent",
-    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/process.md#process
-    "process.pid": "/pid",
 }
 
 

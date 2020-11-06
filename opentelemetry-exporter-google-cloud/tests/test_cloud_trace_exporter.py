@@ -94,7 +94,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "http.status_code": 200,
             "http.url": "http://172.19.0.4:8000/fuzzy/search",
             "http.user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
-            "process.pid": 1111,
         }
         cls.extracted_attributes_labels_mapping = ProtoSpan.Attributes(
             attribute_map={
@@ -133,7 +132,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         truncated_byte_count=0,
                     )
                 ),
-                "/pid": AttributeValue(int_value=1111),
             }
         )
         cls.agent_code = _format_attribute_value(
