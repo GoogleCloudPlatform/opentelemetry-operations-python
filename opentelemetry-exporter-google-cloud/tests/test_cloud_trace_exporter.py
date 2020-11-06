@@ -85,9 +85,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             }
         )
         cls.attributes_labels_mapping = {
-            "exception.message": "exception message",
-            "exception.type": "ValueError",
-            "exception.stacktrace": "exception stacktrace",
             "http.scheme": "http",
             "http.host": "172.19.0.4:8000",
             "http.method": "POST",
@@ -101,21 +98,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         }
         cls.extracted_attributes_labels_mapping = ProtoSpan.Attributes(
             attribute_map={
-                "/error/message": AttributeValue(
-                    string_value=TruncatableString(
-                        value="exception message", truncated_byte_count=0
-                    )
-                ),
-                "/error/name": AttributeValue(
-                    string_value=TruncatableString(
-                        value="ValueError", truncated_byte_count=0
-                    )
-                ),
-                "/stacktrace": AttributeValue(
-                    string_value=TruncatableString(
-                        value="exception stacktrace", truncated_byte_count=0
-                    )
-                ),
                 "/http/client_protocol": AttributeValue(
                     string_value=TruncatableString(
                         value="http", truncated_byte_count=0
