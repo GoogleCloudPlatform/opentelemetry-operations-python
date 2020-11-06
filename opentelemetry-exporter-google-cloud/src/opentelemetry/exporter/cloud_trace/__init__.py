@@ -390,7 +390,7 @@ def _extract_attributes(
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
         if key in LABELS_MAPPING:
-            key = LABELS_MAPPING.get(key, key)
+            key = LABELS_MAPPING[key]
         value = _format_attribute_value(value)
 
         if value:
