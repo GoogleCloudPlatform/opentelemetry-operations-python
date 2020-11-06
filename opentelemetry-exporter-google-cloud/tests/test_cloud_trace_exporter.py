@@ -84,7 +84,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 "int_key": AttributeValue(int_value=123),
             }
         )
-
         cls.agent_code = _format_attribute_value(
             "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
                 _strip_characters(
