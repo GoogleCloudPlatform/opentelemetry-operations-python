@@ -265,9 +265,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             }
         )
         self.assertEqual(
-            _extract_attributes(
-                attributes_labels_mapping, num_attrs_limit=9
-            ),
+            _extract_attributes(attributes_labels_mapping, num_attrs_limit=9),
             extracted_attributes_labels_mapping,
         )
 
