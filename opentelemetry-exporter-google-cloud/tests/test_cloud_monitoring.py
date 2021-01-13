@@ -30,7 +30,7 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import MetricRecord
+from opentelemetry.sdk.metrics.export import ExportRecord
 from opentelemetry.sdk.metrics.export.aggregate import (
     HistogramAggregator,
     SumAggregator,
@@ -145,7 +145,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         self.assertIsNone(
             exporter._get_metric_descriptor(
-                MetricRecord(
+                ExportRecord(
                     MockMetric(),
                     (),
                     UnsupportedAggregator(),
@@ -154,7 +154,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             )
         )
 
-        record = MetricRecord(
+        record = ExportRecord(
             MockMetric(),
             (("label1", "value1"),),
             SumAggregator(),
@@ -185,7 +185,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         # Drop labels with values that aren't string, int or bool
         exporter._get_metric_descriptor(
-            MetricRecord(
+            ExportRecord(
                 MockMetric(name="name2", value_type=float),
                 (
                     ("label1", "value1"),
@@ -222,7 +222,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             project_id=self.project_id, client=client
         )
         exporter.project_name = self.project_name
-        record = MetricRecord(
+        record = ExportRecord(
             MockMetric(),
             (),
             ValueObserverAggregator(),
@@ -259,7 +259,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         exporter.export(
             [
-                MetricRecord(
+                ExportRecord(
                     MockMetric(),
                     (("label1", "value1"),),
                     UnsupportedAggregator(),
@@ -303,13 +303,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         ) * NANOS_PER_SECOND
         exporter.export(
             [
-                MetricRecord(
+                ExportRecord(
                     MockMetric(meter=mock_meter()),
                     (("label1", "value1"), ("label2", 1),),
                     sum_agg_one,
                     resource,
                 ),
-                MetricRecord(
+                ExportRecord(
                     MockMetric(meter=mock_meter()),
                     (("label1", "value2"), ("label2", 2),),
                     sum_agg_one,
@@ -360,13 +360,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         ) * NANOS_PER_SECOND
         exporter.export(
             [
-                MetricRecord(
+                ExportRecord(
                     MockMetric(),
                     (("label1", "value1"), ("label2", 1),),
                     sum_agg_two,
                     Resource.create_empty(),
                 ),
-                MetricRecord(
+                ExportRecord(
                     MockMetric(),
                     (("label1", "value2"), ("label2", 2),),
                     sum_agg_two,
@@ -380,7 +380,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         sum_agg_two.checkpoint = 2
         exporter.export(
             [
-                MetricRecord(
+                ExportRecord(
                     MockMetric(),
                     (("label1", "changed_label"), ("label2", 2),),
                     sum_agg_two,
@@ -439,7 +439,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         ) * NANOS_PER_SECOND
         exporter.export(
             [
-                MetricRecord(
+                ExportRecord(
                     MockMetric(meter=mock_meter()),
                     (),
                     aggregator,
@@ -493,7 +493,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         ) * NANOS_PER_SECOND
         exporter.export(
             [
-                MetricRecord(
+                ExportRecord(
                     MockMetric(meter=mock_meter()),
                     (),
                     aggregator,
@@ -555,7 +555,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         agg.checkpoint = 1
         agg.last_update_timestamp = (WRITE_INTERVAL + 1) * NANOS_PER_SECOND
 
-        metric_record = MetricRecord(
+        metric_record = ExportRecord(
             MockMetric(stateful=False), (), agg, Resource.create_empty()
         )
 
@@ -578,7 +578,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * NANOS_PER_SECOND
 
-        metric_record = MetricRecord(
+        metric_record = ExportRecord(
             MockMetric(stateful=False), (), agg, Resource.create_empty()
         )
 
@@ -633,7 +633,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         sum_agg_one = SumAggregator()
         sum_agg_one.update(1)
-        metric_record = MetricRecord(
+        metric_record = ExportRecord(
             MockMetric(), (), sum_agg_one, Resource.create_empty()
         )
         exporter1.export([metric_record])

@@ -11,7 +11,7 @@ from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 from opentelemetry.sdk.metrics import UpDownCounter
 from opentelemetry.sdk.metrics.export import (
-    MetricRecord,
+    ExportRecord,
     MetricsExporter,
     MetricsExportResult,
 )
@@ -135,7 +135,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             write_ind += MAX_BATCH_WRITE
 
     def _get_metric_descriptor(
-        self, record: MetricRecord
+        self, record: ExportRecord
     ) -> Optional[MetricDescriptor]:
         """ We can map Metric to MetricDescriptor using Metric.name or
         MetricDescriptor.type. We create the MetricDescriptor if it doesn't
@@ -273,10 +273,10 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         }
 
     def export(
-        self, metric_records: Sequence[MetricRecord]
+        self, export_records: Sequence[ExportRecord]
     ) -> "MetricsExportResult":
         all_series = []
-        for record in metric_records:
+        for record in export_records:
             instrument = record.instrument
             metric_descriptor = self._get_metric_descriptor(record)
             if not metric_descriptor:
