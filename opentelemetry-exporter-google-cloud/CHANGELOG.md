@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b1
+
+Released 2021-01-14
+
 - Add mapping between opentelemetry and google traces attributes
   ([#90](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/90))
 
