@@ -220,7 +220,10 @@ def _extract_status(status: trace_api.Status) -> Optional[Status]:
     """Convert a Status object to protobuf object."""
     if not status:
         return None
-    status_dict = {"details": None, "code": status.status_code.value}
+    status_dict = {
+        "details": None,
+        "code": status.status_code.value,
+    }  # type: Dict[str, Any]
 
     if status.description is not None:
         status_dict["message"] = status.description
