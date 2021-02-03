@@ -28,6 +28,7 @@ from opentelemetry.trace.span import (
 _TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
 _TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)"
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
+_FIELDS = {_TRACE_CONTEXT_HEADER_NAME}
 
 
 class CloudTraceFormatPropagator(textmap.TextMapPropagator):
@@ -85,3 +86,7 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
             int(span_context.trace_flags.sampled),
         )
         set_in_carrier(carrier, _TRACE_CONTEXT_HEADER_NAME, header)
+
+    @property
+    def fields(self) -> typing.Set[str]:
+        return _FIELDS
