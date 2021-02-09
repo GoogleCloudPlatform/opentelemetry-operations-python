@@ -1,4 +1,4 @@
-# Copyright OpenTelemetry Authors
+# Copyright 2021 OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -388,7 +388,9 @@ def _extract_attributes(
     add_agent_attr: bool = False,
 ) -> ProtoSpan.Attributes:
     """Convert span.attributes to dict."""
-    attributes_dict = BoundedDict(num_attrs_limit)
+    attributes_dict = BoundedDict(
+        num_attrs_limit
+    )  # type: BoundedDict[str, AttributeValue]
     invalid_value_dropped_count = 0
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
@@ -411,7 +413,7 @@ def _extract_attributes(
         )
     return ProtoSpan.Attributes(
         attribute_map=attributes_dict,
-        dropped_attributes_count=attributes_dict.dropped
+        dropped_attributes_count=attributes_dict.dropped  # type: ignore[attr-defined]
         + invalid_value_dropped_count,
     )
 
