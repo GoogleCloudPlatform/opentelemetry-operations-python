@@ -31,7 +31,7 @@ requests_counter = meter.create_counter(
     name="request_counter",
     description="number of requests",
     unit="1",
-    value_type=int
+    value_type=int,
 )
 
 staging_labels = {"environment": "staging"}
