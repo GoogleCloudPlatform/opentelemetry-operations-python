@@ -27,12 +27,11 @@ metrics.get_meter_provider().start_pipeline(
     meter, CloudMonitoringMetricsExporter(), 5
 )
 
-requests_counter = meter.create_metric(
+requests_counter = meter.create_counter(
     name="request_counter",
     description="number of requests",
     unit="1",
     value_type=int,
-    metric_type=Counter,
 )
 
 staging_labels = {"environment": "staging"}

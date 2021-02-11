@@ -69,13 +69,11 @@ Metrics
         meter, CloudMonitoringMetricsExporter(), 5
     )
 
-    requests_counter = meter.create_metric(
+    requests_counter = meter.create_counter(
         name="request_counter",
         description="number of requests",
         unit="1",
-        value_type=int,
-        metric_type=Counter,
-        label_keys=("environment"),
+        value_type=int
     )
 
     staging_labels = {"environment": "staging"}
