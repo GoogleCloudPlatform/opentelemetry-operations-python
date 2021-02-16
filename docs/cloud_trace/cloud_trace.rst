@@ -1,8 +1,8 @@
 OpenTelemetry Cloud Trace Exporter
 ==================================
 
-.. image:: https://badge.fury.io/py/opentelemetry-exporter-google-cloud.svg
-    :target: https://badge.fury.io/py/opentelemetry-exporter-google-cloud
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace
 
 .. automodule:: opentelemetry.exporter.cloud_trace
     :members:
