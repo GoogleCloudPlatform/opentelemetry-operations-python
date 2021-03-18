@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Handle mixed case cloud propagator headers
+  ([#112](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/112))
+
 ## Version 0.17b0
 
 Released 2021-02-04
