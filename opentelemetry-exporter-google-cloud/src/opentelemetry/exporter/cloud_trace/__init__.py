@@ -56,11 +56,9 @@ import google.auth
 import opentelemetry.trace as trace_api
 import pkg_resources
 from google.cloud.trace_v2 import TraceServiceClient
-from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
-from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
-from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
+from google.cloud.trace_v2.proto import trace_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
-from google.rpc.status_pb2 import Status
+from google.rpc import code_pb2, status_pb2
 from opentelemetry.exporter.google.version import (
     __version__ as google_ext_version,
 )
@@ -72,6 +70,7 @@ from opentelemetry.trace.span import (
     get_hexadecimal_span_id,
     get_hexadecimal_trace_id,
 )
+from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
@@ -204,7 +203,7 @@ def _get_truncatable_str_object(str_to_convert: str, max_length: int):
     truncated bytes count."""
     truncated, truncated_byte_count = _truncate_str(str_to_convert, max_length)
 
-    return TruncatableString(
+    return trace_pb2.TruncatableString(
         value=truncated, truncated_byte_count=truncated_byte_count
     )
 
@@ -216,22 +215,30 @@ def _truncate_str(str_to_check: str, limit: int) -> Tuple[str, int]:
     return truncated_str, len(encoded) - len(truncated_str.encode("utf-8"))
 
 
-def _extract_status(status: trace_api.Status) -> Optional[Status]:
-    """Convert a Status object to protobuf object."""
-    if not status:
-        return None
-    status_dict = {
-        "details": None,
-        "code": status.status_code.value,
-    }  # type: Dict[str, Any]
+def _extract_status(status: trace_api.Status) -> Optional[status_pb2.Status]:
+    """Convert a OTel Status to protobuf Status."""
+    if status.status_code is StatusCode.UNSET:
+        status_proto = None
+    elif status.status_code is StatusCode.OK:
+        status_proto = status_pb2.Status(code=code_pb2.OK)
+    elif status.status_code is StatusCode.ERROR:
+        status_proto = status_pb2.Status(
+            code=code_pb2.UNKNOWN, message=status.description
+        )
+    # future added value
+    else:
+        logger.info(
+            "Couldn't handle OTel status code %s, assuming error",
+            status.status_code,
+        )
+        status_proto = status_pb2.Status(
+            code=code_pb2.UNKNOWN, message=status.description
+        )
 
-    if status.description is not None:
-        status_dict["message"] = status.description
-
-    return Status(**status_dict)
+    return status_proto
 
 
-def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
+def _extract_links(links: Sequence[trace_api.Link]) -> trace_pb2.Span.Links:
     """Convert span.links"""
     if not links:
         return None
@@ -263,12 +270,12 @@ def _extract_links(links: Sequence[trace_api.Link]) -> ProtoSpan.Links:
                 ),
             }
         )
-    return ProtoSpan.Links(
+    return trace_pb2.Span.Links(
         link=extracted_links, dropped_links_count=dropped_links
     )
 
 
-def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
+def _extract_events(events: Sequence[Event]) -> trace_pb2.Span.TimeEvents:
     """Convert span.events to dict."""
     if not events:
         return None
@@ -301,7 +308,7 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
                 },
             }
         )
-    return ProtoSpan.TimeEvents(
+    return trace_pb2.Span.TimeEvents(
         time_event=logs,
         dropped_annotations_count=dropped_annontations,
         dropped_message_events_count=0,
@@ -310,18 +317,20 @@ def _extract_events(events: Sequence[Event]) -> ProtoSpan.TimeEvents:
 
 # pylint: disable=no-member
 SPAN_KIND_MAPPING = {
-    trace_api.SpanKind.INTERNAL: ProtoSpan.SpanKind.INTERNAL,
-    trace_api.SpanKind.CLIENT: ProtoSpan.SpanKind.CLIENT,
-    trace_api.SpanKind.SERVER: ProtoSpan.SpanKind.SERVER,
-    trace_api.SpanKind.PRODUCER: ProtoSpan.SpanKind.PRODUCER,
-    trace_api.SpanKind.CONSUMER: ProtoSpan.SpanKind.CONSUMER,
+    trace_api.SpanKind.INTERNAL: trace_pb2.Span.SpanKind.INTERNAL,
+    trace_api.SpanKind.CLIENT: trace_pb2.Span.SpanKind.CLIENT,
+    trace_api.SpanKind.SERVER: trace_pb2.Span.SpanKind.SERVER,
+    trace_api.SpanKind.PRODUCER: trace_pb2.Span.SpanKind.PRODUCER,
+    trace_api.SpanKind.CONSUMER: trace_pb2.Span.SpanKind.CONSUMER,
 }
 
 
 # pylint: disable=no-member
-def _extract_span_kind(span_kind: trace_api.SpanKind) -> ProtoSpan.SpanKind:
+def _extract_span_kind(
+    span_kind: trace_api.SpanKind,
+) -> trace_pb2.Span.SpanKind:
     return SPAN_KIND_MAPPING.get(
-        span_kind, ProtoSpan.SpanKind.SPAN_KIND_UNSPECIFIED
+        span_kind, trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED
     )
 
 
@@ -386,11 +395,11 @@ def _extract_attributes(
     attrs: types.Attributes,
     num_attrs_limit: int,
     add_agent_attr: bool = False,
-) -> ProtoSpan.Attributes:
+) -> trace_pb2.Span.Attributes:
     """Convert span.attributes to dict."""
     attributes_dict = BoundedDict(
         num_attrs_limit
-    )  # type: BoundedDict[str, AttributeValue]
+    )  # type: BoundedDict[str, trace_pb2.AttributeValue]
     invalid_value_dropped_count = 0
     for key, value in attrs.items() if attrs else []:
         key = _truncate_str(key, 128)[0]
@@ -411,14 +420,16 @@ def _extract_attributes(
                 _strip_characters(google_ext_version),
             )
         )
-    return ProtoSpan.Attributes(
+    return trace_pb2.Span.Attributes(
         attribute_map=attributes_dict,
         dropped_attributes_count=attributes_dict.dropped  # type: ignore[attr-defined]
         + invalid_value_dropped_count,
     )
 
 
-def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
+def _format_attribute_value(
+    value: types.AttributeValue,
+) -> trace_pb2.AttributeValue:
     if isinstance(value, bool):
         value_type = "bool_value"
     elif isinstance(value, int):
@@ -443,4 +454,4 @@ def _format_attribute_value(value: types.AttributeValue) -> AttributeValue:
         )
         return None
 
-    return AttributeValue(**{value_type: value})
+    return trace_pb2.AttributeValue(**{value_type: value})

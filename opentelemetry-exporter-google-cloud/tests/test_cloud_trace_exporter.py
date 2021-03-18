@@ -19,6 +19,7 @@ import pkg_resources
 from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
 from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
 from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
+from google.rpc import code_pb2
 from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace import (
     MAX_EVENT_ATTRS,
@@ -159,7 +160,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 }
             ),
             "links": None,
-            "status": Status(code=StatusCode.UNSET.value),
+            "status": None,
             "time_events": None,
             "start_time": None,
             "end_time": None,
@@ -178,25 +179,35 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "projects/{}".format(self.project_id), [cloud_trace_spans]
         )
 
-    def test_extract_none_status(self):
-        self.assertIsNone(_extract_status(None))
-
-    def test_extract_status_code(self):
-        self.assertEqual(
-            _extract_status(SpanStatus(status_code=StatusCode.OK)),
-            Status(details=None, code=StatusCode.OK.value),
+    def test_extract_status_code_unset(self):
+        self.assertIsNone(
+            _extract_status(SpanStatus(status_code=StatusCode.UNSET))
         )
 
-    def test_extract_status_code_and_desc(self):
+    def test_extract_status_code_ok(self):
+        self.assertEqual(
+            _extract_status(SpanStatus(status_code=StatusCode.OK)),
+            Status(code=code_pb2.OK),
+        )
+
+    def test_extract_status_code_error(self):
         self.assertEqual(
             _extract_status(
                 SpanStatus(
-                    status_code=StatusCode.UNSET, description="error_desc",
+                    status_code=StatusCode.ERROR, description="error_desc",
                 )
             ),
-            Status(
-                details=None, code=StatusCode.UNSET.value, message="error_desc"
+            Status(code=code_pb2.UNKNOWN, message="error_desc"),
+        )
+
+    def test_extract_status_code_future_added(self):
+        self.assertEqual(
+            _extract_status(
+                SpanStatus(
+                    status_code=mock.Mock(), description="unknown_description",
+                )
             ),
+            Status(code=code_pb2.UNKNOWN, message="unknown_description"),
         )
 
     def test_extract_empty_attributes(self):
