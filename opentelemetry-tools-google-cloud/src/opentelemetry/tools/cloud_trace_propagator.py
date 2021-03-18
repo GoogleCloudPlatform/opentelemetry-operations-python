@@ -25,7 +25,7 @@ from opentelemetry.trace.span import (
     get_hexadecimal_trace_id,
 )
 
-_TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context"
+_TRACE_CONTEXT_HEADER_NAME = "x-cloud-trace-context"
 _TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)"
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 _FIELDS = {_TRACE_CONTEXT_HEADER_NAME}
@@ -37,18 +37,36 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
     Cloud format.
     """
 
+    @staticmethod
+    def _get_header_value(
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
+    ) -> typing.Optional[str]:
+        # first try all lowercase header
+        header = getter.get(carrier, _TRACE_CONTEXT_HEADER_NAME)
+        if header:
+            return header[0]
+
+        # otherwise try to find in keys for mixed case
+        for key in getter.keys(carrier):
+            if key.lower() == _TRACE_CONTEXT_HEADER_NAME:
+                header = getter.get(carrier, key)
+                if header:
+                    return header[0]
+        return None
+
     def extract(
         self,
         getter: textmap.Getter[textmap.TextMapPropagatorT],
         carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        header = getter.get(carrier, _TRACE_CONTEXT_HEADER_NAME)
+        header = self._get_header_value(getter, carrier)
 
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        match = re.fullmatch(_TRACE_CONTEXT_HEADER_RE, header[0])
+        match = re.fullmatch(_TRACE_CONTEXT_HEADER_RE, header)
         if match is None:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
