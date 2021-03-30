@@ -423,7 +423,7 @@ def _extract_attributes(
         )
     return trace_pb2.Span.Attributes(
         attribute_map=attributes_dict,
-        dropped_attributes_count=attributes_dict.dropped  # type: ignore[attr-defined]
+        dropped_attributes_count=attributes_dict.dropped
         + invalid_value_dropped_count,
     )
 
