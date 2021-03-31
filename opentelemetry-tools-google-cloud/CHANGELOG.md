@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.17b1
+
+Released 2021-03-31
+
 - Map span status code properly to GCT
   ([#113](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/113))
 - Handle mixed case cloud propagator headers
