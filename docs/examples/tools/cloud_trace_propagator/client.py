@@ -17,7 +17,7 @@ import opentelemetry.ext.requests
 import requests
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.propagators import set_global_textmap
+from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.tools.cloud_trace_propagator import (
