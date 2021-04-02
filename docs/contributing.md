@@ -34,6 +34,11 @@ Guidelines](https://opensource.google/conduct/).
 
 ## Development Instructions
 
+This project is a monorepo for several PyPI packages, each in a
+`opentelemetry-*` subdirectory. Because each package may have different
+dependencies, we use a virtual environment per package which can be created
+with tox.
+
 ### Install tox
 
 This project uses [tox](https://tox.readthedocs.io/en/latest/index.html) for
@@ -43,11 +48,11 @@ development, so make sure it is installed on your system:
 pip install tox tox-factor
 ```
 
-To create the virtual environment `venv/` in the project root for
+To create the virtual environment `venv/` in the root of each package for
 development, run:
 
 ```sh
-tox -e dev
+tox -f dev -pauto
 ```
 
 ### Running tests
@@ -59,7 +64,7 @@ This project supports python versions 3.4 to 3.8. To run tests, use `tox`:
 tox -l
 
 # Run python3.8 exporter tests
-tox -e py38-ci-test-exporter-google-cloud
+tox -e py38-ci-test-exporter
 
 # Run all python3.8 tests in parallel
 tox -f py38-test -pauto
@@ -74,12 +79,15 @@ tox -s true -f ci -pauto
 
 ```sh
 # Run lint checks
-tox -e lint
+tox -f lint
 
 # To fix formatting and import ordering lint issues automatically
-tox -e fix
+tox -f fix
 ```
 
 ### Issues
 
-`tox` usually recreates virtual environments for you whenever the config changes. However, it doesn't fully track external requirements files and your dependencies can be outdated. Either delete the `.tox/` directory or use the `-r` flag with tox to recreate virtual environments.
+`tox` usually recreates virtual environments for you whenever the config
+changes. However, it doesn't fully track external requirements files and your
+dependencies can be outdated. Either delete the `.tox/` directory or use the
+`-r` flag with tox to recreate virtual environments.
