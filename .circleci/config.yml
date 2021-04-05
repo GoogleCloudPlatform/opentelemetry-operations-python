@@ -46,7 +46,6 @@ commands:
       - store_artifacts:
           path: .test-results/test-results
 
-
   setup:
     description: Checkout code and install tox
     steps:
@@ -61,7 +60,7 @@ jobs:
       - run_with_pip_cache:
           cache_key_base: lint-python3.8
           steps:
-            - run: tox -e lint-ci
+            - run: tox -f lint-ci
 
   docs:
     executor: dev_python
@@ -70,7 +69,7 @@ jobs:
       - run_with_pip_cache:
           cache_key_base: lint-python3.8
           steps:
-            - run: tox -e docs-ci
+            - run: tox -f docs-ci
       - run:
           name: Upload docs html artifacts
           command: |
@@ -88,7 +87,7 @@ jobs:
       - run_with_pip_cache:
           cache_key_base: mypy-python3.8
           steps:
-            - run: tox -e mypy-ci
+            - run: tox -f mypy-ci
       - store_test_results_command
 
   tests:

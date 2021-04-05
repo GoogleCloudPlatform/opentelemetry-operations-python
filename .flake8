@@ -10,6 +10,6 @@ exclude =
   .tox
   CVS
   .venv*/
-  venv*/
+  *venv*/
   target
   __pycache__
