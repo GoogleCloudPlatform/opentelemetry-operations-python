@@ -59,9 +59,7 @@ from google.cloud.trace_v2 import TraceServiceClient
 from google.cloud.trace_v2.proto import trace_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc import code_pb2, status_pb2
-from opentelemetry.exporter.google.version import (
-    __version__ as google_ext_version,
-)
+from opentelemetry.exporter.cloud_trace.version import __version__
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
@@ -417,7 +415,7 @@ def _extract_attributes(
                 _strip_characters(
                     pkg_resources.get_distribution("opentelemetry-sdk").version
                 ),
-                _strip_characters(google_ext_version),
+                _strip_characters(__version__),
             )
         )
     return trace_pb2.Span.Attributes(

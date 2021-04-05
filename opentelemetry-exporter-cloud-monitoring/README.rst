@@ -1,5 +1,5 @@
-OpenTelemetry Google Cloud Integration
-======================================
+OpenTelemetry Google Cloud Monitoring Exporter
+==============================================
 
 .. image:: https://badge.fury.io/py/opentelemetry-exporter-cloud-monitoring.svg
     :target: https://badge.fury.io/py/opentelemetry-exporter-cloud-monitoring
@@ -8,14 +8,14 @@ OpenTelemetry Google Cloud Integration
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-This library provides support for:
-
-- Exporting traces to Google Cloud Trace
-- Exporting metrics to Google Cloud Monitoring
+This library provides support for exporting metrics to Google Cloud
+Monitoring.
 
 For resource detection and GCP trace context propagation, see
 `opentelemetry-tools-google-cloud
-<https://pypi.org/project/opentelemetry-tools-google-cloud/>`_.
+<https://pypi.org/project/opentelemetry-tools-google-cloud/>`_. For the
+Google Cloud Trace exporter, see `opentelemetry-exporter-cloud-trace
+<https://pypi.org/project/opentelemetry-exporter-cloud-trace/>`_.
 
 Installation
 ------------
@@ -26,32 +26,6 @@ Installation
 
 Usage
 -----
-
-Traces
-
-.. code:: python
-
-    from opentelemetry import trace
-    from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import (
-        SimpleExportSpanProcessor,
-    )
-
-    trace.set_tracer_provider(TracerProvider())
-
-    cloud_trace_exporter = CloudTraceSpanExporter(
-        project_id='my-gcloud-project',
-    )
-    trace.get_tracer_provider().add_span_processor(
-        SimpleExportSpanProcessor(cloud_trace_exporter)
-    )
-    tracer = trace.get_tracer(__name__)
-    with tracer.start_as_current_span('foo'):
-        print('Hello world!')
-
-
-Metrics
 
 .. code:: python
 
@@ -87,5 +61,5 @@ Metrics
 References
 ----------
 
-* `Cloud Trace <https://cloud.google.com/trace/>`_
+* `Cloud Monitoring <https://cloud.google.com/monitoring>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
