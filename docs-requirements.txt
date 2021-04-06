@@ -3,5 +3,6 @@ Sphinx
 sphinx-autodoc-typehints
 opentelemetry-api
 opentelemetry-sdk
--e ./opentelemetry-exporter-google-cloud
+-e ./opentelemetry-exporter-cloud-trace
+-e ./opentelemetry-exporter-cloud-monitoring
 -e ./opentelemetry-tools-google-cloud

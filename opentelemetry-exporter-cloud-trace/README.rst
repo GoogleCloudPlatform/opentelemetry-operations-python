@@ -1,33 +1,31 @@
 OpenTelemetry Google Cloud Integration
 ======================================
 
-.. image:: https://badge.fury.io/py/opentelemetry-exporter-google-cloud.svg
-    :target: https://badge.fury.io/py/opentelemetry-exporter-google-cloud
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace
 
 .. image:: https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-This library provides support for:
-
-- Exporting traces to Google Cloud Trace
-- Exporting metrics to Google Cloud Monitoring
+This library provides support for exporting traces to Google Cloud Trace.
 
 For resource detection and GCP trace context propagation, see
 `opentelemetry-tools-google-cloud
-<https://pypi.org/project/opentelemetry-tools-google-cloud/>`_.
+<https://pypi.org/project/opentelemetry-tools-google-cloud/>`_. For the
+Google Cloud Monitoring exporter, see
+`opentelemetry-exporter-cloud-monitoring
+<https://pypi.org/project/opentelemetry-exporter-cloud-monitoring/>`_.
 
 Installation
 ------------
 
 .. code:: bash
 
-    pip install opentelemetry-exporter-google-cloud
+    pip install opentelemetry-exporter-cloud-trace
 
 Usage
 -----
-
-Traces
 
 .. code:: python
 
@@ -49,39 +47,6 @@ Traces
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span('foo'):
         print('Hello world!')
-
-
-Metrics
-
-.. code:: python
-
-    import time
-
-    from opentelemetry import metrics
-    from opentelemetry.exporter.cloud_monitoring import (
-        CloudMonitoringMetricsExporter,
-    )
-    from opentelemetry.sdk.metrics import Counter, MeterProvider
-
-    metrics.set_meter_provider(MeterProvider())
-    meter = metrics.get_meter(__name__)
-    metrics.get_meter_provider().start_pipeline(
-        meter, CloudMonitoringMetricsExporter(), 5
-    )
-
-    requests_counter = meter.create_counter(
-        name="request_counter",
-        description="number of requests",
-        unit="1",
-        value_type=int
-    )
-
-    staging_labels = {"environment": "staging"}
-
-    for i in range(20):
-        requests_counter.add(25, staging_labels)
-        time.sleep(10)
-
 
 
 References
