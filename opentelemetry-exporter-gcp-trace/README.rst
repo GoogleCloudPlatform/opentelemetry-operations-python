@@ -1,8 +1,8 @@
 OpenTelemetry Google Cloud Integration
 ======================================
 
-.. image:: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace.svg
-    :target: https://badge.fury.io/py/opentelemetry-exporter-cloud-trace
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-gcp-trace.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-gcp-trace
 
 .. image:: https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
@@ -14,15 +14,15 @@ For resource detection and GCP trace context propagation, see
 `opentelemetry-tools-google-cloud
 <https://pypi.org/project/opentelemetry-tools-google-cloud/>`_. For the
 Google Cloud Monitoring exporter, see
-`opentelemetry-exporter-cloud-monitoring
-<https://pypi.org/project/opentelemetry-exporter-cloud-monitoring/>`_.
+`opentelemetry-exporter-gcp-monitoring
+<https://pypi.org/project/opentelemetry-exporter-gcp-monitoring/>`_.
 
 Installation
 ------------
 
 .. code:: bash
 
-    pip install opentelemetry-exporter-cloud-trace
+    pip install opentelemetry-exporter-gcp-trace
 
 Usage
 -----

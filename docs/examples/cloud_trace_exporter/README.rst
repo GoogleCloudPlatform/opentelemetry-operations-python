@@ -16,7 +16,7 @@ To use this exporter you first need to:
 
 .. code-block:: sh
 
-    pip install opentelemetry-exporter-cloud-trace opentelemetry-api opentelemetry-sdk
+    pip install opentelemetry-exporter-gcp-trace opentelemetry-api opentelemetry-sdk
 
 * Run a basic example locally
 
