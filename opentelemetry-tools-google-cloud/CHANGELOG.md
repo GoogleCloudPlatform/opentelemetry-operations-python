@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Drop support for Python 3.5
+  ([#123](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/123))
+
 ## Version 0.18b0
 
 Released 2021-03-31

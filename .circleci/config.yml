@@ -5,7 +5,7 @@ executors:
   # in tox.ini
   dev_python:
     docker:
-      - image: circleci/python:3.8
+      - image: circleci/python:3.9
 
 commands:
   run_with_pip_cache:
@@ -122,4 +122,4 @@ workflows:
           name: tests-python3.<< matrix.python3_minor >>
           matrix:
             parameters:
-              python3_minor: [5, 6, 7, 8]
+              python3_minor: [6, 7, 8, 9]
