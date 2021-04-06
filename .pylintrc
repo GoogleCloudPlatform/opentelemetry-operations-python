@@ -64,7 +64,8 @@ disable=missing-docstring,
       wrong-import-order, # Leave this up to isort
       bad-continuation, # Leave this up to black
       line-too-long, # Leave this up to black
-      exec-used
+      exec-used,
+      duplicate-code
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
