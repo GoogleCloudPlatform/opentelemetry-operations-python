@@ -58,18 +58,18 @@ jobs:
     steps:
       - setup
       - run_with_pip_cache:
-          cache_key_base: lint-python3.8
+          cache_key_base: lint-python3.9
           steps:
-            - run: tox -f lint-ci
+            - run: tox -s false -f lint-ci
 
   docs:
     executor: dev_python
     steps:
       - setup
       - run_with_pip_cache:
-          cache_key_base: lint-python3.8
+          cache_key_base: lint-python3.9
           steps:
-            - run: tox -f docs-ci
+            - run: tox -s false -f docs-ci
       - run:
           name: Upload docs html artifacts
           command: |
@@ -80,14 +80,13 @@ jobs:
           destination: docs-html
 
   mypy:
-    docker:
-      - image: circleci/python:3.8
+    executor: dev_python
     steps:
       - setup
       - run_with_pip_cache:
-          cache_key_base: mypy-python3.8
+          cache_key_base: mypy-python3.9
           steps:
-            - run: tox -f mypy-ci
+            - run: tox -s false -f mypy-ci
       - store_test_results_command
 
   tests:
@@ -107,7 +106,6 @@ jobs:
                 command: >
                   tox
                   -s false
-                  -pauto
                   -f py3<< parameters.python3_minor >>-ci
       - store_test_results_command
 

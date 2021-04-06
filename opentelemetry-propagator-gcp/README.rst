@@ -1,24 +1,22 @@
-OpenTelemetry Google Cloud Integration
+OpenTelemetry Google Cloud Propagator
 ======================================
 
-.. image:: https://badge.fury.io/py/opentelemetry-tools-google-cloud.svg
-    :target: https://badge.fury.io/py/opentelemetry-tools-google-cloud
+.. image:: https://badge.fury.io/py/opentelemetry-propagator-gcp.svg
+    :target: https://badge.fury.io/py/opentelemetry-propagator-gcp
 
 .. image:: https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-This library provides support for:
-
-- Detecting GCP resources like GCE, GKE, etc.
-- Propagating trace context in the legacy Google Cloud format
+This library provides support for propagating trace context in the Google
+Cloud ``X-Cloud-Trace-Context`` format.
 
 Installation
 ------------
 
 .. code:: bash
 
-    pip install opentelemetry-tools-google-cloud
+    pip install opentelemetry-propagator-gcp
 
 ..
     TODO: Add usage info here

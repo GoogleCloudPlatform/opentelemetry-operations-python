@@ -16,14 +16,14 @@ import os
 import unittest
 from unittest import mock
 
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.tools.resource_detector import (
+from opentelemetry.resourcedetector.gcp_resource_detector import (
     _GCP_METADATA_URL,
     GoogleCloudResourceDetector,
     NoGoogleResourcesFound,
     get_gce_resources,
     get_gke_resources,
 )
+from opentelemetry.sdk.resources import Resource
 
 NAMESPACE = "NAMESPACE"
 CONTAINER_NAME = "CONTAINER_NAME"
@@ -46,7 +46,7 @@ GKE_RESOURCES_JSON_STRING = {
 
 
 @mock.patch(
-    "opentelemetry.tools.resource_detector.requests.get",
+    "opentelemetry.resourcedetector.gcp_resource_detector.requests.get",
     **{"return_value.json.return_value": GCE_RESOURCES_JSON_STRING}
 )
 class TestGCEResourceFinder(unittest.TestCase):
@@ -78,7 +78,7 @@ def clear_gke_env_vars():
 
 
 @mock.patch(
-    "opentelemetry.tools.resource_detector.requests.get",
+    "opentelemetry.resourcedetector.gcp_resource_detector.requests.get",
     **{"return_value.json.return_value": GKE_RESOURCES_JSON_STRING}
 )
 class TestGKEResourceFinder(unittest.TestCase):
@@ -172,7 +172,9 @@ class TestGKEResourceFinder(unittest.TestCase):
         )
 
 
-@mock.patch("opentelemetry.tools.resource_detector.requests.get")
+@mock.patch(
+    "opentelemetry.resourcedetector.gcp_resource_detector.requests.get"
+)
 class TestGoogleCloudResourceDetector(unittest.TestCase):
     def tearDown(self) -> None:
         clear_gke_env_vars()
