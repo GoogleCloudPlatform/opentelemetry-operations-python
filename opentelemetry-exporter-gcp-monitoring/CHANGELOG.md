@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+- Drop support for Python 3.5
+  ([#123](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/123))
 - Split cloud trace and cloud monitoring exporters into separate packages
   ([#107](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/107))
+  ([#122](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/122))
 
 ## Version 0.18b0
 
