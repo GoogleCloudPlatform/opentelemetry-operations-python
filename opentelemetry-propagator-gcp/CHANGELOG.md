@@ -4,6 +4,8 @@
 
 - Drop support for Python 3.5
   ([#123](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/123))
+- Split tools package into separate propagator and resource detector packages
+  ([#124](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/124))
 
 ## Version 0.18b0
 

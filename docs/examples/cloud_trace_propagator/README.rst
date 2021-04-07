@@ -1,7 +1,8 @@
 Cloud Trace Propagator Example
 ==============================
 
-These examples show how to make OpenTelemetry use the 'X-Cloud-Trace-Context' header for context propagation.
+These examples show how to make OpenTelemetry use the
+``X-Cloud-Trace-Context`` header for context propagation.
 
 
 Basic Example
@@ -16,10 +17,11 @@ To use this feature you first need to:
 
 .. code-block:: sh
 
-    pip install opentelemetry-api
-    pip install opentelemetry-sdk
-    pip install opentelemetry-exporter-google-cloud
-    pip install opentelemetry-tools-google-cloud
+    pip install opentelemetry-api \
+      opentelemetry-sdk \
+      opentelemetry-exporter-gcp-trace \
+      opentelemetry-exporter-gcp-monitoring \
+      opentelemetry-propagator-gcp
 
 * Create a server that uses the Cloud Trace header
 

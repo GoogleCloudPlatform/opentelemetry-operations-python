@@ -5,4 +5,5 @@ opentelemetry-api
 opentelemetry-sdk
 -e ./opentelemetry-exporter-gcp-trace
 -e ./opentelemetry-exporter-gcp-monitoring
--e ./opentelemetry-tools-google-cloud
+-e ./opentelemetry-propagator-gcp
+-e ./opentelemetry-resourcedetector-gcp

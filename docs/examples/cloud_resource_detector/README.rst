@@ -20,10 +20,11 @@ To use this feature you first need to:
 
 .. code-block:: sh
 
-    pip install opentelemetry-api
-    pip install opentelemetry-sdk
-    pip install opentelemetry-exporter-google-cloud
-    pip install opentelemetry-tools-google-cloud
+    pip install opentelemetry-api \
+      opentelemetry-sdk \
+      opentelemetry-exporter-gcp-trace \
+      opentelemetry-exporter-gcp-monitoring \
+      opentelemetry-resourcedetector-gcp
 
 * Run an example on the Google tool of your choice
 
