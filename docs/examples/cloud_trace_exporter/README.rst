@@ -16,7 +16,9 @@ To use this exporter you first need to:
 
 .. code-block:: sh
 
-    pip install opentelemetry-exporter-gcp-trace opentelemetry-api opentelemetry-sdk
+    pip install opentelemetry-exporter-gcp-trace \
+        opentelemetry-api \
+        opentelemetry-sdk
 
 * Run a basic example locally
 
@@ -24,7 +26,10 @@ To use this exporter you first need to:
     :language: python
     :lines: 1-
 
-* Run a more advanced example that uses features like attributes, events, links, and batching
+* Run a more advanced example that uses features like attributes, events,
+  links, and batching. You should generally use the
+  :class:`opentelemetry.sdk.trace.export.BatchSpanProcessor` for real
+  production purposes to optimize performance.
 
 .. literalinclude:: advanced_trace.py
     :language: python
@@ -84,17 +89,17 @@ returns ``Python 2.X.X`` try calling
 
 Exporting is slow or making the program slow
 ############################################
-:class:`opentelemetry.sdk.trace.export.SimpleExportSpanProcessor` will slow
+:class:`opentelemetry.sdk.trace.export.SimpleSpanProcessor` will slow
 down your program because it exports spans synchronously, one-by-one as they
 finish, without any batching. It should only be used for testing or
 debugging.
 
-Instead, use :class:`opentelemetry.sdk.trace.export.BatchExportSpanProcessor`
+Instead, use :class:`opentelemetry.sdk.trace.export.BatchSpanProcessor`
 (with the default parameters) which buffers spans and sends them in batches
 in a background thread.
 
 .. code-block:: python
 
     trace.get_tracer_provider().add_span_processor(
-        BatchExportSpanProcessor(cloud_trace_exporter)
+        BatchSpanProcessor(cloud_trace_exporter)
     )

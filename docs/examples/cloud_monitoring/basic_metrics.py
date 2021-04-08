@@ -19,7 +19,7 @@ from opentelemetry import metrics
 from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 
 metrics.set_meter_provider(MeterProvider())
 meter = metrics.get_meter(__name__)

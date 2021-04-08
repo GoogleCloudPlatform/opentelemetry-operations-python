@@ -20,18 +20,29 @@ takes place on `Github
 Installation
 ------------
 
-To install trace and metrics exporters:
+To install the Cloud Trace exporter:
 
 .. code-block:: bash
 
-    pip install opentelemetry-exporter-google-cloud
+    pip install opentelemetry-exporter-gcp-trace
 
-To install the additional tools package with resource detection and GCP trace
-context propagation:
+To install Cloud Monitoring exporter:
 
 .. code-block:: bash
 
-    pip install opentelemetry-tools-google-cloud
+    pip install opentelemetry-exporter-gcp-monitoring
+
+To install the GCP resource detector:
+
+.. code-block:: bash
+
+    pip install opentelemetry-resourcedetector-gcp
+
+To install the GCP trace propagator:
+
+.. code-block:: bash
+
+    pip install opentelemetry-propagator-gcp
 
 
 .. toctree::

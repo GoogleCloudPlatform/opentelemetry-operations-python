@@ -25,15 +25,15 @@ Usage
     from opentelemetry.sdk.trace import TracerProvider
 
     # For debugging
-    from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
     # Otherwise
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     trace.set_tracer_provider(TracerProvider())
 
     cloud_trace_exporter = CloudTraceSpanExporter()
     trace.get_tracer_provider().add_span_processor(
-        BatchExportSpanProcessor(cloud_trace_exporter)
+        BatchSpanProcessor(cloud_trace_exporter)
     )
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("foo"):
@@ -41,7 +41,7 @@ Usage
 
 
 When not debugging, make sure to use
-:class:`opentelemetry.sdk.trace.export.BatchExportSpanProcessor` with the
+:class:`opentelemetry.sdk.trace.export.BatchSpanProcessor` with the
 default parameters for performance reasons.
 
 API
