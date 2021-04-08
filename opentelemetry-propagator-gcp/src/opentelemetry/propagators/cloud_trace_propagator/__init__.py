@@ -18,12 +18,8 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import textmap
-from opentelemetry.trace.span import (
-    SpanContext,
-    TraceFlags,
-    get_hexadecimal_trace_id,
-)
+from opentelemetry.propagators import textmap
+from opentelemetry.trace.span import SpanContext, TraceFlags, format_trace_id
 
 _TRACE_CONTEXT_HEADER_NAME = "x-cloud-trace-context"
 _TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)"
@@ -39,8 +35,7 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
 
     @staticmethod
     def _get_header_value(
-        getter: textmap.Getter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        getter: textmap.Getter, carrier: textmap.CarrierT,
     ) -> typing.Optional[str]:
         # first try all lowercase header
         header = getter.get(carrier, _TRACE_CONTEXT_HEADER_NAME)
@@ -57,9 +52,9 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        getter: textmap.Getter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         header = self._get_header_value(getter, carrier)
 
@@ -84,14 +79,14 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
             trace_flags=TraceFlags(trace_options),
         )
         return trace.set_span_in_context(
-            trace.DefaultSpan(span_context), context
+            trace.NonRecordingSpan(span_context), context
         )
 
     def inject(
         self,
-        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
@@ -99,11 +94,11 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
             return
 
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(span_context.trace_id),
+            format_trace_id(span_context.trace_id),
             span_context.span_id,
             int(span_context.trace_flags.sampled),
         )
-        set_in_carrier(carrier, _TRACE_CONTEXT_HEADER_NAME, header)
+        setter.set(carrier, _TRACE_CONTEXT_HEADER_NAME, header)
 
     @property
     def fields(self) -> typing.Set[str]:

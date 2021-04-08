@@ -62,12 +62,13 @@ from google.rpc import code_pb2, status_pb2
 from opentelemetry.exporter.cloud_trace.version import __version__
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
-from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
-from opentelemetry.sdk.util import BoundedDict
-from opentelemetry.trace.span import (
-    get_hexadecimal_span_id,
-    get_hexadecimal_trace_id,
+from opentelemetry.sdk.trace.export import (
+    ReadableSpan,
+    SpanExporter,
+    SpanExportResult,
 )
+from opentelemetry.sdk.util import BoundedDict
+from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import types
 
@@ -98,7 +99,7 @@ class CloudTraceSpanExporter(SpanExporter):
         else:
             self.project_id = project_id
 
-    def export(self, spans: Sequence[Span]) -> SpanExportResult:
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         """Export the spans to Cloud Trace.
 
         See: https://cloud.google.com/trace/docs/reference/v2/rest/v2/projects.traces/batchWrite
@@ -119,7 +120,7 @@ class CloudTraceSpanExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def _translate_to_cloud_trace(
-        self, spans: Sequence[Span]
+        self, spans: Sequence[ReadableSpan]
     ) -> List[Dict[str, Any]]:
         """Translate the spans to Cloud Trace format.
 
@@ -131,20 +132,20 @@ class CloudTraceSpanExporter(SpanExporter):
 
         for span in spans:
             ctx = span.get_span_context()
-            trace_id = get_hexadecimal_trace_id(ctx.trace_id)
-            span_id = get_hexadecimal_span_id(ctx.span_id)
+            trace_id = format_trace_id(ctx.trace_id)
+            span_id = format_span_id(ctx.span_id)
             span_name = "projects/{}/traces/{}/spans/{}".format(
                 self.project_id, trace_id, span_id
             )
 
             parent_id = None
             if span.parent:
-                parent_id = get_hexadecimal_span_id(span.parent.span_id)
+                parent_id = format_span_id(span.parent.span_id)
 
             start_time = _get_time_from_ns(span.start_time)
             end_time = _get_time_from_ns(span.end_time)
 
-            if len(span.attributes) > MAX_SPAN_ATTRS:
+            if span.attributes and len(span.attributes) > MAX_SPAN_ATTRS:
                 logger.warning(
                     "Span has more then %s attributes, some will be truncated",
                     MAX_SPAN_ATTRS,
@@ -152,8 +153,10 @@ class CloudTraceSpanExporter(SpanExporter):
 
             # Span does not support a MonitoredResource object. We put the
             # information into attributes instead.
-            resources_and_attrs = _extract_resources(span.resource)
-            resources_and_attrs.update(span.attributes)
+            resources_and_attrs = {
+                **(span.attributes or {}),
+                **_extract_resources(span.resource),
+            }
 
             cloud_trace_spans.append(
                 {
@@ -185,7 +188,7 @@ class CloudTraceSpanExporter(SpanExporter):
         pass
 
 
-def _get_time_from_ns(nanoseconds: int) -> Optional[Timestamp]:
+def _get_time_from_ns(nanoseconds: Optional[int]) -> Optional[Timestamp]:
     """Given epoch nanoseconds, split into epoch milliseconds and remaining
     nanoseconds"""
     if not nanoseconds:
@@ -256,8 +259,8 @@ def _extract_links(links: Sequence[trace_api.Link]) -> trace_pb2.Span.Links:
                 "Link has more then %s attributes, some will be truncated",
                 MAX_LINK_ATTRS,
             )
-        trace_id = get_hexadecimal_trace_id(link.context.trace_id)
-        span_id = get_hexadecimal_span_id(link.context.span_id)
+        trace_id = format_trace_id(link.context.trace_id)
+        span_id = format_span_id(link.context.span_id)
         extracted_links.append(
             {
                 "trace_id": trace_id,
