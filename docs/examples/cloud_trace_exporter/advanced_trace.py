@@ -15,11 +15,17 @@
 import random
 import time
 
+# [START opentelemetry_trace_import]
+
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Link
+
+# [END opentelemetry_trace_import]
+
+# [START opentelemetry_setup_exporter]
 
 tracer_provider = TracerProvider()
 cloud_trace_exporter = CloudTraceSpanExporter()
@@ -33,10 +39,14 @@ trace.set_tracer_provider(tracer_provider)
 
 tracer = trace.get_tracer(__name__)
 
+# [END opentelemetry_setup_exporter]
+
 
 def do_work() -> None:
     time.sleep(random.random() * 0.5)
 
+
+# [START opentelemetry_trace_custom_span]
 
 with tracer.start_span("foo_with_attribute") as current_span:
     do_work()
@@ -47,11 +57,18 @@ with tracer.start_span("foo_with_attribute") as current_span:
     current_span.set_attribute("int_attribute", 3)
     current_span.set_attribute("float_attribute", 3.14)
 
+# [END opentelemetry_trace_custom_span]
+
+# [START opentelemetry_trace_custom_span_events]
 
 # Adding events to spans
 with tracer.start_as_current_span("foo_with_event") as current_span:
     do_work()
     current_span.add_event(name="event_name")
+
+# [END opentelemetry_trace_custom_span_events]
+
+# [START opentelemetry_trace_custom_span_links]
 
 # Adding links to spans
 with tracer.start_as_current_span("link_target") as link_target:
@@ -73,3 +90,5 @@ with tracer.start_as_current_span("link_target") as link_target:
         links=[Link(link_target.context, attributes={"link_attr": "string"})],
     ):
         do_work()
+
+# [END opentelemetry_trace_custom_span_links]
