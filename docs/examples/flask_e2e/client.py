@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# [START opentelemetry_flask_client_import]
-
 import requests
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
@@ -26,15 +24,7 @@ from opentelemetry.propagators.cloud_trace_propagator import (
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-# [END opentelemetry_flask_client_import]
-
-# [START opentelemetry_flask_client_setup_propagator]
-
 set_global_textmap(CloudTraceFormatPropagator())
-
-# [END opentelemetry_flask_client_setup_propagator]
-
-# [START opentelemetry_flask_client_setup_exporter]
 
 tracer_provider = TracerProvider()
 cloud_trace_exporter = CloudTraceSpanExporter()
@@ -48,13 +38,7 @@ trace.set_tracer_provider(tracer_provider)
 
 tracer = trace.get_tracer(__name__)
 
-# [END opentelemetry_flask_client_setup_exporter]
-
-# [START opentelemetry_flask_client_instrument]
-
 RequestsInstrumentor().instrument()
 
 res = requests.get("http://localhost:6000")
 print(res.text)
-
-# [END opentelemetry_flask_client_instrument]

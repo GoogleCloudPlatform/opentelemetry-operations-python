@@ -67,4 +67,5 @@ def hello_world():
 
     return "Hello, World!"
 
+
 # [END opentelemetry_flask_instrument]
