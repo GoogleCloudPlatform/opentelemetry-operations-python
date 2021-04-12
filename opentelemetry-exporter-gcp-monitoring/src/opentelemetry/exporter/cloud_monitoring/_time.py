@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test utilities used across packages
-
-This code is only used in other modules' tests
-"""
-
-
-from .base_exporter_integration_test import BaseExporterIntegrationTest
 
 try:
     from time import time_ns as _time_ns
@@ -37,7 +30,3 @@ def time_ns() -> int:
     TODO: remove when python3.6 is dropped
     """
     return _time_ns()
-
-
-__all__ = ["time_ns", "BaseExporterIntegrationTest"]
-

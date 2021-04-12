@@ -200,12 +200,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_extract_status_code_future_added(self):
         self.assertEqual(
-            _extract_status(
-                SpanStatus(
-                    status_code=mock.Mock(), description="unknown_description",
-                )
-            ),
-            Status(code=code_pb2.UNKNOWN, message="unknown_description"),
+            _extract_status(SpanStatus(status_code=mock.Mock(),)),
+            Status(code=code_pb2.UNKNOWN),
         )
 
     def test_extract_empty_attributes(self):
@@ -623,7 +619,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
     def test_extract_empty_resources(self):
-        self.assertEqual(_extract_resources(Resource.create_empty()), {})
+        self.assertEqual(_extract_resources(Resource.get_empty()), {})
 
     def test_extract_well_formed_resources(self):
         resource = Resource(

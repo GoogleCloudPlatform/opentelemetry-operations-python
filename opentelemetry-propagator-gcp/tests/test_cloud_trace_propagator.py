@@ -20,16 +20,14 @@ from opentelemetry.propagators.cloud_trace_propagator import (
     _TRACE_CONTEXT_HEADER_NAME,
     CloudTraceFormatPropagator,
 )
-from opentelemetry.trace.propagation import textmap
+from opentelemetry.propagators.textmap import default_getter
 from opentelemetry.trace.span import (
     INVALID_SPAN_ID,
     INVALID_TRACE_ID,
     SpanContext,
     TraceFlags,
-    get_hexadecimal_trace_id,
+    format_trace_id,
 )
-
-dict_getter = textmap.DictGetter()
 
 
 class TestCloudTraceFormatPropagator(unittest.TestCase):
@@ -42,7 +40,9 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
     def _extract(self, header_value):
         """Test helper"""
         header = {_TRACE_CONTEXT_HEADER_NAME: [header_value]}
-        new_context = self.propagator.extract(dict_getter, header)
+        new_context = self.propagator.extract(
+            carrier=header, getter=default_getter
+        )
         return trace.get_current_span(new_context).get_span_context()
 
     def _inject(self, span=None):
@@ -51,12 +51,14 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         if span is not None:
             ctx = trace.set_span_in_context(span, ctx)
         output = {}
-        self.propagator.inject(dict.__setitem__, output, context=ctx)
+        self.propagator.inject(output, context=ctx)
         return output.get(_TRACE_CONTEXT_HEADER_NAME)
 
     def test_no_context_header(self):
         header = {}
-        new_context = self.propagator.extract(dict_getter, header)
+        new_context = self.propagator.extract(
+            carrier=header, getter=default_getter
+        )
         self.assertEqual(
             trace.get_current_span(new_context).get_span_context(),
             trace.INVALID_SPAN.get_span_context(),
@@ -70,7 +72,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
 
     def test_valid_header(self):
         header = "{}/{};o=1".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
         new_span_context = self._extract(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
@@ -79,7 +81,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.assertTrue(new_span_context.is_remote)
 
         header = "{}/{};o=10".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
         new_span_context = self._extract(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
@@ -88,7 +90,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.assertTrue(new_span_context.is_remote)
 
         header = "{}/{};o=0".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
         new_span_context = self._extract(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
@@ -96,9 +98,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
         self.assertTrue(new_span_context.is_remote)
 
-        header = "{}/{};o=0".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), 345
-        )
+        header = "{}/{};o=0".format(format_trace_id(self.valid_trace_id), 345)
         new_span_context = self._extract(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
         self.assertEqual(new_span_context.span_id, 345)
@@ -107,7 +107,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
 
     def test_mixed_case_header_key(self):
         header_value = "{}/{};o=1".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
 
         for header_key in (
@@ -116,7 +116,9 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
             "X-CLOUD-TRACE-CONTEXT",
         ):
             header_map = {header_key: [header_value]}
-            new_context = self.propagator.extract(dict_getter, header_map)
+            new_context = self.propagator.extract(
+                carrier=header_map, getter=default_getter
+            )
             new_span_context = trace.get_current_span(
                 new_context
             ).get_span_context()
@@ -132,36 +134,34 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         )
 
         header = "{}/{};o=".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "extra_chars/{}/{};o=1".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{}extra_chars;o=1".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o=1extra_chars".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.valid_span_id
+            format_trace_id(self.valid_trace_id), self.valid_span_id
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
-        header = "{}/;o=1".format(
-            get_hexadecimal_trace_id(self.valid_trace_id)
-        )
+        header = "{}/;o=1".format(format_trace_id(self.valid_trace_id))
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
@@ -203,28 +203,28 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
 
     def test_invalid_span_id(self):
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), INVALID_SPAN_ID, 1
+            format_trace_id(self.valid_trace_id), INVALID_SPAN_ID, 1
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), "0" * 16, 1
+            format_trace_id(self.valid_trace_id), "0" * 16, 1
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), "0", 1
+            format_trace_id(self.valid_trace_id), "0", 1
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
         )
 
         header = "{}/{};o={}".format(
-            get_hexadecimal_trace_id(self.valid_trace_id), self.too_long_id, 1
+            format_trace_id(self.valid_trace_id), self.too_long_id, 1
         )
         self.assertEqual(
             self._extract(header), trace.INVALID_SPAN.get_span_context()
@@ -245,12 +245,10 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
             is_remote=True,
             trace_flags=TraceFlags(1),
         )
-        output = self._inject(trace.DefaultSpan(span_context))
+        output = self._inject(trace.NonRecordingSpan(span_context))
         self.assertEqual(
             output,
             "{}/{};o={}".format(
-                get_hexadecimal_trace_id(self.valid_trace_id),
-                self.valid_span_id,
-                1,
+                format_trace_id(self.valid_trace_id), self.valid_span_id, 1,
             ),
         )

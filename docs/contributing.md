@@ -35,9 +35,7 @@ Guidelines](https://opensource.google/conduct/).
 ## Development Instructions
 
 This project is a monorepo for several PyPI packages, each in a
-`opentelemetry-*` subdirectory. Because each package may have different
-dependencies, we use a virtual environment per package which can be created
-with tox.
+`opentelemetry-*` subdirectory.
 
 ### Install tox
 
@@ -48,16 +46,16 @@ development, so make sure it is installed on your system:
 pip install tox tox-factor
 ```
 
-To create the virtual environment `venv/` in the root of each package for
-development, run:
+To create a virtual environment `venv/` at the root of the repository (useful
+for pointing editors like vscode at), run:
 
 ```sh
-tox -f dev -pauto
+tox -e dev
 ```
 
 ### Running tests
 
-This project supports python versions 3.4 to 3.8. To run tests, use `tox`:
+This project supports python versions 3.5 to 3.9. To run tests, use `tox`:
 
 ```sh
 # List all tox environments

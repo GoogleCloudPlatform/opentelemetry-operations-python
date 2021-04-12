@@ -23,6 +23,7 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from opentelemetry.exporter.cloud_monitoring._time import time_ns
 from opentelemetry.sdk.metrics import UpDownCounter
 from opentelemetry.sdk.metrics.export import (
     ExportRecord,
@@ -35,7 +36,6 @@ from opentelemetry.sdk.metrics.export.aggregate import (
     ValueObserverAggregator,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
