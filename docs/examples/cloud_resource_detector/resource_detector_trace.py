@@ -17,7 +17,7 @@ from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.resources import get_aggregated_resources
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
 
 # MUST be run on a Google tool!
@@ -33,7 +33,7 @@ trace.set_tracer_provider(TracerProvider(resource=resources))
 # Cloud Trace exporter will automatically format these resources and export
 cloud_trace_exporter = CloudTraceSpanExporter()
 trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(cloud_trace_exporter)
+    SimpleSpanProcessor(cloud_trace_exporter)
 )
 tracer = trace.get_tracer(__name__)
 with tracer.start_as_current_span("foo"):

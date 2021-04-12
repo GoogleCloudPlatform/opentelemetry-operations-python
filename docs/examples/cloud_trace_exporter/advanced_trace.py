@@ -12,41 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import random
+import time
+
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Link
 
-trace.set_tracer_provider(TracerProvider())
-
+tracer_provider = TracerProvider()
 cloud_trace_exporter = CloudTraceSpanExporter()
-trace.get_tracer_provider().add_span_processor(
-    # BatchExportSpanProcessor buffers spans and sends them in batches in a
-    # background thread.
-    BatchExportSpanProcessor(cloud_trace_exporter)
+tracer_provider.add_span_processor(
+    # BatchSpanProcessor buffers spans and sends them in batches in a
+    # background thread. The default parameters are sensible, but can be
+    # tweaked to optimize your performance
+    BatchSpanProcessor(cloud_trace_exporter)
 )
+trace.set_tracer_provider(tracer_provider)
+
 tracer = trace.get_tracer(__name__)
 
-# Adding attributes to spans
-with tracer.start_as_current_span("foo_with_attribute") as current_span:
+
+def do_work() -> None:
+    time.sleep(random.random() * 0.5)
+
+
+with tracer.start_span("foo_with_attribute") as current_span:
+    do_work()
+
+    # Add attributes to the spans of various types
     current_span.set_attribute("string_attribute", "str")
     current_span.set_attribute("bool_attribute", False)
     current_span.set_attribute("int_attribute", 3)
     current_span.set_attribute("float_attribute", 3.14)
 
+
 # Adding events to spans
 with tracer.start_as_current_span("foo_with_event") as current_span:
-    current_span.add_event(name="event_name",)
+    do_work()
+    current_span.add_event(name="event_name")
 
 # Adding links to spans
 with tracer.start_as_current_span("link_target") as link_target:
+    # Using start_as_current_span() instead of start_span() will make spans
+    # created within this scope children of foo_with_attribute
+
     # Creates a span "span_with_link" and a link from
     # "span_with_link" -> "link_target"
     with tracer.start_as_current_span(
         "span_with_link", links=[Link(link_target.context)]
     ):
-        pass
+        do_work()
+
     # Creates a span "span_with_link" and a link from
     # "span_with_link" -> "link_target". This link also has the attribute
     # {"link_attr": "string"}
@@ -54,11 +72,4 @@ with tracer.start_as_current_span("link_target") as link_target:
         "span_with_link_and_link_attributes",
         links=[Link(link_target.context, attributes={"link_attr": "string"})],
     ):
-        pass
-
-# You can also do a combination of these
-with tracer.start_as_current_span(
-    "foo_with_event_and_attributes"
-) as current_span:
-    current_span.add_event(name="event_name", attributes={"event_attr1": 123})
-    current_span.set_attribute("bool_attribute", False)
+        do_work()

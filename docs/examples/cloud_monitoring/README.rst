@@ -16,9 +16,11 @@ To use this exporter you first need to:
 
 .. code-block:: sh
 
-    pip install opentelemetry-exporter-gcp-monitoring opentelemetry-api opentelemetry-sdk 
+    pip install opentelemetry-exporter-gcp-monitoring \
+        opentelemetry-api \
+        opentelemetry-sdk 
 
-* Run example
+* Run example code
 
 .. literalinclude:: basic_metrics.py
     :language: python
