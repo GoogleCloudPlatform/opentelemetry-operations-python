@@ -25,6 +25,10 @@ from opentelemetry.trace import Link
 
 # [END opentelemetry_trace_import]
 
+# [START opentelemetry_foobar]
+print("Hello test")
+# [END opentelemetry_foobar]
+
 # [START opentelemetry_setup_exporter]
 
 tracer_provider = TracerProvider()
