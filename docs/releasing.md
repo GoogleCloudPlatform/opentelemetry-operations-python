@@ -85,7 +85,7 @@ with:
 master. See [previous
 releases](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/)
 for examples.
-- In description, paste all of the individual changelogs f r the package
+- In description, paste all of the individual changelogs for the package
 versions being released.
 
 Once the release tag is created move the `stable` tag to point to the same
