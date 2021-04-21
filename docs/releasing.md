@@ -32,33 +32,34 @@ git remote add fork git@github.com:$GH_USERNAME/opentelemetry-operations-python.
 Run the `release.py` script which creates two commits in a new release
 branch. The script does the following:
 
-> Creates two commits in a new release branch (create new branch first). The first
-> commit (a) updates the changelogs for the new release_version, and updates
-> version.py files to the new release_version. This will be the tagged release
-> commit. The second commit (b) updates the version.py file to the
-> new_dev_version.
+> Creates two commits in a new release branch (create new branch first). The
+> first commit (a) updates the changelogs and version.py with the
+> release_version specified for any packages in the release_config_json
+> positional arg. This will be the tagged release commit. The second commit (b)
+> updates the version.py file to the new_dev_version for each package specified
+> in release_config_json.
 
 This workflow guarantees that there won't be any commits between (a) and (b)
 in the master branch history, as long as you merge with "Rebase and merge".
 
-To create a release at version `0.11b1` which depends on
-`opentelemetry-(api|sdk)==0.11b0`, and then update package versions in the
-repository to `0.12.dev0`:
+To create a release PR branch `release-pr/1.1.0` with
+`opentelemetry-propagator-gcp` at version `1.0.1` and
+`opentelemetry-resourcedetector-gcp` at version `1.1.0`, and then update
+package versions in the repository:
 
 ```bash
 ./release.py \
-    --release_version 0.11b1 \
-    --new_dev_version 0.12.dev0 \
-    --ot_version "==0.11b0"
+    1.1.0 \
+    '{ "opentelemetry-propagator-gcp": { "release_version": "1.10a0", "dev_version": "1.1.0dev0" }, "opentelemetry-exporter-gcp-trace": { "release_version": "1.0.0rc1", "dev_version": "1.1.0dev0" }, "opentelemetry-exporter-gcp-monitoring": { "release_version": "1.10a0", "dev_version": "1.1.0dev0" }, "opentelemetry-resourcedetector-gcp": { "release_version": "1.10a0", "dev_version": "1.1.0dev0" } }'
 ```
 
 ## Open and merge a PR
 
-You will now have the new branch `release-pr/0.11b1` checked out with the two
+You will now have the new branch `release-pr/1.1.0` checked out with the two
 commits. Push them to your fork and create a PR:
 
 ```bash
-git push --set-upstream fork release-pr/0.11b1
+git push --set-upstream fork release-pr/1.1.0
 # if you have GH cli installed, or create the PR regularly
 gh pr create -f -d
 ```
@@ -79,39 +80,26 @@ Now, [create a
 release](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/new)
 with:
 
-- Tag version of `v` + `--new_dev_version` you used above -
-**pointing at the first commit (a)** that was merged into master. For the
-example PR listed above, that creates release
-[`v0.11b0@4ad9ccd`](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/tag/v0.11b0).
-- In description, paste a changelog for the packages. I used this (probably
-buggy) small script for the example PR's tag:
+- Tag version of `v` + `release_tag` you used above
+**pointing at the first commit (a)** that was merged into
+master. See [previous
+releases](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/)
+for examples.
+- In description, paste all of the individual changelogs f r the package
+versions being released.
 
-  ```bash
-  for cl in opentelemetry-*/CHANGELOG.md; do
-      if cl_entries=`pcregrep -M -o1 "^## Version 0\.10b0$\n\n^Released.*\n\n((?:- [\s\S]+?)*?)(?=(\s+##|\Z))" $cl`
-      then
-          echo -e "# `dirname $cl`\n$cl_entries"
-      fi
-  done
-  ```
-
-Once the release tag is created, create a permanent branch (for later fixes)
-at that commit (a), and also move the `stable` tag to point to the same
+Once the release tag is created move the `stable` tag to point to the same
 commit.
 
 ```bash
 # pull in the new release tag
 git fetch origin
 
-# create branch and move stable
-git branch release/0.11b0 v0.11b0
+# move stable
 git tag -d stable
 git push origin :refs/tags/stable
-git tag stable v0.11b0
+git tag stable v1.1.0
 git push --tags
-
-# push
-git push --set-upstream origin release/0.11b0 stable
 ```
 
 ## Push to PyPI
@@ -124,7 +112,7 @@ consulting internal docs for how to get login credentials.
 
 ```bash
 # make sure you're checked out to the release tag created before
-git checkout v0.11b0
+git checkout v1.1.0
 
 # clean and create fresh venv
 git clean -fdx
@@ -132,8 +120,8 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -U pip wheel twine
 
-# Build the packages
-for setup_file in opentelemetry-*/setup.py; do
+# Build the packages that you want to release
+for setup_file in {opentelemetry-propagator-gcp,opentelemetry-exporter-gcp-trace}/setup.py; do
     pushd `dirname $setup_file`
     # to be safe
     rm -rf dist/ build/
@@ -142,14 +130,14 @@ for setup_file in opentelemetry-*/setup.py; do
 done
 
 # See what was built and verify
-twine check opentelemetry-*/dist/*
+twine check {opentelemetry-propagator-gcp,opentelemetry-exporter-gcp-trace}/dist/*
 
 # First, publish to https://test.pypi.org/ to make sure everything goes
 # correctly. Consult internal docs for populating TWINE_USERNAME and
 # TWINE_PASSWORD environment variables.
-twine upload -r testpypi opentelemetry-*/dist/*
+twine upload -r testpypi {opentelemetry-propagator-gcp,opentelemetry-exporter-gcp-trace}/dist/*
 
 # Go check the packages look correct on test pypi. If all is good, upload to
 # pypi
-twine upload opentelemetry-*/dist/*
+twine upload {opentelemetry-propagator-gcp,opentelemetry-exporter-gcp-trace}/dist/*
 ```
