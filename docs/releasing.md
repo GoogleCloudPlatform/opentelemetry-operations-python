@@ -119,6 +119,9 @@ git fetch origin
 # move stable
 git tag -d stable
 git push origin :refs/tags/stable
+git tag stable v0.11b0
+
+# push
 git push --tags
 ```
 
