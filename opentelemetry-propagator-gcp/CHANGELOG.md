@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.0.0rc0
+
+Released 2021-04-22
+
 - Drop support for Python 3.5
   ([#123](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/123))
 - Split tools package into separate propagator and resource detector packages
