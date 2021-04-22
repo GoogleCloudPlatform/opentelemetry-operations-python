@@ -50,6 +50,13 @@ for the first commit. Do NOT merge with "Squash and merge", or commit (a) will
 be overwritten by (b).
 """
 
+# Map of different suffixes to use instead of the given ones in release_version
+ALTERNATE_SUFFIXES = {
+    # Mark monitoring and resource detector alpha
+    "opentelemetry-exporter-gcp-monitoring": "a0",
+    "opentelemetry-resourcedetector-gcp": "a0",
+}
+
 
 @functools.cache
 def repo_root() -> Path:
@@ -108,26 +115,7 @@ def parse_args() -> argparse.Namespace:
         help="The new developement version string to update master",
         required=True,
     )
-    parser.add_argument(
-        "--alternate_suffix",
-        help="Pass as 'package_name:suffix' to use an alternate suffix for package_name instead of "
-        "what's specified in release_version. Can pass multiple times for multiple packages",
-        action="append",
-    )
     return parser.parse_args()
-
-
-def parse_alterate_suffixes(alterate_suffixes: list[str]) -> dict[Path, str]:
-    """Map of repo root path onto alternate suffix to use"""
-    alternate_suffix_map: dict[Path, str] = {}
-    for s in alterate_suffixes:
-        split = s.split(":")
-        if len(split) != 2:
-            raise Exception(
-                f"Could not parse '{s}' as format 'package_name:suffix'"
-            )
-        alternate_suffix_map[repo_root() / split[0]] = split[1]
-    return alternate_suffix_map
 
 
 def run(
@@ -140,15 +128,17 @@ def git_commit_with_message(message: str) -> None:
     run(["git", "commit", "-a", "-m", message])
 
 
-def create_release_commit(
-    release_version: str, alternate_suffix_map: dict[Path, str],
-) -> None:
+def create_release_commit(release_version: str,) -> None:
     release_version_parsed = Version(release_version)
     today = datetime.now().strftime("%Y-%m-%d")
+    alternate_suffix_paths = {
+        repo_root() / package_name: suffix
+        for package_name, suffix in ALTERNATE_SUFFIXES.items()
+    }
 
     for package_root in repo_root().glob("opentelemetry-*/"):
-        if package_root in alternate_suffix_map:
-            suffix = alternate_suffix_map[package_root]
+        if package_root in alternate_suffix_paths:
+            suffix = alternate_suffix_paths[package_root]
             release_version_use = release_version_parsed.base_version + suffix
             # verify the resulting version is valid by PEP440
             try:
@@ -200,9 +190,6 @@ def main() -> None:
     current_version = get_current_version()
     release_version: str = args.release_version
     new_dev_version: str = args.new_dev_version
-    alternate_suffix_map: dict[Path, str] = parse_alterate_suffixes(
-        args.alternate_suffix
-    )
 
     git_status_output = (
         run(["git", "status", "-s"], capture_output=True)
@@ -235,10 +222,7 @@ def main() -> None:
         cwd=repo_root(),
     )
 
-    create_release_commit(
-        release_version=release_version,
-        alternate_suffix_map=alternate_suffix_map,
-    )
+    create_release_commit(release_version=release_version,)
     create_new_dev_commit(
         release_version=release_version, new_dev_version=new_dev_version,
     )
