@@ -18,7 +18,7 @@ import re
 import functools
 import subprocess
 import sys
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, Sequence, Union
@@ -148,10 +148,17 @@ def create_release_commit(
 
     for package_root in repo_root().glob("opentelemetry-*/"):
         if package_root in alternate_suffix_map:
-            release_version_use = (
-                release_version_parsed.base_version
-                + alternate_suffix_map[package_root]
-            )
+            suffix = alternate_suffix_map[package_root]
+            release_version_use = release_version_parsed.base_version + suffix
+            # verify the resulting version is valid by PEP440
+            try:
+                Version(release_version_use)
+            except InvalidVersion as e:
+                raise Exception(
+                    "Resulting version string for package {} with specified suffix '{}' "
+                    "is not valid: {}".format(package_root.name, suffix, e,),
+                )
+
         else:
             release_version_use = release_version
 
