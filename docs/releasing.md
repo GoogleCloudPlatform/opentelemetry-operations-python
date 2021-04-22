@@ -41,16 +41,22 @@ branch. The script does the following:
 This workflow guarantees that there won't be any commits between (a) and (b)
 in the master branch history, as long as you merge with "Rebase and merge".
 
-To create a release at version `0.11b1` which depends on
-`opentelemetry-(api|sdk)==0.11b0`, and then update package versions in the
-repository to `0.12.dev0`:
+To create a release at version `0.11b1` and then update package versions in
+the repository to `0.12.dev0`:
 
 ```bash
 ./release.py \
     --release_version 0.11b1 \
-    --new_dev_version 0.12.dev0 \
-    --ot_version "==0.11b0"
+    --new_dev_version 0.12.dev0
 ```
+
+You can also specify anternate suffixes to add for certain packages by
+updating the `ALTERNATE_SUFFIXES` map in `release.py`. This lets you mark
+some packages as rc/alpha/beta/etc. Check the code comments for details.
+
+Besides the suffixes at the end of the version, all packages in this repo are
+tied to the same base version. For example, they are all 1.0.0 base version,
+but some can be 1.0.0 and others 1.0.0a0.
 
 ## Open and merge a PR
 
@@ -95,23 +101,20 @@ buggy) small script for the example PR's tag:
   done
   ```
 
-Once the release tag is created, create a permanent branch (for later fixes)
-at that commit (a), and also move the `stable` tag to point to the same
+Once the release tag is created, move the `stable` tag to point to the same
 commit.
 
 ```bash
 # pull in the new release tag
 git fetch origin
 
-# create branch and move stable
-git branch release/0.11b0 v0.11b0
+# move stable
 git tag -d stable
 git push origin :refs/tags/stable
 git tag stable v0.11b0
-git push --tags
 
 # push
-git push --set-upstream origin release/0.11b0 stable
+git push --tags
 ```
 
 ## Push to PyPI
