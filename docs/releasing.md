@@ -50,9 +50,9 @@ the repository to `0.12.dev0`:
     --new_dev_version 0.12.dev0
 ```
 
-You can also specify alternative suffixes to add for certain packages by
-updated the `ALTERNATE_SUFFIXES` map in `release.py`. This lets you mark some
-packages as rc/alpha/beta/etc. Check the code comments for details.
+You can also specify anternate suffixes to add for certain packages by
+updating the `ALTERNATE_SUFFIXES` map in `release.py`. This lets you mark
+some packages as rc/alpha/beta/etc. Check the code comments for details.
 
 Besides the suffixes at the end of the version, all packages in this repo are
 tied to the same base version. For example, they are all 1.0.0 base version,
