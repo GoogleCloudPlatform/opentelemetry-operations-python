@@ -18,6 +18,7 @@ import re
 import functools
 import subprocess
 import sys
+from packaging.version import Version
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, Sequence, Union
@@ -107,7 +108,26 @@ def parse_args() -> argparse.Namespace:
         help="The new developement version string to update master",
         required=True,
     )
+    parser.add_argument(
+        "--alternate_suffix",
+        help="Pass as 'package_name:suffix' to use an alternate suffix for package_name instead of "
+        "what's specified in release_version. Can pass multiple times for multiple packages",
+        action="append",
+    )
     return parser.parse_args()
+
+
+def parse_alterate_suffixes(alterate_suffixes: list[str]) -> dict[Path, str]:
+    """Map of repo root path onto alternate suffix to use"""
+    alternate_suffix_map: dict[Path, str] = {}
+    for s in alterate_suffixes:
+        split = s.split(":")
+        if len(split) != 2:
+            raise Exception(
+                f"Could not parse '{s}' as format 'package_name:suffix'"
+            )
+        alternate_suffix_map[repo_root() / split[0]] = split[1]
+    return alternate_suffix_map
 
 
 def run(
@@ -120,19 +140,33 @@ def git_commit_with_message(message: str) -> None:
     run(["git", "commit", "-a", "-m", message])
 
 
-def create_release_commit(current_version: str, release_version: str) -> None:
-    # Update version.py files
-    find_and_replace(
-        re.escape(current_version), release_version, get_version_py_paths(),
-    )
-
-    # Mark release in changelogs
+def create_release_commit(
+    release_version: str, alternate_suffix_map: dict[Path, str],
+) -> None:
+    release_version_parsed = Version(release_version)
     today = datetime.now().strftime("%Y-%m-%d")
-    find_and_replace(
-        r"\#\#\ Unreleased",
-        rf"## Unreleased\n\n## Version {release_version}\n\nReleased {today}",
-        repo_root().glob("opentelemetry-*/CHANGELOG.md"),
-    )
+
+    for package_root in repo_root().glob("opentelemetry-*/"):
+        if package_root in alternate_suffix_map:
+            release_version_use = (
+                release_version_parsed.base_version
+                + alternate_suffix_map[package_root]
+            )
+        else:
+            release_version_use = release_version
+
+        # Update version.py files
+        find_and_replace(
+            r'__version__ = ".*"',
+            '__version__ = "{}"'.format(release_version_use),
+            package_root.glob("**/version.py"),
+        )
+        # Mark release in changelogs
+        find_and_replace(
+            r"\#\#\ Unreleased",
+            rf"## Unreleased\n\n## Version {release_version_use}\n\nReleased {today}",
+            [package_root / "CHANGELOG.md"],
+        )
 
     git_commit_with_message(
         RELEASE_COMMIT_FMT.format(release_version=release_version)
@@ -142,7 +176,9 @@ def create_release_commit(current_version: str, release_version: str) -> None:
 def create_new_dev_commit(release_version: str, new_dev_version: str) -> None:
     # Update version.py files
     find_and_replace(
-        re.escape(release_version), new_dev_version, get_version_py_paths()
+        r'__version__ = ".*"',
+        '__version__ = "{}"'.format(new_dev_version),
+        get_version_py_paths(),
     )
 
     git_commit_with_message(
@@ -157,6 +193,9 @@ def main() -> None:
     current_version = get_current_version()
     release_version: str = args.release_version
     new_dev_version: str = args.new_dev_version
+    alternate_suffix_map: dict[Path, str] = parse_alterate_suffixes(
+        args.alternate_suffix
+    )
 
     git_status_output = (
         run(["git", "status", "-s"], capture_output=True)
@@ -190,7 +229,8 @@ def main() -> None:
     )
 
     create_release_commit(
-        current_version=current_version, release_version=release_version,
+        release_version=release_version,
+        alternate_suffix_map=alternate_suffix_map,
     )
     create_new_dev_commit(
         release_version=release_version, new_dev_version=new_dev_version,
