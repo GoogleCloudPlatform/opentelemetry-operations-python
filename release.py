@@ -15,6 +15,7 @@
 
 import argparse
 import re
+import functools
 import subprocess
 import sys
 from datetime import datetime
@@ -25,14 +26,11 @@ RELEASE_COMMIT_FMT = """Release {release_version} (Part 1/2) release commit
 
 - Update version.py files
 - Marked releases in changelogs
-- Pinned `opentelemetry-{{api,sdk}}` versions in dev-constraints
-- Pinned `opentelemetry-{{api,sdk}}` versions in each package's `setup.cfg` file
 """
 
 NEW_DEV_COMMIT_FMT = """Release {release_version} (Part 2/2) bump version to {new_dev_version}
 
-- Update version.py files
-- Unpin `opentelemetry-{{api,sdk}}` versions in each package's `setup.cfg` file
+- Update version.py files to dev version
 """
 
 
@@ -52,16 +50,24 @@ be overwritten by (b).
 """
 
 
+@functools.cache
+def repo_root() -> Path:
+    return Path(
+        run(["git", "rev-parse", "--show-toplevel"], capture_output=True)
+        .stdout.decode()
+        .strip()
+    )
+
+
+@functools.cache
+def get_version_py_paths() -> list[Path]:
+    return list(repo_root().glob("opentelemetry-*/**/version.py"))
+
+
+@functools.cache
 def get_current_version() -> str:
     package_info: Dict[str, str] = {}
-    with open(
-        Path("opentelemetry-exporter-google-cloud")
-        / "src"
-        / "opentelemetry"
-        / "exporter"
-        / "google"
-        / "version.py"
-    ) as version_file:
+    with get_version_py_paths()[0].open() as version_file:
         exec(version_file.read(), package_info)
     return package_info["__version__"]
 
@@ -101,11 +107,6 @@ def parse_args() -> argparse.Namespace:
         help="The new developement version string to update master",
         required=True,
     )
-    required_named_args.add_argument(
-        "--ot_version",
-        help="The version specifer for opentelemetry packages. E.g. '~=0.11.b0'",
-        required=True,
-    )
     return parser.parse_args()
 
 
@@ -119,18 +120,10 @@ def git_commit_with_message(message: str) -> None:
     run(["git", "commit", "-a", "-m", message])
 
 
-def create_release_commit(
-    git_files: Iterable[Path],
-    current_version: str,
-    release_version: str,
-    ot_version: str,
-    repo_root: Path,
-) -> None:
+def create_release_commit(current_version: str, release_version: str) -> None:
     # Update version.py files
     find_and_replace(
-        re.escape(current_version),
-        release_version,
-        (path for path in git_files if path.name == "version.py"),
+        re.escape(current_version), release_version, get_version_py_paths(),
     )
 
     # Mark release in changelogs
@@ -138,36 +131,7 @@ def create_release_commit(
     find_and_replace(
         r"\#\#\ Unreleased",
         rf"## Unreleased\n\n## Version {release_version}\n\nReleased {today}",
-        (path for path in git_files if path.name == "CHANGELOG.md"),
-    )
-
-    # Pin the OT version in dev-constraints.txt
-    find_regex = (
-        r"^"
-        + re.escape(
-            "-e git+https://github.com/open-telemetry/opentelemetry-python.git@"
-        )
-        + r".+#egg=(.+)&subdirectory=.+$"
-    )
-    matched = find_and_replace(
-        find_regex,
-        rf"\1{ot_version}",
-        [repo_root / "dev-constraints.txt"],
-        flags=re.MULTILINE,
-    )
-    if not matched:
-        find_and_replace(
-            r"^(opentelemetry-(?:api-sdk)).*",
-            rf"\1{ot_version}",
-            [repo_root / "dev-constraints.txt"],
-            flags=re.MULTILINE,
-        )
-
-    # Pin the OT version in each package's setup.cfg file
-    find_and_replace(
-        r"(opentelemetry-(?:api|sdk))",
-        rf"\1{ot_version}",
-        (path for path in git_files if path.name == "setup.cfg"),
+        repo_root().glob("opentelemetry-*/CHANGELOG.md"),
     )
 
     git_commit_with_message(
@@ -175,24 +139,12 @@ def create_release_commit(
     )
 
 
-def create_new_dev_commit(
-    git_files: Iterable[Path], release_version: str, new_dev_version: str,
-) -> None:
+def create_new_dev_commit(release_version: str, new_dev_version: str) -> None:
     # Update version.py files
     find_and_replace(
-        re.escape(release_version),
-        new_dev_version,
-        (path for path in git_files if path.name == "version.py"),
+        re.escape(release_version), new_dev_version, get_version_py_paths()
     )
 
-    # Unpin the OT version in each package's setup.cfg file, so it comes from
-    # dev-constraints.txt
-    find_and_replace(
-        r"(opentelemetry-(?:api|sdk)).+$",
-        r"\1",
-        (path for path in git_files if path.name == "setup.cfg"),
-        flags=re.MULTILINE,
-    )
     git_commit_with_message(
         NEW_DEV_COMMIT_FMT.format(
             release_version=release_version, new_dev_version=new_dev_version
@@ -205,7 +157,6 @@ def main() -> None:
     current_version = get_current_version()
     release_version: str = args.release_version
     new_dev_version: str = args.new_dev_version
-    ot_version: str = args.ot_version
 
     git_status_output = (
         run(["git", "status", "-s"], capture_output=True)
@@ -225,12 +176,6 @@ def main() -> None:
         )
     )
 
-    repo_root = Path(
-        run(["git", "rev-parse", "--show-toplevel"], capture_output=True)
-        .stdout.decode()
-        .strip()
-    ).absolute()
-
     # create new release branch
     run(["git", "clean", "-fdx", "-e", "venv/", "-e", ".tox/"])
     run(
@@ -241,31 +186,14 @@ def main() -> None:
             "release-pr/{}".format(release_version),
             "origin/master",
         ],
-        cwd=repo_root,
+        cwd=repo_root(),
     )
-
-    git_files = [
-        repo_root / path
-        for path in run(
-            ["git", "ls-files"], cwd=repo_root, capture_output=True
-        )
-        .stdout.decode()
-        .strip()
-        .split()
-        if __file__ not in path
-    ]
 
     create_release_commit(
-        git_files=git_files,
-        current_version=current_version,
-        release_version=release_version,
-        ot_version=ot_version,
-        repo_root=repo_root,
+        current_version=current_version, release_version=release_version,
     )
     create_new_dev_commit(
-        git_files=git_files,
-        release_version=release_version,
-        new_dev_version=new_dev_version,
+        release_version=release_version, new_dev_version=new_dev_version,
     )
 
 
