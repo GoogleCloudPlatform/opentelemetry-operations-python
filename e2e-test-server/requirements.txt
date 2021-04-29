@@ -1,0 +1,6 @@
+-c constraints.txt
+../opentelemetry-exporter-gcp-trace
+opentelemetry-sdk
+opentelemetry-api
+Flask
+gunicorn
