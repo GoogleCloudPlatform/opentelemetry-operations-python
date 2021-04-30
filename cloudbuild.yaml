@@ -20,7 +20,7 @@ steps:
       - --file=e2e-test-server/Dockerfile
       - .
 
-  - name: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:0.5.3
+  - name: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:0.5.5
     env:
       - "PROJECT_ID=$PROJECT_ID"
     args:
