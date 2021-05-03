@@ -13,7 +13,8 @@
 # limitations under the License.
 
 steps:
-  - name: "docker"
+  - name: docker
+    id: build-test-server
     args:
       - build
       - --tag=gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server
@@ -21,6 +22,7 @@ steps:
       - .
 
   - name: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:0.5.5
+    id: run-tests
     env:
       - "PROJECT_ID=$PROJECT_ID"
     args:
