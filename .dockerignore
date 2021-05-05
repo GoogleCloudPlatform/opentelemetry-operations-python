@@ -1,0 +1,5 @@
+.git
+docs/
+.tox
+**/venv/
+.mypy_cache/
