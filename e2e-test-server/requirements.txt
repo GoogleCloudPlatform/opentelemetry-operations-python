@@ -3,4 +3,4 @@
 opentelemetry-sdk
 opentelemetry-api
 Flask
-gunicorn
+google-cloud-pubsub

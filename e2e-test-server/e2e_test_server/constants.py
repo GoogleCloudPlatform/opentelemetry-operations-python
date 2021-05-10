@@ -12,17 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-if "PORT" not in os.environ:
-    raise Exception("Must supply environment variable PORT")
-
-bind = "0.0.0.0:{}".format(os.environ["PORT"])
-
-# Needed to prevent forking for OTel
-workers = 1
-
-wsgi_app = "server:app"
-
-# log requests to stdout
-accesslog = "-"
+INSTRUMENTING_MODULE_NAME = "opentelemetry-ops-e2e-test-server"
+SCENARIO = "scenario"
+STATUS = "status"
+TEST_ID = "test-id"
