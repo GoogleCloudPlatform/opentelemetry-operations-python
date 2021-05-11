@@ -4,3 +4,4 @@ opentelemetry-sdk
 opentelemetry-api
 Flask
 google-cloud-pubsub
+googleapis-common-protos

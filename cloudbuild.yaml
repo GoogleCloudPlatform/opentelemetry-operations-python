@@ -26,7 +26,7 @@ steps:
       - push
       - gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server:$SHORT_SHA
 
-  - name: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:0.5.10
+  - name: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:$_TEST_SERVER_TAG
     id: run-tests
     dir: /
     env:
@@ -37,5 +37,7 @@ steps:
       - --network=cloudbuild
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
+substitutions:
+  _TEST_SERVER_TAG: 0.5.11
 images:
   - gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server:$SHORT_SHA

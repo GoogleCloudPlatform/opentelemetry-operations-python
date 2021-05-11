@@ -18,7 +18,8 @@ from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
 
 from . import scenarios
-from .constants import SCENARIO, STATUS, TEST_ID
+from .constants import SCENARIO, STATUS_CODE, TEST_ID
+from google.rpc import code_pb2
 
 PROJECT_ID = os.environ["PROJECT_ID"]
 REQUEST_SUBSCRIPTION_NAME = os.environ["REQUEST_SUBSCRIPTION_NAME"]
@@ -34,16 +35,19 @@ def pubsub_pull() -> None:
 
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(
-        PROJECT_ID, REQUEST_SUBSCRIPTION_NAME,
+        PROJECT_ID,
+        REQUEST_SUBSCRIPTION_NAME,
     )
 
     def respond(test_id: str, res: scenarios.Response) -> None:
         """Respond to the test runner that we finished executing the scenario"""
         data = bytes()
-        attributes = {TEST_ID: test_id, STATUS: str(res.status)}
+        attributes = {TEST_ID: test_id, STATUS_CODE: str(res.status_code)}
         print(f"publishing {data=} and {attributes=}")
         publisher.publish(
-            response_topic, bytes(), **attributes,
+            response_topic,
+            bytes(),
+            **attributes,
         )
 
     def pubsub_callback(message: Message) -> None:
@@ -58,7 +62,10 @@ def pubsub_pull() -> None:
             publisher.publish(
                 response_topic,
                 f'Expected attribute "{SCENARIO}" is missing',
-                **{TEST_ID: test_id, "status": 500},
+                **{
+                    TEST_ID: test_id,
+                    STATUS_CODE: str(code_pb2.INVALID_ARGUMENT),
+                },
             )
         scenario = message.attributes[SCENARIO]
 
@@ -68,7 +75,7 @@ def pubsub_pull() -> None:
             scenarioFunc = scenarios.basicTrace
         else:
             scenarioFunc = lambda *args, **kwargs: scenarios.Response(
-                status=404
+                status_code=str(code_pb2.UNIMPLEMENTED)
             )
 
         res = scenarioFunc(test_id, message.attributes, message.data)

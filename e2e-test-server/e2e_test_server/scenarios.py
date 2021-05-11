@@ -17,6 +17,8 @@ import os
 from dataclasses import dataclass
 from typing import Any, Iterator, Mapping
 
+from google.rpc import code_pb2
+
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -28,12 +30,11 @@ from .constants import INSTRUMENTING_MODULE_NAME, TEST_ID
 
 @dataclass
 class Response:
-    # HTTP style status code, even for pubsub
-    status: int
+    status_code: code_pb2.Code
 
 
 @contextlib.contextmanager
-def _tracer_setup(carrier: Mapping[str, str]) -> Iterator[tuple[str, Tracer]]:
+def _tracer_setup(carrier: Mapping[str, str]) -> Iterator[Tracer]:
     """\
     Context manager with common setup for tracing endpoints
 
@@ -56,7 +57,7 @@ def _tracer_setup(carrier: Mapping[str, str]) -> Iterator[tuple[str, Tracer]]:
 
 
 def health(test_id: str, headers: Mapping[str, str], body: bytes) -> Response:
-    return Response(status=200)
+    return Response(status_code=code_pb2.OK)
 
 
 def basicTrace(
@@ -68,4 +69,4 @@ def basicTrace(
         with tracer.start_span("basicTrace", attributes={TEST_ID: test_id}):
             pass
 
-    return Response(status=200)
+    return Response(status_code=code_pb2.OK)

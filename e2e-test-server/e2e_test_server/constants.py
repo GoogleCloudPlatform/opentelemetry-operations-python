@@ -14,5 +14,5 @@
 
 INSTRUMENTING_MODULE_NAME = "opentelemetry-ops-e2e-test-server"
 SCENARIO = "scenario"
-STATUS = "status"
-TEST_ID = "test-id"
+STATUS_CODE = "status_code"
+TEST_ID = "test_id"
