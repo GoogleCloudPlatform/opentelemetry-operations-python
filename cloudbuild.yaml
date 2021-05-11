@@ -17,18 +17,25 @@ steps:
     id: build-test-server
     args:
       - build
-      - --tag=gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server
+      - --tag=gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server:$SHORT_SHA
       - --file=e2e-test-server/Dockerfile
       - .
+  - name: docker
+    id: push-test-server-image
+    args:
+      - push
+      - gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server:$SHORT_SHA
 
-  - name: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:0.5.9
+  - name: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:0.5.10
     id: run-tests
     dir: /
     env:
       - "PROJECT_ID=$PROJECT_ID"
     args:
       - local
-      - --image=gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server
+      - --image=gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server:$SHORT_SHA
       - --network=cloudbuild
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
+images:
+  - gcr.io/$PROJECT_ID/opentelemetry-operations-python-e2e-test-server:$SHORT_SHA
