@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 import unittest
+from opentelemetry.context.context import Context
 
 import opentelemetry.trace as trace
 from opentelemetry.context import get_current
@@ -43,7 +44,13 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         new_context = self.propagator.extract(
             carrier=header, getter=default_getter
         )
-        return trace.get_current_span(new_context).get_span_context()
+        return new_context
+
+    def _extractSpanContext(self, header_value):
+        """Test helper"""
+        return trace.get_current_span(
+            self._extract(header_value)
+        ).get_span_context()
 
     def _inject(self, span=None):
         """Test helper"""
@@ -54,27 +61,30 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.propagator.inject(output, context=ctx)
         return output.get(_TRACE_CONTEXT_HEADER_NAME)
 
-    def test_no_context_header(self):
-        header = {}
-        new_context = self.propagator.extract(
-            carrier=header, getter=default_getter
-        )
+    def _assertFailedToExtract(self, new_context: Context):
+        self.assertEqual(new_context, Context())
         self.assertEqual(
             trace.get_current_span(new_context).get_span_context(),
             trace.INVALID_SPAN.get_span_context(),
         )
 
+    def test_no_context_header(self):
+        headers = {}
+        new_context = self.propagator.extract(
+            carrier=headers, getter=default_getter
+        )
+        self._assertFailedToExtract(new_context)
+
     def test_empty_context_header(self):
         header = ""
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        new_context = self._extract(header)
+        self._assertFailedToExtract(new_context)
 
     def test_valid_header(self):
         header = "{}/{};o=1".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        new_span_context = self._extract(header)
+        new_span_context = self._extractSpanContext(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
         self.assertEqual(new_span_context.span_id, self.valid_span_id)
         self.assertEqual(new_span_context.trace_flags, TraceFlags(1))
@@ -83,7 +93,7 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         header = "{}/{};o=10".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        new_span_context = self._extract(header)
+        new_span_context = self._extractSpanContext(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
         self.assertEqual(new_span_context.span_id, self.valid_span_id)
         self.assertEqual(new_span_context.trace_flags, TraceFlags(10))
@@ -92,14 +102,14 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         header = "{}/{};o=0".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        new_span_context = self._extract(header)
+        new_span_context = self._extractSpanContext(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
         self.assertEqual(new_span_context.span_id, self.valid_span_id)
         self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
         self.assertTrue(new_span_context.is_remote)
 
         header = "{}/{};o=0".format(format_trace_id(self.valid_trace_id), 345)
-        new_span_context = self._extract(header)
+        new_span_context = self._extractSpanContext(header)
         self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
         self.assertEqual(new_span_context.span_id, 345)
         self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
@@ -129,106 +139,73 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
 
     def test_invalid_header_format(self):
         header = "invalid_header"
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{};o=".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "extra_chars/{}/{};o=1".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{}extra_chars;o=1".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{};o=1extra_chars".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/;o=1".format(format_trace_id(self.valid_trace_id))
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "/{};o=1".format(self.valid_span_id)
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{};o={}".format("123", "34", "4")
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
     def test_invalid_trace_id(self):
         header = "{}/{};o={}".format(INVALID_TRACE_ID, self.valid_span_id, 1)
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
+
         header = "{}/{};o={}".format("0" * 32, self.valid_span_id, 1)
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "0/{};o={}".format(self.valid_span_id, 1)
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "234/{};o={}".format(self.valid_span_id, 1)
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{};o={}".format(self.too_long_id, self.valid_span_id, 1)
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
     def test_invalid_span_id(self):
         header = "{}/{};o={}".format(
             format_trace_id(self.valid_trace_id), INVALID_SPAN_ID, 1
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{};o={}".format(
             format_trace_id(self.valid_trace_id), "0" * 16, 1
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{};o={}".format(
             format_trace_id(self.valid_trace_id), "0", 1
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
         header = "{}/{};o={}".format(
             format_trace_id(self.valid_trace_id), self.too_long_id, 1
         )
-        self.assertEqual(
-            self._extract(header), trace.INVALID_SPAN.get_span_context()
-        )
+        self._assertFailedToExtract(self._extract(header))
 
     def test_inject_with_no_context(self):
         output = self._inject()

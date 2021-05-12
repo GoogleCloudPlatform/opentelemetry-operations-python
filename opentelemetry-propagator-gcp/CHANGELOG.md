@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix propagator modifying context if failed to extract
+
 ## Version 1.0.0rc0
 
 Released 2021-04-22
