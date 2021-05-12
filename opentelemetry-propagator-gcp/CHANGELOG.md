@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix propagator modifying context if failed to extract
+  ([#139](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/139))
 
 ## Version 1.0.0rc0
 
