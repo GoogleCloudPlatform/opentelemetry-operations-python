@@ -13,10 +13,10 @@
 # limitations under the License.
 #
 import unittest
-from opentelemetry.context.context import Context
 
 import opentelemetry.trace as trace
 from opentelemetry.context import get_current
+from opentelemetry.context.context import Context
 from opentelemetry.propagators.cloud_trace_propagator import (
     _TRACE_CONTEXT_HEADER_NAME,
     CloudTraceFormatPropagator,
