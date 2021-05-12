@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add CompositeCloudTraceW3CPropagator
+  ([#140](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/140))
 - Fix propagator modifying context if failed to extract
   ([#139](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/139))
 

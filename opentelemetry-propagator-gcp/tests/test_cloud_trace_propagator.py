@@ -11,15 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 import unittest
+<<<<<<< HEAD
+=======
+from typing import Type
+from unittest import mock
+>>>>>>> 1ecda74 (add CompositeCloudTraceW3CPropagator and update docs)
 
 import opentelemetry.trace as trace
+from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.propagators.cloud_trace_propagator import (
     _TRACE_CONTEXT_HEADER_NAME,
     CloudTraceFormatPropagator,
+    CompositeCloudTraceW3CPropagator,
 )
 from opentelemetry.propagators.textmap import default_getter
 from opentelemetry.trace.span import (
@@ -27,29 +34,40 @@ from opentelemetry.trace.span import (
     INVALID_TRACE_ID,
     SpanContext,
     TraceFlags,
+    TraceState,
+    format_span_id,
     format_trace_id,
 )
 
+_TRACEPARENT_HEADER_NAME = "traceparent"
+_BAGGAGE_HEADER_NAME = "baggage"
+
 
 class TestCloudTraceFormatPropagator(unittest.TestCase):
+    PropagatorCls: Type[
+        CloudTraceFormatPropagator
+    ] = CloudTraceFormatPropagator
+
     def setUp(self):
-        self.propagator = CloudTraceFormatPropagator()
+        self.propagator = self.PropagatorCls()
         self.valid_trace_id = 281017822499060589596062859815111849546
         self.valid_span_id = 17725314949316355921
         self.too_long_id = 111111111111111111111111111111111111111111111
 
-    def _extract(self, header_value):
+    def _extract(self, header_value, header_key=_TRACE_CONTEXT_HEADER_NAME):
         """Test helper"""
-        header = {_TRACE_CONTEXT_HEADER_NAME: [header_value]}
+        header = {header_key: [header_value]}
         new_context = self.propagator.extract(
             carrier=header, getter=default_getter
         )
         return new_context
 
-    def _extract_span_context(self, header_value):
+    def _extract_span_context(
+        self, header_value, header_key=_TRACE_CONTEXT_HEADER_NAME,
+    ):
         """Test helper"""
         return trace.get_current_span(
-            self._extract(header_value)
+            self._extract(header_value, header_key)
         ).get_span_context()
 
     def _inject(self, span=None):
@@ -229,3 +247,162 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
                 format_trace_id(self.valid_trace_id), self.valid_span_id, 1,
             ),
         )
+
+class TestCompositeCloudTraceW3CPropagator(TestCloudTraceFormatPropagator):
+    PropagatorCls = CompositeCloudTraceW3CPropagator
+
+    baggage_key = "hello"
+    baggage_value = "world"
+
+    def test_inject_tracecontext(self):
+        span_context = SpanContext(
+            trace_id=self.valid_trace_id,
+            span_id=self.valid_span_id,
+            is_remote=True,
+            trace_flags=TraceFlags(1),
+        )
+        ctx = trace.set_span_in_context(
+            trace.NonRecordingSpan(span_context), get_current()
+        )
+        output = {}
+        self.propagator.inject(output, context=ctx)
+
+        self.assertIn(_TRACEPARENT_HEADER_NAME, output)
+        self.assertEqual(
+            output[_TRACEPARENT_HEADER_NAME],
+            "00-{}-{}-01".format(
+                format_trace_id(self.valid_trace_id),
+                format_span_id(self.valid_span_id),
+            ),
+        )
+
+    def test_extract_tracecontext(self):
+        header = "00-{}-{}-01".format(
+            format_trace_id(self.valid_trace_id),
+            format_span_id(self.valid_span_id),
+        )
+        new_span_context = self._extract_span_context(
+            header, _TRACEPARENT_HEADER_NAME
+        )
+        self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
+        self.assertEqual(new_span_context.span_id, self.valid_span_id)
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(1))
+        self.assertTrue(new_span_context.is_remote)
+
+    def test_inject_baggage(self):
+        ctx = baggage.set_baggage(
+            self.baggage_key, self.baggage_value, get_current()
+        )
+        output = {}
+        self.propagator.inject(output, context=ctx)
+        self.assertIn(_BAGGAGE_HEADER_NAME, output)
+        self.assertEqual(
+            output[_BAGGAGE_HEADER_NAME],
+            "{}={}".format(self.baggage_key, self.baggage_value),
+        )
+
+    def test_extract_baggage(self):
+        header = "{}={}".format(self.baggage_key, self.baggage_value)
+        new_context = self._extract(header, _BAGGAGE_HEADER_NAME)
+        self.assertEqual(
+            baggage.get_baggage(self.baggage_key, new_context),
+            self.baggage_value,
+        )
+
+    def test_merge_contexts_if_already_present_and_match(self):
+        """This could happen in the case of a composite propagator of
+        traceparent + x-cloud-trace-context. They could represent the same
+        remote parent, but one of the two forces sampling (trace flags 0x01). We
+        should respect that. Also, tracestate header is not supported by
+        x-cloud-trace-context, so we should preserve it.
+        """
+
+        existing_trace_state = TraceState([("hello", "world")])
+
+        def extract_with_existing(
+            existing_traceflags: TraceFlags,
+            cloudtrace_traceflags: TraceFlags,
+            existing_trace_id: int,
+            cloudtrace_trace_id: int,
+        ) -> SpanContext:
+            existing_span = trace.NonRecordingSpan(
+                SpanContext(
+                    trace_id=existing_trace_id,
+                    span_id=self.valid_span_id,
+                    is_remote=True,
+                    trace_flags=existing_traceflags,
+                    trace_state=existing_trace_state,
+                )
+            )
+            headers = {
+                _TRACE_CONTEXT_HEADER_NAME: [
+                    "{}/{};o={}".format(
+                        format_trace_id(cloudtrace_trace_id),
+                        self.valid_span_id,
+                        cloudtrace_traceflags,
+                    )
+                ]
+            }
+            existing_context = set_span_in_context(existing_span, Context())
+            return get_current_span(
+                self.propagator.extract(
+                    carrier=headers, context=existing_context
+                )
+            ).get_span_context()
+
+        # trace flags and trace state should be preserved with matching span contexts
+        new_span_context = extract_with_existing(
+            TraceFlags(1),
+            TraceFlags(0),
+            self.valid_trace_id,
+            self.valid_trace_id,
+        )
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(1))
+        self.assertEqual(new_span_context.trace_state, existing_trace_state)
+
+        # trace flags and trace state should be preserved with matching span contexts
+        new_span_context = extract_with_existing(
+            TraceFlags(0),
+            TraceFlags(1),
+            self.valid_trace_id,
+            self.valid_trace_id,
+        )
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(1))
+        self.assertEqual(new_span_context.trace_state, existing_trace_state)
+
+        # everything should be overwritten with different span contexts
+        new_span_context = extract_with_existing(
+            TraceFlags(1), TraceFlags(0), self.valid_trace_id, 0xDEADBEEF,
+        )
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
+        self.assertNotEqual(new_span_context.trace_state, existing_trace_state)
+
+    @mock.patch("opentelemetry.propagators.cloud_trace_propagator.logger")
+    def test_warn_if_overwriting_existing_span_context(
+        self, mock_logger: mock.Mock
+    ):
+        headers = {
+            _TRACE_CONTEXT_HEADER_NAME: [
+                "{}/{};o=1".format(
+                    format_trace_id(self.valid_trace_id), self.valid_span_id
+                )
+            ]
+        }
+
+        # should not warn if not overwriting
+        self.propagator.extract(carrier=headers, context=Context())
+        mock_logger.warning.assert_not_called()
+
+        # should warn if overwriting
+        existing_span = trace.NonRecordingSpan(
+            SpanContext(
+                trace_id=self.valid_trace_id,
+                span_id=self.valid_span_id,
+                is_remote=True,
+                trace_flags=TraceFlags(1),
+            )
+        )
+        context = set_span_in_context(existing_span, Context())
+        self.propagator.extract(carrier=headers, context=context)
+        mock_logger.warning.assert_called_once()
+

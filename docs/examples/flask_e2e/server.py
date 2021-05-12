@@ -23,7 +23,7 @@ from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.cloud_trace_propagator import (
-    CloudTraceFormatPropagator,
+    CompositeCloudTraceW3CPropagator,
 )
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -32,7 +32,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 # [START opentelemetry_flask_setup_propagator]
 
-set_global_textmap(CloudTraceFormatPropagator())
+set_global_textmap(CompositeCloudTraceW3CPropagator())
 
 # [END opentelemetry_flask_setup_propagator]
 

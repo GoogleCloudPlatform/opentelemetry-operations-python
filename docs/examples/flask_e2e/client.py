@@ -19,12 +19,12 @@ from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.cloud_trace_propagator import (
-    CloudTraceFormatPropagator,
+    CompositeCloudTraceW3CPropagator,
 )
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-set_global_textmap(CloudTraceFormatPropagator())
+set_global_textmap(CompositeCloudTraceW3CPropagator())
 
 tracer_provider = TracerProvider()
 cloud_trace_exporter = CloudTraceSpanExporter()
