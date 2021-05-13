@@ -37,6 +37,14 @@ from opentelemetry.sdk.metrics.export.aggregate import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.util import time_ns
 
+import warnings
+
+warnings.warn(
+    "Package opentelemetry-exporter-google-cloud is deprecated. Please install "
+    "opentelemetry-exporter-gcp-monitoring and opentelemetry-exporter-gcp-trace instead",
+    DeprecationWarning,
+)
+
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10

@@ -25,6 +25,14 @@ from opentelemetry.trace.span import (
     get_hexadecimal_trace_id,
 )
 
+import warnings
+
+warnings.warn(
+    "Package opentelemetry-tools-google-cloud is deprecated. Please install "
+    "opentelemetry-resourcedetector-gcp and opentelemetry-propagator-gcp instead",
+    DeprecationWarning,
+)
+
 _TRACE_CONTEXT_HEADER_NAME = "x-cloud-trace-context"
 _TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)"
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)

@@ -73,6 +73,14 @@ from opentelemetry.trace.span import (
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import types
 
+import warnings
+
+warnings.warn(
+    "Package opentelemetry-exporter-google-cloud is deprecated. Please install "
+    "opentelemetry-exporter-gcp-monitoring and opentelemetry-exporter-gcp-trace instead",
+    DeprecationWarning,
+)
+
 logger = logging.getLogger(__name__)
 
 MAX_NUM_LINKS = 128

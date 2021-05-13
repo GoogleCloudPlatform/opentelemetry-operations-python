@@ -8,6 +8,16 @@ OpenTelemetry Google Cloud Integration
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
+DEPRECATED
+----------
+
+**This package is deprecated. It will not
+receive any more updates.** Please use `opentelemetry-exporter-gcp-monitoring
+<https://pypi.org/project/opentelemetry-exporter-gcp-monitoring/>`_ and
+`opentelemetry-exporter-gcp-trace
+<https://pypi.org/project/opentelemetry-exporter-gcp-trace/>`_ instead. It will
+not receive any more updates.
+
 This library provides support for:
 
 - Exporting traces to Google Cloud Trace
