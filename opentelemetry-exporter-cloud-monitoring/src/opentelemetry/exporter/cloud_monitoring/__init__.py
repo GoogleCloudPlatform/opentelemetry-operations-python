@@ -15,6 +15,14 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 
+import warnings
+
+warnings.warn(
+    "Package opentelemetry-exporter-cloud-monitoring is deprecated. Please install "
+    "opentelemetry-exporter-gcp-monitoring instead",
+    DeprecationWarning,
+)
+
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10

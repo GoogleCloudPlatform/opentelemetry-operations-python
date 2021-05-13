@@ -1,6 +1,14 @@
 OpenTelemetry Cloud Monitoring Exporters
 ========================================
 
+DEPRECATED
+----------
+
+**This package is deprecated. It will not
+receive any more updates.** Please use `opentelemetry-exporter-gcp-monitoring
+<https://pypi.org/project/opentelemetry-exporter-gcp-monitoring/>`_ instead. It
+will not receive any more updates.
+
 This library provides classes for exporting metrics data to Google Cloud Monitoring.
 
 Installation
