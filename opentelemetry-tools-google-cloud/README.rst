@@ -8,6 +8,16 @@ OpenTelemetry Google Cloud Integration
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
+DEPRECATED
+----------
+
+**This package is deprecated. It will not
+receive any more updates.** Please use `opentelemetry-resourcedetector-gcp
+<https://pypi.org/project/opentelemetry-resourcedetector-gcp/>`_ and
+`opentelemetry-propagator-gcp
+<https://pypi.org/project/opentelemetry-propagator-gcp/>`_ instead. It will not
+receive any more updates.
+
 This library provides support for:
 
 - Detecting GCP resources like GCE, GKE, etc.

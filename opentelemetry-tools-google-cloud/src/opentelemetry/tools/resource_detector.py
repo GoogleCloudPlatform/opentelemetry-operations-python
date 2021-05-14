@@ -14,10 +14,17 @@
 
 import logging
 import os
+import warnings
 
 import requests
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
+
+warnings.warn(
+    "Package opentelemetry-exporter-cloud-monitoring is deprecated. Please install "
+    "opentelemetry-exporter-gcp-monitoring instead",
+    DeprecationWarning,
+)
 
 _GCP_METADATA_URL = (
     "http://metadata.google.internal/computeMetadata/v1/?recursive=true"
