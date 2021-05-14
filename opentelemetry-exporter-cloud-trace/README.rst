@@ -1,6 +1,16 @@
 OpenTelemetry Cloud Trace Exporters
 ===================================
 
+DEPRECATED
+----------
+
+**This package is deprecated. It will not
+receive any more updates.** Please use `opentelemetry-exporter-gcp-trace
+<https://pypi.org/project/opentelemetry-exporter-gcp-trace/>`_ and
+`opentelemetry-propagator-gcp
+<https://pypi.org/project/opentelemetry-propagator-gcp/>`_ instead. It will not
+receive any more updates.
+
 This library provides classes for exporting trace data to Google Cloud Trace.
 
 Installation
