@@ -15,6 +15,7 @@
 
 import re
 import typing
+import warnings
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
@@ -24,8 +25,6 @@ from opentelemetry.trace.span import (
     TraceFlags,
     get_hexadecimal_trace_id,
 )
-
-import warnings
 
 warnings.warn(
     "Package opentelemetry-tools-google-cloud is deprecated. Please install "

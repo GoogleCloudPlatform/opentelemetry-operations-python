@@ -14,12 +14,11 @@
 
 import logging
 import os
+import warnings
 
 import requests
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
-
-import warnings
 
 warnings.warn(
     "Package opentelemetry-exporter-cloud-monitoring is deprecated. Please install "

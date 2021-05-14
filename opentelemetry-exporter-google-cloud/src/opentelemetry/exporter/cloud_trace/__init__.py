@@ -50,6 +50,7 @@ API
 
 import collections
 import logging
+import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
@@ -72,8 +73,6 @@ from opentelemetry.trace.span import (
 )
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import types
-
-import warnings
 
 warnings.warn(
     "Package opentelemetry-exporter-google-cloud is deprecated. Please install "
