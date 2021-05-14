@@ -56,21 +56,24 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
+        if context is None:
+            context = Context()
+
         header = self._get_header_value(getter, carrier)
 
         if not header:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         match = re.fullmatch(_TRACE_CONTEXT_HEADER_RE, header)
         if match is None:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         trace_id = match.group("trace_id")
         span_id = match.group("span_id")
         trace_options = match.group("trace_flags")
 
         if trace_id == "0" * 32 or int(span_id) == 0:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         span_context = SpanContext(
             trace_id=int(trace_id, 16),
