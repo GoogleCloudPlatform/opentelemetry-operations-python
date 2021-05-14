@@ -21,8 +21,8 @@ from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.resources import Resource, ResourceDetector
 
 warnings.warn(
-    "Package opentelemetry-exporter-cloud-monitoring is deprecated. Please install "
-    "opentelemetry-exporter-gcp-monitoring instead",
+    "Package opentelemetry-tools-google-cloud is deprecated. Please install "
+    "opentelemetry-resourcedetector-gcp and opentelemetry-propagator-gcp instead",
     DeprecationWarning,
 )
 
