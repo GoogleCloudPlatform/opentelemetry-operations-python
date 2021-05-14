@@ -37,8 +37,6 @@ steps:
       - --network=cloudbuild
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
-options:
-  dynamic_substitutions: true
 substitutions:
   _TEST_RUNNER_IMAGE: gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-e2e-testing:0.5.12
   _TEST_SERVER_IMAGE: gcr.io/${PROJECT_ID}/opentelemetry-operations-python-e2e-test-server:${SHORT_SHA}
