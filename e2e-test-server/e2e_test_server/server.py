@@ -18,12 +18,15 @@ from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
 
 from . import scenarios
-from .constants import SCENARIO, STATUS_CODE, TEST_ID
+from .constants import (
+    SCENARIO,
+    STATUS_CODE,
+    TEST_ID,
+    PROJECT_ID,
+    REQUEST_SUBSCRIPTION_NAME,
+    RESPONSE_TOPIC_NAME,
+)
 from google.rpc import code_pb2
-
-PROJECT_ID = os.environ["PROJECT_ID"]
-REQUEST_SUBSCRIPTION_NAME = os.environ["REQUEST_SUBSCRIPTION_NAME"]
-RESPONSE_TOPIC_NAME = os.environ["RESPONSE_TOPIC_NAME"]
 
 
 def pubsub_pull() -> None:
@@ -35,8 +38,7 @@ def pubsub_pull() -> None:
 
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(
-        PROJECT_ID,
-        REQUEST_SUBSCRIPTION_NAME,
+        PROJECT_ID, REQUEST_SUBSCRIPTION_NAME,
     )
 
     def respond(test_id: str, res: scenarios.Response) -> None:
@@ -45,9 +47,7 @@ def pubsub_pull() -> None:
         attributes = {TEST_ID: test_id, STATUS_CODE: str(res.status_code)}
         print(f"publishing {data=} and {attributes=}")
         publisher.publish(
-            response_topic,
-            bytes(),
-            **attributes,
+            response_topic, bytes(), **attributes,
         )
 
     def pubsub_callback(message: Message) -> None:

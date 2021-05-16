@@ -31,6 +31,7 @@ from .constants import INSTRUMENTING_MODULE_NAME, TEST_ID
 @dataclass
 class Response:
     status_code: code_pb2.Code
+    message: Any = None
 
 
 @contextlib.contextmanager

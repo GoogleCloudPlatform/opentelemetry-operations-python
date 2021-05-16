@@ -13,6 +13,15 @@
 # limitations under the License.
 
 from e2e_test_server import server
+from e2e_test_server.constants import SUBSCRIPTION_MODE, SubscriptionMode
+
 
 if __name__ == "__main__":
-    server.pubsub_pull()
+    if SUBSCRIPTION_MODE is SubscriptionMode.PULL:
+        server.pubsub_pull()
+    else:
+        raise RuntimeError(
+            "server does not support subscription mode {}".format(
+                SUBSCRIPTION_MODE
+            )
+        )
