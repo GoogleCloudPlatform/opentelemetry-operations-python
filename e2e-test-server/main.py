@@ -15,7 +15,6 @@
 from e2e_test_server import server
 from e2e_test_server.constants import SUBSCRIPTION_MODE, SubscriptionMode
 
-
 if __name__ == "__main__":
     if SUBSCRIPTION_MODE is SubscriptionMode.PULL:
         server.pubsub_pull()

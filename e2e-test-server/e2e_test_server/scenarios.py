@@ -15,11 +15,10 @@
 import contextlib
 import os
 from dataclasses import dataclass
-from typing import Any, Callable, Iterator, Mapping
-
-from google.rpc import code_pb2
+from typing import Callable, Iterator, Mapping
 
 import pydantic
+from google.rpc import code_pb2
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor

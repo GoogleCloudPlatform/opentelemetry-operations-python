@@ -12,23 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import Handler
 import logging
-import os
 
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
+from google.rpc import code_pb2
 
 from . import scenarios
 from .constants import (
-    SCENARIO,
-    STATUS_CODE,
-    TEST_ID,
     PROJECT_ID,
     REQUEST_SUBSCRIPTION_NAME,
     RESPONSE_TOPIC_NAME,
+    SCENARIO,
+    STATUS_CODE,
+    TEST_ID,
 )
-from google.rpc import code_pb2
 
 logger = logging.getLogger(__name__)
 
