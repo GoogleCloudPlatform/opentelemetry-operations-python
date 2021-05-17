@@ -51,7 +51,7 @@ def pubsub_pull() -> None:
         )
 
     def pubsub_callback(message: Message) -> None:
-        """Execute a scenario based on the incoming message from the test test runner"""
+        """Execute a scenario based on the incoming message from the test runner"""
         if TEST_ID not in message.attributes:
             # don't even know how to write back to the publisher that the
             # message is invalid, so nack()
