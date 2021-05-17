@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from e2e_test_server import server
 from e2e_test_server.constants import SUBSCRIPTION_MODE, SubscriptionMode
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
     if SUBSCRIPTION_MODE is SubscriptionMode.PULL:
         server.pubsub_pull()
     else:
