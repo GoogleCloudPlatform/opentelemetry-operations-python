@@ -15,10 +15,11 @@
 import contextlib
 import os
 from dataclasses import dataclass
-from typing import Any, Iterator, Mapping
+from typing import Any, Callable, Iterator, Mapping
 
 from google.rpc import code_pb2
 
+import pydantic
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -28,14 +29,20 @@ from opentelemetry.trace import Tracer
 from .constants import INSTRUMENTING_MODULE_NAME, TEST_ID
 
 
+class Request(pydantic.BaseModel):
+    test_id: str
+    headers: Mapping[str, str]
+    data: bytes
+
+
 @dataclass
 class Response:
     status_code: code_pb2.Code
-    message: Any = None
+    data: bytes = bytes()
 
 
 @contextlib.contextmanager
-def _tracer_setup(carrier: Mapping[str, str]) -> Iterator[Tracer]:
+def _tracer_setup() -> Iterator[Tracer]:
     """\
     Context manager with common setup for tracing endpoints
 
@@ -57,17 +64,27 @@ def _tracer_setup(carrier: Mapping[str, str]) -> Iterator[Tracer]:
         tracer_provider.shutdown()
 
 
-def health(test_id: str, headers: Mapping[str, str], body: bytes) -> Response:
+def health(request: Request) -> Response:
     return Response(status_code=code_pb2.OK)
 
 
-def basicTrace(
-    test_id: str, headers: Mapping[str, str], body: bytes
-) -> Response:
+def basic_trace(request: Request) -> Response:
     """Create a basic trace"""
 
-    with _tracer_setup(headers) as tracer:
-        with tracer.start_span("basicTrace", attributes={TEST_ID: test_id}):
+    with _tracer_setup() as tracer:
+        with tracer.start_span(
+            "basicTrace", attributes={TEST_ID: request.test_id}
+        ):
             pass
 
     return Response(status_code=code_pb2.OK)
+
+
+def not_implemented_handler(_: Request) -> Response:
+    return Response(status_code=str(code_pb2.UNIMPLEMENTED))
+
+
+SCENARIO_TO_HANDLER: dict[str, Callable[[Request], Response]] = {
+    "/health": health,
+    "/basicTrace": basic_trace,
+}

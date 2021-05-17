@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import Handler
+import logging
 import os
 
 from google.cloud import pubsub_v1
@@ -28,6 +30,8 @@ from .constants import (
 )
 from google.rpc import code_pb2
 
+logger = logging.getLogger(__name__)
+
 
 def pubsub_pull() -> None:
     publisher = pubsub_v1.PublisherClient(
@@ -38,16 +42,19 @@ def pubsub_pull() -> None:
 
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(
-        PROJECT_ID, REQUEST_SUBSCRIPTION_NAME,
+        PROJECT_ID,
+        REQUEST_SUBSCRIPTION_NAME,
     )
 
     def respond(test_id: str, res: scenarios.Response) -> None:
         """Respond to the test runner that we finished executing the scenario"""
-        data = bytes()
+        data = res.data
         attributes = {TEST_ID: test_id, STATUS_CODE: str(res.status_code)}
-        print(f"publishing {data=} and {attributes=}")
+        logger.info(f"publishing {data=} and {attributes=}")
         publisher.publish(
-            response_topic, bytes(), **attributes,
+            response_topic,
+            data,
+            **attributes,
         )
 
     def pubsub_callback(message: Message) -> None:
@@ -56,38 +63,43 @@ def pubsub_pull() -> None:
             # don't even know how to write back to the publisher that the
             # message is invalid, so nack()
             message.nack()
-        test_id = message.attributes[TEST_ID]
+        test_id: str = message.attributes[TEST_ID]
 
         if SCENARIO not in message.attributes:
-            publisher.publish(
-                response_topic,
-                f'Expected attribute "{SCENARIO}" is missing',
-                **{
-                    TEST_ID: test_id,
-                    STATUS_CODE: str(code_pb2.INVALID_ARGUMENT),
-                },
+            respond(
+                test_id,
+                scenarios.Response(
+                    status_code=code_pb2.INVALID_ARGUMENT,
+                    data=f'Expected attribute "{SCENARIO}" is missing'.encode(),
+                ),
             )
         scenario = message.attributes[SCENARIO]
+        handler = scenarios.SCENARIO_TO_HANDLER.get(
+            scenario, scenarios.not_implemented_handler
+        )
 
-        if scenario == "/health":
-            scenarioFunc = scenarios.health
-        elif scenario == "/basicTrace":
-            scenarioFunc = scenarios.basicTrace
-        else:
-            scenarioFunc = lambda *args, **kwargs: scenarios.Response(
-                status_code=str(code_pb2.UNIMPLEMENTED)
+        try:
+            res = handler(
+                scenarios.Request(
+                    test_id=test_id,
+                    headers=dict(message.attributes),
+                    data=message.data,
+                )
             )
-
-        res = scenarioFunc(test_id, message.attributes, message.data)
-
-        respond(test_id, res)
-        message.ack()
+        except Exception as e:
+            logger.exception("exception trying to handle request")
+            res = scenarios.Response(
+                status_code=code_pb2.INTERNAL, data=str(e).encode()
+            )
+        finally:
+            respond(test_id, res)
+            message.ack()
 
     streaming_pull_future = subscriber.subscribe(
         subscription_path, callback=pubsub_callback
     )
 
-    print(
+    logger.info(
         "Listening on subscription {} for pub/sub messages".format(
             REQUEST_SUBSCRIPTION_NAME
         )
