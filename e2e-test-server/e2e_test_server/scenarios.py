@@ -14,33 +14,40 @@
 
 import contextlib
 import os
-from typing import Iterator
+from dataclasses import dataclass
+from typing import Callable, Iterator, Mapping
 
-from flask import Flask, Response, request
+import pydantic
+from google.rpc import code_pb2
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 from opentelemetry.trace import Tracer
 
-TEST_ID = "test-id"
-INSTRUMENTING_MODULE_NAME = "opentelemetry-ops-e2e-test-server"
+from .constants import INSTRUMENTING_MODULE_NAME, TEST_ID
 
-app = Flask(__name__)
+
+class Request(pydantic.BaseModel):
+    test_id: str
+    headers: Mapping[str, str]
+    data: bytes
+
+
+@dataclass
+class Response:
+    status_code: code_pb2.Code
+    data: bytes = bytes()
 
 
 @contextlib.contextmanager
-def common_setup() -> Iterator[tuple[str, Tracer]]:
+def _tracer_setup() -> Iterator[Tracer]:
     """\
-    Context manager with common setup for test endpoints
+    Context manager with common setup for tracing endpoints
 
-    It extracts the test-id header, creates a tracer, and finally flushes
-    spans created during the test
+    Yields a tracer (from a fresh SDK with new exporter) then finally flushes
+    spans created during the test after.
     """
-
-    if TEST_ID not in request.headers:
-        raise Exception(f"{TEST_ID} header is required")
-    test_id = request.headers[TEST_ID]
 
     tracer_provider = TracerProvider(
         sampler=ALWAYS_ON,
@@ -51,22 +58,32 @@ def common_setup() -> Iterator[tuple[str, Tracer]]:
     tracer = tracer_provider.get_tracer(INSTRUMENTING_MODULE_NAME)
 
     try:
-        yield test_id, tracer
+        yield tracer
     finally:
         tracer_provider.shutdown()
 
 
-@app.route("/health")
-def health():
-    return "OK", 200
+def health(request: Request) -> Response:
+    return Response(status_code=code_pb2.OK)
 
 
-@app.route("/basicTrace", methods=["POST"])
-def basicTrace():
+def basic_trace(request: Request) -> Response:
     """Create a basic trace"""
 
-    with common_setup() as (test_id, tracer):
-        with tracer.start_span("basicTrace", attributes={TEST_ID: test_id}):
+    with _tracer_setup() as tracer:
+        with tracer.start_span(
+            "basicTrace", attributes={TEST_ID: request.test_id}
+        ):
             pass
 
-    return Response(status=200)
+    return Response(status_code=code_pb2.OK)
+
+
+def not_implemented_handler(_: Request) -> Response:
+    return Response(status_code=str(code_pb2.UNIMPLEMENTED))
+
+
+SCENARIO_TO_HANDLER: dict[str, Callable[[Request], Response]] = {
+    "/health": health,
+    "/basicTrace": basic_trace,
+}

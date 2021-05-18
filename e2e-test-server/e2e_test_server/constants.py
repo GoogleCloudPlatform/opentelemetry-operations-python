@@ -12,17 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import enum
 import os
 
-if "PORT" not in os.environ:
-    raise Exception("Must supply environment variable PORT")
 
-bind = "0.0.0.0:{}".format(os.environ["PORT"])
+class SubscriptionMode(enum.Enum):
+    PULL = "pull"
+    PUSH = "push"
 
-# Needed to prevent forking for OTel
-workers = 1
 
-wsgi_app = "server:app"
-
-# log requests to stdout
-accesslog = "-"
+INSTRUMENTING_MODULE_NAME = "opentelemetry-ops-e2e-test-server"
+SCENARIO = "scenario"
+STATUS_CODE = "status_code"
+TEST_ID = "test_id"
+SUBSCRIPTION_MODE: SubscriptionMode = SubscriptionMode(
+    os.environ["SUBSCRIPTION_MODE"]
+)
+PROJECT_ID = os.environ["PROJECT_ID"]
+REQUEST_SUBSCRIPTION_NAME = os.environ["REQUEST_SUBSCRIPTION_NAME"]
+RESPONSE_TOPIC_NAME = os.environ["RESPONSE_TOPIC_NAME"]

@@ -37,4 +37,4 @@ WORKDIR $SRC/e2e-test-server
 COPY --from=build-base $SRC/e2e-test-server/venv venv/
 COPY e2e-test-server/ ./
 
-ENTRYPOINT ["./venv/bin/gunicorn"]
+ENTRYPOINT ["./venv/bin/python", "main.py"]
