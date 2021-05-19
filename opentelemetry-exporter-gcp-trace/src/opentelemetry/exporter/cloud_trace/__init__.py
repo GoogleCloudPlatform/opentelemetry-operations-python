@@ -50,6 +50,7 @@ API
 
 import collections
 import logging
+import os
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import google.auth
@@ -79,6 +80,7 @@ MAX_NUM_EVENTS = 32
 MAX_EVENT_ATTRS = 4
 MAX_LINK_ATTRS = 32
 MAX_SPAN_ATTRS = 32
+OTEL_RESOURCE_ATTRIBUTES = os.getenv("OTEL_RESOURCE_ATTRIBUTES", "")
 
 
 class CloudTraceSpanExporter(SpanExporter):
@@ -358,23 +360,31 @@ OT_RESOURCE_ATTRIBUTE_TO_GCP = {
 
 
 def _extract_resources(resource: Resource) -> Dict[str, str]:
+    extracted_attributes = {}
+    for pair in OTEL_RESOURCE_ATTRIBUTES.split(","):
+        if "=" in pair:
+            attr_key, attr_value = pair.split("=", 1)
+            extracted_attributes[attr_key] = attr_value
     resource_attributes = resource.attributes
     if resource_attributes.get("cloud.provider") != "gcp":
-        return {}
+        return extracted_attributes
     resource_type = resource_attributes["gcp.resource_type"]
     if (
         not isinstance(resource_type, str)
         or resource_type not in OT_RESOURCE_ATTRIBUTE_TO_GCP
     ):
-        return {}
-    return {
-        "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
-            resource_attributes[ot_resource_key]
-        )
-        for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
-            resource_type
-        ].items()
-    }
+        return extracted_attributes
+    extracted_attributes.update(
+        {
+            "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
+                resource_attributes[ot_resource_key]
+            )
+            for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
+                resource_type
+            ].items()
+        }
+    )
+    return extracted_attributes
 
 
 LABELS_MAPPING = {

@@ -621,6 +621,33 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_extract_empty_resources(self):
         self.assertEqual(_extract_resources(Resource.get_empty()), {})
 
+    @mock.patch(
+        "opentelemetry.exporter.cloud_trace.OTEL_RESOURCE_ATTRIBUTES",
+        "service.name=my-app,service.version=1",
+    )
+    def test_extract_otel_resource_attributes(self):
+        resource = Resource(
+            attributes={
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "extra_info": "extra",
+                "gcp.resource_type": "gce_instance",
+                "not_gcp_resource": "value",
+                "service.name": "my-app",
+                "service.version": "1",
+            }
+        )
+        expected_extract = {
+            "g.co/r/gce_instance/project_id": "123",
+            "g.co/r/gce_instance/instance_id": "host",
+            "g.co/r/gce_instance/zone": "US",
+            "service.name": "my-app",
+            "service.version": "1",
+        }
+        self.assertEqual(_extract_resources(resource), expected_extract)
+
     def test_extract_well_formed_resources(self):
         resource = Resource(
             attributes={
