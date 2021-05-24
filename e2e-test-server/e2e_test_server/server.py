@@ -40,8 +40,7 @@ def pubsub_pull() -> None:
 
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(
-        PROJECT_ID,
-        REQUEST_SUBSCRIPTION_NAME,
+        PROJECT_ID, REQUEST_SUBSCRIPTION_NAME,
     )
 
     def respond(test_id: str, res: scenarios.Response) -> None:
@@ -50,9 +49,7 @@ def pubsub_pull() -> None:
         attributes = {TEST_ID: test_id, STATUS_CODE: str(res.status_code)}
         logger.info(f"publishing {data=} and {attributes=}")
         publisher.publish(
-            response_topic,
-            data,
-            **attributes,
+            response_topic, data, **attributes,
         )
 
     def pubsub_callback(message: Message) -> None:
@@ -61,6 +58,7 @@ def pubsub_pull() -> None:
             # don't even know how to write back to the publisher that the
             # message is invalid, so nack()
             message.nack()
+            return
         test_id: str = message.attributes[TEST_ID]
 
         if SCENARIO not in message.attributes:
@@ -71,6 +69,9 @@ def pubsub_pull() -> None:
                     data=f'Expected attribute "{SCENARIO}" is missing'.encode(),
                 ),
             )
+            message.ack()
+            return
+
         scenario = message.attributes[SCENARIO]
         handler = scenarios.SCENARIO_TO_HANDLER.get(
             scenario, scenarios.not_implemented_handler
