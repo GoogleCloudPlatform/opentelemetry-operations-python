@@ -61,7 +61,7 @@ from google.cloud.trace_v2.proto import trace_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc import code_pb2, status_pb2
 from opentelemetry.exporter.cloud_trace.version import __version__
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import OTELResourceDetector, Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import (
     ReadableSpan,
@@ -80,7 +80,6 @@ MAX_NUM_EVENTS = 32
 MAX_EVENT_ATTRS = 4
 MAX_LINK_ATTRS = 32
 MAX_SPAN_ATTRS = 32
-OTEL_RESOURCE_ATTRIBUTES = os.getenv("OTEL_RESOURCE_ATTRIBUTES", "")
 
 
 class CloudTraceSpanExporter(SpanExporter):
@@ -90,16 +89,22 @@ class CloudTraceSpanExporter(SpanExporter):
         project_id: ID of the cloud project that will receive the traces.
         client: Cloud Trace client. If not given, will be taken from gcloud
             default credentials
+        use_otel_env_resource: A boolean to extract resource attributes
+            that were added via special OpenTelemetry variables such as
+            `OTEL_RESOURCE_ATTRIBUTES` (default: False).
     """
 
     def __init__(
-        self, project_id=None, client=None,
+        self, project_id=None, client=None, use_otel_env_resource=False,
     ):
         self.client = client or TraceServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
         else:
             self.project_id = project_id
+        self.otel_env_resource = (
+            OTELResourceDetector().detect() if use_otel_env_resource else None
+        )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         """Export the spans to Cloud Trace.
@@ -157,7 +162,7 @@ class CloudTraceSpanExporter(SpanExporter):
             # information into attributes instead.
             resources_and_attrs = {
                 **(span.attributes or {}),
-                **_extract_resources(span.resource),
+                **_extract_resources(span.resource, self.otel_env_resource),
             }
 
             cloud_trace_spans.append(
@@ -359,12 +364,12 @@ OT_RESOURCE_ATTRIBUTE_TO_GCP = {
 }
 
 
-def _extract_resources(resource: Resource) -> Dict[str, str]:
+def _extract_resources(
+    resource: Resource, otel_env_resource: Optional[Resource] = None
+) -> Dict[str, str]:
     extracted_attributes = {}
-    for pair in OTEL_RESOURCE_ATTRIBUTES.split(","):
-        if "=" in pair:
-            attr_key, attr_value = pair.split("=", 1)
-            extracted_attributes[attr_key] = attr_value
+    if otel_env_resource:
+        extracted_attributes.update(otel_env_resource.attributes)
     resource_attributes = resource.attributes
     if resource_attributes.get("cloud.provider") != "gcp":
         return extracted_attributes

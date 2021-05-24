@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 from unittest import mock
 
@@ -39,7 +40,7 @@ from opentelemetry.exporter.cloud_trace import (
     _truncate_str,
 )
 from opentelemetry.exporter.cloud_trace.version import __version__
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import OTELResourceDetector, Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace import _Span as Span
 from opentelemetry.trace import Link, SpanContext, SpanKind
@@ -621,11 +622,12 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_extract_empty_resources(self):
         self.assertEqual(_extract_resources(Resource.get_empty()), {})
 
-    @mock.patch(
-        "opentelemetry.exporter.cloud_trace.OTEL_RESOURCE_ATTRIBUTES",
-        "service.name=my-app,service.version=1",
+    @mock.patch.dict(
+        os.environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-app,service.version=1"},
     )
     def test_extract_otel_resource_attributes(self):
+        otel_env_resource = OTELResourceDetector().detect()
         resource = Resource(
             attributes={
                 "cloud.account.id": 123,
@@ -635,8 +637,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                 "extra_info": "extra",
                 "gcp.resource_type": "gce_instance",
                 "not_gcp_resource": "value",
-                "service.name": "my-app",
-                "service.version": "1",
             }
         )
         expected_extract = {
@@ -646,7 +646,32 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             "service.name": "my-app",
             "service.version": "1",
         }
-        self.assertEqual(_extract_resources(resource), expected_extract)
+        self.assertEqual(
+            _extract_resources(resource, otel_env_resource), expected_extract
+        )
+
+    @mock.patch.dict(os.environ, {}, clear=True)
+    def test_empty_extracted_otel_resource_attributes(self):
+        otel_env_resource = OTELResourceDetector().detect()
+        resource = Resource(
+            attributes={
+                "cloud.account.id": 123,
+                "host.id": "host",
+                "cloud.zone": "US",
+                "cloud.provider": "gcp",
+                "extra_info": "extra",
+                "gcp.resource_type": "gce_instance",
+                "not_gcp_resource": "value",
+            }
+        )
+        expected_extract = {
+            "g.co/r/gce_instance/project_id": "123",
+            "g.co/r/gce_instance/instance_id": "host",
+            "g.co/r/gce_instance/zone": "US",
+        }
+        self.assertEqual(
+            _extract_resources(resource, otel_env_resource), expected_extract
+        )
 
     def test_extract_well_formed_resources(self):
         resource = Resource(
