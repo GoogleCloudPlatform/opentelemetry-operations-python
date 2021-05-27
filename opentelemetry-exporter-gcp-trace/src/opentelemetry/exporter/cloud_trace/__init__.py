@@ -50,8 +50,8 @@ API
 
 import collections
 import logging
-import os
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+import re
+from typing import Any, Dict, List, Optional, Pattern, Sequence, Tuple
 
 import google.auth
 import opentelemetry.trace as trace_api
@@ -61,7 +61,7 @@ from google.cloud.trace_v2.proto import trace_pb2
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc import code_pb2, status_pb2
 from opentelemetry.exporter.cloud_trace.version import __version__
-from opentelemetry.sdk.resources import OTELResourceDetector, Resource
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import (
     ReadableSpan,
@@ -89,21 +89,20 @@ class CloudTraceSpanExporter(SpanExporter):
         project_id: ID of the cloud project that will receive the traces.
         client: Cloud Trace client. If not given, will be taken from gcloud
             default credentials
-        use_otel_env_resource: A boolean to extract resource attributes
-            that were added via special OpenTelemetry variables such as
-            `OTEL_RESOURCE_ATTRIBUTES` (default: False).
+        resource_regex: A regex string to match and extract resource
+            attributes from spans (default: None).
     """
 
     def __init__(
-        self, project_id=None, client=None, use_otel_env_resource=False,
+        self, project_id=None, client=None, resource_regex=None,
     ):
         self.client = client or TraceServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
         else:
             self.project_id = project_id
-        self.otel_env_resource = (
-            OTELResourceDetector().detect() if use_otel_env_resource else None
+        self.resource_regex = (
+            re.compile(resource_regex) if resource_regex else None
         )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
@@ -162,7 +161,7 @@ class CloudTraceSpanExporter(SpanExporter):
             # information into attributes instead.
             resources_and_attrs = {
                 **(span.attributes or {}),
-                **_extract_resources(span.resource, self.otel_env_resource),
+                **_extract_resources(span.resource, self.resource_regex),
             }
 
             cloud_trace_spans.append(
@@ -365,12 +364,18 @@ OT_RESOURCE_ATTRIBUTE_TO_GCP = {
 
 
 def _extract_resources(
-    resource: Resource, otel_env_resource: Optional[Resource] = None
+    resource: Resource, resource_regex: Optional[Pattern] = None
 ) -> Dict[str, str]:
     extracted_attributes = {}
-    if otel_env_resource:
-        extracted_attributes.update(otel_env_resource.attributes)
     resource_attributes = resource.attributes
+    if resource_regex:
+        extracted_attributes.update(
+            {
+                k: str(v)
+                for k, v in resource_attributes.items()
+                if resource_regex.match(k)
+            }
+        )
     if resource_attributes.get("cloud.provider") != "gcp":
         return extracted_attributes
     resource_type = resource_attributes["gcp.resource_type"]
@@ -381,9 +386,9 @@ def _extract_resources(
         return extracted_attributes
     extracted_attributes.update(
         {
-            "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
-                resource_attributes[ot_resource_key]
-            )
+            "g.co/r/{}/{}".format(resource_type, gcp_resource_key,)
+            if resource_type == "gce_instance"
+            else ot_resource_key: str(resource_attributes[ot_resource_key])
             for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
                 resource_type
             ].items()
