@@ -23,7 +23,7 @@ from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
-from opentelemetry.trace import Tracer
+from opentelemetry.trace import SpanKind, Tracer
 
 from .constants import INSTRUMENTING_MODULE_NAME, TEST_ID
 
@@ -79,6 +79,33 @@ def basic_trace(request: Request) -> Response:
     return Response(status_code=code_pb2.OK)
 
 
+def complex_trace(request: Request) -> Response:
+    """Create a complex trace"""
+
+    with _tracer_setup() as tracer:
+        with tracer.start_as_current_span(
+            "complexTrace/root", attributes={TEST_ID: request.test_id}
+        ):
+            with tracer.start_as_current_span(
+                "complexTrace/child1",
+                attributes={TEST_ID: request.test_id},
+                kind=SpanKind.SERVER,
+            ):
+                with tracer.start_as_current_span(
+                    "complexTrace/child2",
+                    attributes={TEST_ID: request.test_id},
+                    kind=SpanKind.CLIENT,
+                ):
+                    pass
+            with tracer.start_as_current_span(
+                "complexTrace/child3",
+                attributes={TEST_ID: request.test_id},
+            ):
+                pass
+
+    return Response(status_code=code_pb2.OK)
+
+
 def not_implemented_handler(_: Request) -> Response:
     return Response(status_code=str(code_pb2.UNIMPLEMENTED))
 
@@ -86,4 +113,5 @@ def not_implemented_handler(_: Request) -> Response:
 SCENARIO_TO_HANDLER: dict[str, Callable[[Request], Response]] = {
     "/health": health,
     "/basicTrace": basic_trace,
+    "/complexTrace": complex_trace,
 }
