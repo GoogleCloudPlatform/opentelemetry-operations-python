@@ -66,7 +66,7 @@ OT_RESOURCE_LABEL_TO_GCP = {
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
 class CloudMonitoringMetricsExporter(MetricsExporter):
-    """ Implementation of Metrics Exporter to Google Cloud Monitoring
+    """Implementation of Metrics Exporter to Google Cloud Monitoring
 
         You can manually pass in project_id and client, or else the
         Exporter will take that information from Application Default
@@ -135,7 +135,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         )
 
     def _batch_write(self, series: TimeSeries) -> None:
-        """ Cloud Monitoring allows writing up to 200 time series at once
+        """Cloud Monitoring allows writing up to 200 time series at once
 
         :param series: ProtoBuf TimeSeries
         :return:
@@ -151,7 +151,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
     def _get_metric_descriptor(
         self, record: ExportRecord
     ) -> Optional[MetricDescriptor]:
-        """ We can map Metric to MetricDescriptor using Metric.name or
+        """We can map Metric to MetricDescriptor using Metric.name or
         MetricDescriptor.type. We create the MetricDescriptor if it doesn't
         exist already and cache it. Note that recreating MetricDescriptors is
         a no-op if it already exists.

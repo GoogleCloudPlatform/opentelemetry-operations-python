@@ -42,9 +42,9 @@ def _get_google_metadata_and_common_attributes():
 
 
 def get_gce_resources():
-    """ Resource finder for common GCE attributes
+    """Resource finder for common GCE attributes
 
-        See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
+    See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
     """
     (
         common_attributes,
@@ -60,9 +60,7 @@ def get_gce_resources():
 
 
 def get_gke_resources():
-    """ Resource finder for GKE attributes
-
-    """
+    """Resource finder for GKE attributes"""
     # The user must specify the container name via the Downward API
     container_name = os.getenv("CONTAINER_NAME")
     if container_name is None:

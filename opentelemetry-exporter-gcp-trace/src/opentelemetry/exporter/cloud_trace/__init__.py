@@ -94,7 +94,10 @@ class CloudTraceSpanExporter(SpanExporter):
     """
 
     def __init__(
-        self, project_id=None, client=None, resource_regex=None,
+        self,
+        project_id=None,
+        client=None,
+        resource_regex=None,
     ):
         self.client = client or TraceServiceClient()
         if not project_id:

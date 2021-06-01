@@ -35,7 +35,8 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
 
     @staticmethod
     def _get_header_value(
-        getter: textmap.Getter, carrier: textmap.CarrierT,
+        getter: textmap.Getter,
+        carrier: textmap.CarrierT,
     ) -> typing.Optional[str]:
         # first try all lowercase header
         header = getter.get(carrier, _TRACE_CONTEXT_HEADER_NAME)

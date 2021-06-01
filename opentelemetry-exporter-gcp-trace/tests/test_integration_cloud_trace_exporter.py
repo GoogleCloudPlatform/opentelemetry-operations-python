@@ -20,7 +20,6 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import _Span as Span
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import SpanContext, SpanKind
-
 from test_common import BaseExporterIntegrationTest, time_ns
 
 
