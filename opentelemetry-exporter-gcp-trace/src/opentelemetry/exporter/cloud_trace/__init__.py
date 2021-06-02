@@ -386,9 +386,9 @@ def _extract_resources(
         return extracted_attributes
     extracted_attributes.update(
         {
-            "g.co/r/{}/{}".format(resource_type, gcp_resource_key,)
-            if resource_type == "gce_instance"
-            else ot_resource_key: str(resource_attributes[ot_resource_key])
+            "g.co/r/{}/{}".format(resource_type, gcp_resource_key): str(
+                resource_attributes[ot_resource_key]
+            )
             for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
                 resource_type
             ].items()
