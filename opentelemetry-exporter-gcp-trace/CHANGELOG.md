@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add optional resource attributes to trace spans with regex
+  ([#145](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/145))
+
 ## Version 1.0.0
 
 Released 2021-05-13
