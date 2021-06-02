@@ -50,7 +50,8 @@ API
 
 import collections
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+import re
+from typing import Any, Dict, List, Optional, Pattern, Sequence, Tuple
 
 import google.auth
 import opentelemetry.trace as trace_api
@@ -88,16 +89,21 @@ class CloudTraceSpanExporter(SpanExporter):
         project_id: ID of the cloud project that will receive the traces.
         client: Cloud Trace client. If not given, will be taken from gcloud
             default credentials
+        resource_regex: Resource attributes with keys matching this regex will be
+          added to exported spans as labels (default: None).
     """
 
     def __init__(
-        self, project_id=None, client=None,
+        self, project_id=None, client=None, resource_regex=None,
     ):
         self.client = client or TraceServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
         else:
             self.project_id = project_id
+        self.resource_regex = (
+            re.compile(resource_regex) if resource_regex else None
+        )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         """Export the spans to Cloud Trace.
@@ -155,7 +161,7 @@ class CloudTraceSpanExporter(SpanExporter):
             # information into attributes instead.
             resources_and_attrs = {
                 **(span.attributes or {}),
-                **_extract_resources(span.resource),
+                **_extract_resources(span.resource, self.resource_regex),
             }
 
             cloud_trace_spans.append(
@@ -357,24 +363,38 @@ OT_RESOURCE_ATTRIBUTE_TO_GCP = {
 }
 
 
-def _extract_resources(resource: Resource) -> Dict[str, str]:
+def _extract_resources(
+    resource: Resource, resource_regex: Optional[Pattern] = None
+) -> Dict[str, str]:
+    extracted_attributes = {}
     resource_attributes = resource.attributes
+    if resource_regex:
+        extracted_attributes.update(
+            {
+                k: str(v)
+                for k, v in resource_attributes.items()
+                if resource_regex.match(k)
+            }
+        )
     if resource_attributes.get("cloud.provider") != "gcp":
-        return {}
+        return extracted_attributes
     resource_type = resource_attributes["gcp.resource_type"]
     if (
         not isinstance(resource_type, str)
         or resource_type not in OT_RESOURCE_ATTRIBUTE_TO_GCP
     ):
-        return {}
-    return {
-        "g.co/r/{}/{}".format(resource_type, gcp_resource_key,): str(
-            resource_attributes[ot_resource_key]
-        )
-        for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
-            resource_type
-        ].items()
-    }
+        return extracted_attributes
+    extracted_attributes.update(
+        {
+            "g.co/r/{}/{}".format(resource_type, gcp_resource_key): str(
+                resource_attributes[ot_resource_key]
+            )
+            for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
+                resource_type
+            ].items()
+        }
+    )
+    return extracted_attributes
 
 
 LABELS_MAPPING = {
