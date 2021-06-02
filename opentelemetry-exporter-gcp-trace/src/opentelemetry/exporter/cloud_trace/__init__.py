@@ -89,8 +89,8 @@ class CloudTraceSpanExporter(SpanExporter):
         project_id: ID of the cloud project that will receive the traces.
         client: Cloud Trace client. If not given, will be taken from gcloud
             default credentials
-        resource_regex: A regex string to match and extract resource
-            attributes from spans (default: None).
+        resource_regex: Resource attributes with keys matching this regex will be
+          added to exported spans as labels (default: None).
     """
 
     def __init__(
