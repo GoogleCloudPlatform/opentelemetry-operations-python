@@ -226,6 +226,8 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.assertEqual(
             output,
             "{}/{};o={}".format(
-                format_trace_id(self.valid_trace_id), self.valid_span_id, 1,
+                format_trace_id(self.valid_trace_id),
+                self.valid_span_id,
+                1,
             ),
         )

@@ -193,7 +193,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         self.assertEqual(
             _extract_status(
                 SpanStatus(
-                    status_code=StatusCode.ERROR, description="error_desc",
+                    status_code=StatusCode.ERROR,
+                    description="error_desc",
                 )
             ),
             Status(code=code_pb2.UNKNOWN, message="error_desc"),
@@ -201,7 +202,11 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_extract_status_code_future_added(self):
         self.assertEqual(
-            _extract_status(SpanStatus(status_code=mock.Mock(),)),
+            _extract_status(
+                SpanStatus(
+                    status_code=mock.Mock(),
+                )
+            ),
             Status(code=code_pb2.UNKNOWN),
         )
 
@@ -392,7 +397,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                     {
                         "time": self.example_time_stamp,
                         "annotation": {
-                            "description": TruncatableString(value="event",),
+                            "description": TruncatableString(
+                                value="event",
+                            ),
                             "attributes": {},
                         },
                     },

@@ -27,7 +27,6 @@ from opentelemetry.exporter.cloud_monitoring import (
 from opentelemetry.sdk import metrics
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.resources import Resource
-
 from test_common import BaseExporterIntegrationTest
 
 logger = logging.getLogger(__name__)
