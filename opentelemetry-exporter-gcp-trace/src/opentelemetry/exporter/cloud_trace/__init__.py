@@ -405,7 +405,7 @@ LABELS_MAPPING = {
     "http.scheme": "/http/client_protocol",
     "http.host": "/http/host",
     "http.method": "/http/method",
-    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#common-attributes
+    # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#common-attributes
     "http.request_content_length": "/http/request/size",
     "http.response_content_length": "/http/response/size",
     "http.route": "/http/route",

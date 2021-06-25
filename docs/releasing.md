@@ -39,7 +39,7 @@ branch. The script does the following:
 > new_dev_version.
 
 This workflow guarantees that there won't be any commits between (a) and (b)
-in the master branch history, as long as you merge with "Rebase and merge".
+in the main branch history, as long as you merge with "Rebase and merge".
 
 To create a release at version `0.11b1` and then update package versions in
 the repository to `0.12.dev0`:
@@ -86,7 +86,7 @@ release](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/
 with:
 
 - Tag version of `v` + `--new_dev_version` you used above -
-**pointing at the first commit (a)** that was merged into master. For the
+**pointing at the first commit (a)** that was merged into main. For the
 example PR listed above, that creates release
 [`v0.11b0@4ad9ccd`](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/releases/tag/v0.11b0).
 - In description, paste a changelog for the packages. I used this (probably

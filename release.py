@@ -45,7 +45,7 @@ commit. The second commit (b) updates the version.py file to the
 new_dev_version.
 
 Create a PR and merge it with github's "Rebase and merge" option, so that the
-two commits appear in the master history. Then, you can create a tag and release
+two commits appear in the main history. Then, you can create a tag and release
 for the first commit. Do NOT merge with "Squash and merge", or commit (a) will
 be overwritten by (b).
 """
@@ -112,7 +112,7 @@ def parse_args() -> argparse.Namespace:
     )
     required_named_args.add_argument(
         "--new_dev_version",
-        help="The new developement version string to update master",
+        help="The new development version string to update main",
         required=True,
     )
     return parser.parse_args()
@@ -217,7 +217,7 @@ def main() -> None:
             "checkout",
             "-b",
             "release-pr/{}".format(release_version),
-            "origin/master",
+            "origin/main",
         ],
         cwd=repo_root(),
     )
