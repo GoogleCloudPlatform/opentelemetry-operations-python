@@ -20,6 +20,9 @@ from typing import Callable, Iterator, Mapping
 import pydantic
 from google.rpc import code_pb2
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+from opentelemetry.propagators.cloud_trace_propagator import (
+    CloudTraceFormatPropagator,
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
@@ -106,6 +109,22 @@ def complex_trace(request: Request) -> Response:
     return Response(status_code=code_pb2.OK)
 
 
+def basic_propagator(request: Request) -> Response:
+    """Create a trace, using the Cloud Trace format propagator"""
+
+    with _tracer_setup() as tracer:
+        propagator = CloudTraceFormatPropagator()
+        context = propagator.extract(request.headers)
+        with tracer.start_span(
+            "basicPropagator",
+            attributes={TEST_ID: request.test_id},
+            context=context,
+        ):
+            pass
+
+    return Response(status_code=code_pb2.OK)
+
+
 def not_implemented_handler(_: Request) -> Response:
     return Response(status_code=str(code_pb2.UNIMPLEMENTED))
 
@@ -114,4 +133,5 @@ SCENARIO_TO_HANDLER: dict[str, Callable[[Request], Response]] = {
     "/health": health,
     "/basicTrace": basic_trace,
     "/complexTrace": complex_trace,
+    "/basicPropagator": basic_propagator,
 }
