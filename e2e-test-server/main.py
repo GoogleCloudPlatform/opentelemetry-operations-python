@@ -23,8 +23,4 @@ if __name__ == "__main__":
     if SUBSCRIPTION_MODE is SubscriptionMode.PULL:
         server.pubsub_pull()
     else:
-        raise RuntimeError(
-            "server does not support subscription mode {}".format(
-                SUBSCRIPTION_MODE
-            )
-        )
+        server.pubsub_push()
