@@ -15,6 +15,8 @@
 import enum
 import os
 
+from pydantic import BaseModel
+
 
 class SubscriptionMode(enum.Enum):
     PULL = "pull"
@@ -31,3 +33,8 @@ SUBSCRIPTION_MODE: SubscriptionMode = SubscriptionMode(
 PROJECT_ID = os.environ["PROJECT_ID"]
 REQUEST_SUBSCRIPTION_NAME = os.environ["REQUEST_SUBSCRIPTION_NAME"]
 RESPONSE_TOPIC_NAME = os.environ["RESPONSE_TOPIC_NAME"]
+PUSH_PORT = (
+    os.environ["PUSH_PORT"]
+    if SUBSCRIPTION_MODE is SubscriptionMode.PUSH
+    else None
+)

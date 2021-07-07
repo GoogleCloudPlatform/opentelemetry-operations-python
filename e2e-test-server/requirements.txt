@@ -7,3 +7,4 @@ Flask
 google-cloud-pubsub
 googleapis-common-protos
 pydantic
+waitress

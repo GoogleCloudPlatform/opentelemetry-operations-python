@@ -13,11 +13,9 @@
 # limitations under the License.
 
 import contextlib
-import os
 from dataclasses import dataclass
 from typing import Callable, Iterator, Mapping
 
-import pydantic
 from google.rpc import code_pb2
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.propagators.cloud_trace_propagator import (
@@ -27,11 +25,12 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 from opentelemetry.trace import SpanKind, Tracer
+from pydantic import BaseModel
 
-from .constants import INSTRUMENTING_MODULE_NAME, TEST_ID
+from .constants import INSTRUMENTING_MODULE_NAME, PROJECT_ID, TEST_ID
 
 
-class Request(pydantic.BaseModel):
+class Request(BaseModel):
     test_id: str
     headers: Mapping[str, str]
     data: bytes
@@ -52,11 +51,9 @@ def _tracer_setup() -> Iterator[Tracer]:
     spans created during the test after.
     """
 
-    tracer_provider = TracerProvider(
-        sampler=ALWAYS_ON,
-        active_span_processor=BatchSpanProcessor(
-            CloudTraceSpanExporter(project_id=os.environ.get("PROJECT_ID"))
-        ),
+    tracer_provider = TracerProvider(sampler=ALWAYS_ON)
+    tracer_provider.add_span_processor(
+        BatchSpanProcessor(CloudTraceSpanExporter(project_id=PROJECT_ID))
     )
     tracer = tracer_provider.get_tracer(INSTRUMENTING_MODULE_NAME)
 
