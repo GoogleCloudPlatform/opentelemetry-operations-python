@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import contextlib
-from dataclasses import dataclass
+import dataclasses
 from typing import Callable, Iterator, Mapping
 
 from google.rpc import code_pb2
@@ -24,10 +24,10 @@ from opentelemetry.propagators.cloud_trace_propagator import (
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
-from opentelemetry.trace import SpanKind, Tracer
+from opentelemetry.trace import SpanKind, Tracer, format_trace_id
 from pydantic import BaseModel
 
-from .constants import INSTRUMENTING_MODULE_NAME, PROJECT_ID, TEST_ID
+from .constants import INSTRUMENTING_MODULE_NAME, PROJECT_ID, TEST_ID, TRACE_ID
 
 
 class Request(BaseModel):
@@ -36,9 +36,10 @@ class Request(BaseModel):
     data: bytes
 
 
-@dataclass
+@dataclasses.dataclass
 class Response:
     status_code: code_pb2.Code
+    headers: dict[str, str] = dataclasses.field(default_factory=dict)
     data: bytes = bytes()
 
 
@@ -73,10 +74,10 @@ def basic_trace(request: Request) -> Response:
     with _tracer_setup() as tracer:
         with tracer.start_span(
             "basicTrace", attributes={TEST_ID: request.test_id}
-        ):
-            pass
+        ) as span:
+            trace_id = format_trace_id(span.get_span_context().trace_id)
 
-    return Response(status_code=code_pb2.OK)
+    return Response(status_code=code_pb2.OK, headers={TRACE_ID: trace_id})
 
 
 def complex_trace(request: Request) -> Response:
@@ -85,7 +86,8 @@ def complex_trace(request: Request) -> Response:
     with _tracer_setup() as tracer:
         with tracer.start_as_current_span(
             "complexTrace/root", attributes={TEST_ID: request.test_id}
-        ):
+        ) as root_span:
+            trace_id = format_trace_id(root_span.get_span_context().trace_id)
             with tracer.start_as_current_span(
                 "complexTrace/child1",
                 attributes={TEST_ID: request.test_id},
@@ -103,7 +105,7 @@ def complex_trace(request: Request) -> Response:
             ):
                 pass
 
-    return Response(status_code=code_pb2.OK)
+    return Response(status_code=code_pb2.OK, headers={TRACE_ID: trace_id})
 
 
 def basic_propagator(request: Request) -> Response:
@@ -116,10 +118,10 @@ def basic_propagator(request: Request) -> Response:
             "basicPropagator",
             attributes={TEST_ID: request.test_id},
             context=context,
-        ):
-            pass
+        ) as span:
+            trace_id = format_trace_id(span.get_span_context().trace_id)
 
-    return Response(status_code=code_pb2.OK)
+    return Response(status_code=code_pb2.OK, headers={TRACE_ID: trace_id})
 
 
 def not_implemented_handler(_: Request) -> Response:

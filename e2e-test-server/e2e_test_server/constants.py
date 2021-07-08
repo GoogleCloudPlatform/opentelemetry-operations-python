@@ -27,6 +27,7 @@ INSTRUMENTING_MODULE_NAME = "opentelemetry-ops-e2e-test-server"
 SCENARIO = "scenario"
 STATUS_CODE = "status_code"
 TEST_ID = "test_id"
+TRACE_ID = "trace_id"
 SUBSCRIPTION_MODE: SubscriptionMode = SubscriptionMode(
     os.environ["SUBSCRIPTION_MODE"]
 )
