@@ -16,11 +16,11 @@
 import opentelemetry.ext.requests
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.ext.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.tools.cloud_trace_propagator import (
+from opentelemetry.propagators.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
 )
 
