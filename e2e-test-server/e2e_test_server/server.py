@@ -53,7 +53,11 @@ class _Responder:
     ) -> None:
         """Respond to the test runner that we finished executing the scenario"""
         data = res.data
-        attributes = {TEST_ID: test_id, STATUS_CODE: str(res.status_code)}
+        attributes = {
+            **res.headers,
+            TEST_ID: test_id,
+            STATUS_CODE: str(res.status_code),
+        }
         logger.info(f"publishing {data=} and {attributes=}")
 
         self._publisher.publish(
