@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.ext.requests
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 import requests
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
@@ -25,7 +25,7 @@ from opentelemetry.tools.cloud_trace_propagator import (
 )
 
 # Instrumenting requests
-opentelemetry.ext.requests.RequestsInstrumentor().instrument()
+RequestsInstrumentor().instrument()
 
 # Tracer boilerplate
 trace.set_tracer_provider(TracerProvider())
