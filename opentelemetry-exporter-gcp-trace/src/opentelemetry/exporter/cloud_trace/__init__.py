@@ -48,9 +48,9 @@ API
 ---
 """
 
-import collections
 import logging
 import re
+from collections.abc import Sequence as SequenceABC
 from typing import Any, Dict, List, Optional, Pattern, Sequence, Tuple
 
 import google.auth
@@ -464,7 +464,7 @@ def _format_attribute_value(
     elif isinstance(value, float):
         value_type = "string_value"
         value = _get_truncatable_str_object("{:0.4f}".format(value), 256)
-    elif isinstance(value, collections.Sequence):
+    elif isinstance(value, SequenceABC):
         value_type = "string_value"
         value = _get_truncatable_str_object(
             ",".join(str(x) for x in value), 256

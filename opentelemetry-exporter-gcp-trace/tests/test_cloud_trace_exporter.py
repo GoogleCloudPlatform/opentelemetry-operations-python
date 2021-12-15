@@ -552,7 +552,6 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                             "attribute_map": {
                                 "int_attr_value": AttributeValue(int_value=123)
                             },
-                            "dropped_attributes_count": 1,
                         },
                     },
                 ]
