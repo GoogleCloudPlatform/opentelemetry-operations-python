@@ -5,9 +5,8 @@ click==7.1.2
 Flask==1.1.2
 google-api-core==1.26.3
 google-auth==1.30.0
-google-cloud-core==1.6.0
 google-cloud-pubsub==2.4.1
-google-cloud-trace==0.24.0
+google-cloud-trace==1.5.0
 googleapis-common-protos==1.53.0
 grpc-google-iam-v1==0.12.3
 grpcio==1.37.0

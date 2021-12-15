@@ -4,6 +4,7 @@
 
 - Add optional resource attributes to trace spans with regex
   ([#145](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/145))
+- Upgrade `google-cloud-trace` dependency to version 1.1 or newer.
 
 ## Version 1.0.0
 

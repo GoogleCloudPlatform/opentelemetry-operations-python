@@ -51,13 +51,22 @@ API
 import logging
 import re
 from collections.abc import Sequence as SequenceABC
-from typing import Any, Dict, List, Optional, Pattern, Sequence, Tuple
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Pattern,
+    Sequence,
+    Tuple,
+    overload,
+)
 
 import google.auth
 import opentelemetry.trace as trace_api
 import pkg_resources
-from google.cloud.trace_v2 import TraceServiceClient
-from google.cloud.trace_v2.proto import trace_pb2
+from google.cloud.trace_v2 import BatchWriteSpansRequest, TraceServiceClient
+from google.cloud.trace_v2 import types as trace_types
 from google.protobuf.timestamp_pb2 import Timestamp
 from google.rpc import code_pb2, status_pb2
 from opentelemetry.exporter.cloud_trace.version import __version__
@@ -99,7 +108,7 @@ class CloudTraceSpanExporter(SpanExporter):
         client=None,
         resource_regex=None,
     ):
-        self.client = client or TraceServiceClient()
+        self.client: TraceServiceClient = client or TraceServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
         else:
@@ -118,8 +127,10 @@ class CloudTraceSpanExporter(SpanExporter):
         """
         try:
             self.client.batch_write_spans(
-                "projects/{}".format(self.project_id),
-                self._translate_to_cloud_trace(spans),
+                request=BatchWriteSpansRequest(
+                    name="projects/{}".format(self.project_id),
+                    spans=self._translate_to_cloud_trace(spans),
+                )
             )
         # pylint: disable=broad-except
         except Exception as ex:
@@ -130,14 +141,14 @@ class CloudTraceSpanExporter(SpanExporter):
 
     def _translate_to_cloud_trace(
         self, spans: Sequence[ReadableSpan]
-    ) -> List[Dict[str, Any]]:
+    ) -> List[trace_types.Span]:
         """Translate the spans to Cloud Trace format.
 
         Args:
             spans: Sequence of spans to convert
         """
 
-        cloud_trace_spans = []
+        cloud_trace_spans: List[trace_types.Span] = []
 
         for span in spans:
             ctx = span.get_span_context()
@@ -168,25 +179,23 @@ class CloudTraceSpanExporter(SpanExporter):
             }
 
             cloud_trace_spans.append(
-                {
-                    "name": span_name,
-                    "span_id": span_id,
-                    "display_name": _get_truncatable_str_object(
-                        span.name, 128
-                    ),
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "parent_span_id": parent_id,
-                    "attributes": _extract_attributes(
+                trace_types.Span(
+                    name=span_name,
+                    span_id=span_id,
+                    display_name=_get_truncatable_str_object(span.name, 128),
+                    start_time=start_time,
+                    end_time=end_time,
+                    parent_span_id=parent_id,
+                    attributes=_extract_attributes(
                         resources_and_attrs,
                         MAX_SPAN_ATTRS,
                         add_agent_attr=True,
                     ),
-                    "links": _extract_links(span.links),  # type: ignore[has-type]
-                    "status": _extract_status(span.status),  # type: ignore[arg-type]
-                    "time_events": _extract_events(span.events),
-                    "span_kind": _extract_span_kind(span.kind),
-                }
+                    links=_extract_links(span.links),  # type: ignore[has-type]
+                    status=_extract_status(span.status),  # type: ignore[arg-type]
+                    time_events=_extract_events(span.events),
+                    span_kind=_extract_span_kind(span.kind),
+                )
             )
             # TODO: Leverage more of the Cloud Trace API, e.g.
             #  same_process_as_parent_span and child_span_count
@@ -213,7 +222,7 @@ def _get_truncatable_str_object(str_to_convert: str, max_length: int):
     truncated bytes count."""
     truncated, truncated_byte_count = _truncate_str(str_to_convert, max_length)
 
-    return trace_pb2.TruncatableString(
+    return trace_types.TruncatableString(
         value=truncated, truncated_byte_count=truncated_byte_count
     )
 
@@ -248,11 +257,13 @@ def _extract_status(status: trace_api.Status) -> Optional[status_pb2.Status]:
     return status_proto
 
 
-def _extract_links(links: Sequence[trace_api.Link]) -> trace_pb2.Span.Links:
+def _extract_links(
+    links: Sequence[trace_api.Link],
+) -> Optional[trace_types.Span.Links]:
     """Convert span.links"""
     if not links:
         return None
-    extracted_links = []
+    extracted_links: List[trace_types.Span.Link] = []
     dropped_links = 0
     if len(links) > MAX_NUM_LINKS:
         logger.warning(
@@ -271,25 +282,27 @@ def _extract_links(links: Sequence[trace_api.Link]) -> trace_pb2.Span.Links:
         trace_id = format_trace_id(link.context.trace_id)
         span_id = format_span_id(link.context.span_id)
         extracted_links.append(
-            {
-                "trace_id": trace_id,
-                "span_id": span_id,
-                "type": "TYPE_UNSPECIFIED",
-                "attributes": _extract_attributes(
+            trace_types.Span.Link(
+                trace_id=trace_id,
+                span_id=span_id,
+                type="TYPE_UNSPECIFIED",
+                attributes=_extract_attributes(
                     link_attributes, MAX_LINK_ATTRS
                 ),
-            }
+            )
         )
-    return trace_pb2.Span.Links(
+    return trace_types.Span.Links(
         link=extracted_links, dropped_links_count=dropped_links
     )
 
 
-def _extract_events(events: Sequence[Event]) -> trace_pb2.Span.TimeEvents:
+def _extract_events(
+    events: Sequence[Event],
+) -> Optional[trace_types.Span.TimeEvents]:
     """Convert span.events to dict."""
     if not events:
         return None
-    logs = []
+    time_events: List[trace_types.Span.TimeEvent] = []
     dropped_annontations = 0
     if len(events) > MAX_NUM_EVENTS:
         logger.warning(
@@ -305,21 +318,19 @@ def _extract_events(events: Sequence[Event]) -> trace_pb2.Span.TimeEvents:
                 event.name,
                 MAX_EVENT_ATTRS,
             )
-        logs.append(
-            {
-                "time": _get_time_from_ns(event.timestamp),
-                "annotation": {
-                    "description": _get_truncatable_str_object(
-                        event.name, 256
-                    ),
-                    "attributes": _extract_attributes(
+        time_events.append(
+            trace_types.Span.TimeEvent(
+                time=_get_time_from_ns(event.timestamp),
+                annotation=trace_types.Span.TimeEvent.Annotation(
+                    description=_get_truncatable_str_object(event.name, 256),
+                    attributes=_extract_attributes(
                         event.attributes, MAX_EVENT_ATTRS
                     ),
-                },
-            }
+                ),
+            )
         )
-    return trace_pb2.Span.TimeEvents(
-        time_event=logs,
+    return trace_types.Span.TimeEvents(
+        time_event=time_events,
         dropped_annotations_count=dropped_annontations,
         dropped_message_events_count=0,
     )
@@ -327,20 +338,20 @@ def _extract_events(events: Sequence[Event]) -> trace_pb2.Span.TimeEvents:
 
 # pylint: disable=no-member
 SPAN_KIND_MAPPING = {
-    trace_api.SpanKind.INTERNAL: trace_pb2.Span.SpanKind.INTERNAL,
-    trace_api.SpanKind.CLIENT: trace_pb2.Span.SpanKind.CLIENT,
-    trace_api.SpanKind.SERVER: trace_pb2.Span.SpanKind.SERVER,
-    trace_api.SpanKind.PRODUCER: trace_pb2.Span.SpanKind.PRODUCER,
-    trace_api.SpanKind.CONSUMER: trace_pb2.Span.SpanKind.CONSUMER,
+    trace_api.SpanKind.INTERNAL: trace_types.Span.SpanKind.INTERNAL,
+    trace_api.SpanKind.CLIENT: trace_types.Span.SpanKind.CLIENT,
+    trace_api.SpanKind.SERVER: trace_types.Span.SpanKind.SERVER,
+    trace_api.SpanKind.PRODUCER: trace_types.Span.SpanKind.PRODUCER,
+    trace_api.SpanKind.CONSUMER: trace_types.Span.SpanKind.CONSUMER,
 }
 
 
 # pylint: disable=no-member
 def _extract_span_kind(
     span_kind: trace_api.SpanKind,
-) -> trace_pb2.Span.SpanKind:
+) -> int:
     return SPAN_KIND_MAPPING.get(
-        span_kind, trace_pb2.Span.SpanKind.SPAN_KIND_UNSPECIFIED
+        span_kind, trace_types.Span.SpanKind.SPAN_KIND_UNSPECIFIED
     )
 
 
@@ -419,19 +430,19 @@ def _extract_attributes(
     attrs: types.Attributes,
     num_attrs_limit: int,
     add_agent_attr: bool = False,
-) -> trace_pb2.Span.Attributes:
+) -> trace_types.Span.Attributes:
     """Convert span.attributes to dict."""
     attributes_dict = BoundedDict(
         num_attrs_limit
-    )  # type: BoundedDict[str, trace_pb2.AttributeValue]
+    )  # type: BoundedDict[str, trace_types.AttributeValue]
     invalid_value_dropped_count = 0
-    for key, value in attrs.items() if attrs else []:
-        key = _truncate_str(key, 128)[0]
+    for ot_key, ot_value in attrs.items() if attrs else []:
+        key = _truncate_str(ot_key, 128)[0]
         if key in LABELS_MAPPING:  # pylint: disable=consider-using-get
             key = LABELS_MAPPING[key]
-        value = _format_attribute_value(value)
+        value = _format_attribute_value(ot_value)
 
-        if value:
+        if value is not None:
             attributes_dict[key] = value
         else:
             invalid_value_dropped_count += 1
@@ -444,16 +455,30 @@ def _extract_attributes(
                 _strip_characters(__version__),
             )
         )
-    return trace_pb2.Span.Attributes(
-        attribute_map=attributes_dict,
+    return trace_types.Span.Attributes(
+        attribute_map=dict(attributes_dict),
         dropped_attributes_count=attributes_dict.dropped
         + invalid_value_dropped_count,
     )
 
 
+@overload
 def _format_attribute_value(
     value: types.AttributeValue,
-) -> trace_pb2.AttributeValue:
+) -> trace_types.AttributeValue:
+    ...
+
+
+@overload
+def _format_attribute_value(
+    value: Any,
+) -> Optional[trace_types.AttributeValue]:
+    ...
+
+
+def _format_attribute_value(
+    value,
+) -> Optional[trace_types.AttributeValue]:
     if isinstance(value, bool):
         value_type = "bool_value"
     elif isinstance(value, int):
@@ -478,4 +503,4 @@ def _format_attribute_value(
         )
         return None
 
-    return trace_pb2.AttributeValue(**{value_type: value})
+    return trace_types.AttributeValue(**{value_type: value})
