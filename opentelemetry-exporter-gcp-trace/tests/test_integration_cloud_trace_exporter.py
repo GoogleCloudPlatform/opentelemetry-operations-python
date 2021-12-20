@@ -14,7 +14,9 @@
 
 import grpc
 from google.cloud.trace_v2 import TraceServiceClient
-from google.cloud.trace_v2.gapic.transports import trace_service_grpc_transport
+from google.cloud.trace_v2.services.trace_service.transports.grpc import (
+    TraceServiceGrpcTransport,
+)
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import _Span as Span
@@ -58,9 +60,8 @@ class TestCloudTraceSpanExporter(BaseExporterIntegrationTest):
 
         # Setup the trace exporter.
         channel = grpc.insecure_channel(self.address)
-        transport = trace_service_grpc_transport.TraceServiceGrpcTransport(
-            channel=channel
-        )
+        transport = TraceServiceGrpcTransport(channel=channel)
+
         client = TraceServiceClient(transport=transport)
         trace_exporter = CloudTraceSpanExporter(self.project_id, client=client)
 

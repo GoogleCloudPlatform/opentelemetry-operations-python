@@ -17,9 +17,9 @@ import unittest
 from unittest import mock
 
 import pkg_resources
-from google.cloud.trace_v2.proto.trace_pb2 import AttributeValue
-from google.cloud.trace_v2.proto.trace_pb2 import Span as ProtoSpan
-from google.cloud.trace_v2.proto.trace_pb2 import TruncatableString
+from google.cloud.trace_v2.types import AttributeValue, BatchWriteSpansRequest
+from google.cloud.trace_v2.types import Span as ProtoSpan
+from google.cloud.trace_v2.types import TruncatableString
 from google.rpc import code_pb2
 from google.rpc.status_pb2 import Status
 from opentelemetry.exporter.cloud_trace import (
@@ -175,7 +175,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
         self.assertTrue(client.batch_write_spans.called)
         client.batch_write_spans.assert_called_with(
-            "projects/{}".format(self.project_id), [cloud_trace_spans]
+            request=BatchWriteSpansRequest(
+                name="projects/{}".format(self.project_id),
+                spans=[cloud_trace_spans],
+            )
         )
 
     def test_extract_status_code_unset(self):
