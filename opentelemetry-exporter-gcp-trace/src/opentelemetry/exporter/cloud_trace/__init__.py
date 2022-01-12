@@ -89,6 +89,8 @@ MAX_NUM_EVENTS = 32
 MAX_EVENT_ATTRS = 4
 MAX_LINK_ATTRS = 32
 MAX_SPAN_ATTRS = 32
+MAX_ATTR_KEY_BYTES = 128
+MAX_ATTR_VAL_BYTES = 16 * 1024  # 16 kilobytes
 
 
 class CloudTraceSpanExporter(SpanExporter):
@@ -437,7 +439,7 @@ def _extract_attributes(
     )  # type: BoundedDict[str, trace_types.AttributeValue]
     invalid_value_dropped_count = 0
     for ot_key, ot_value in attrs.items() if attrs else []:
-        key = _truncate_str(ot_key, 128)[0]
+        key = _truncate_str(ot_key, MAX_ATTR_KEY_BYTES)[0]
         if key in LABELS_MAPPING:  # pylint: disable=consider-using-get
             key = LABELS_MAPPING[key]
         value = _format_attribute_value(ot_value)
@@ -485,14 +487,16 @@ def _format_attribute_value(
         value_type = "int_value"
     elif isinstance(value, str):
         value_type = "string_value"
-        value = _get_truncatable_str_object(value, 256)
+        value = _get_truncatable_str_object(value, MAX_ATTR_VAL_BYTES)
     elif isinstance(value, float):
         value_type = "string_value"
-        value = _get_truncatable_str_object("{:0.4f}".format(value), 256)
+        value = _get_truncatable_str_object(
+            "{:0.4f}".format(value), MAX_ATTR_VAL_BYTES
+        )
     elif isinstance(value, SequenceABC):
         value_type = "string_value"
         value = _get_truncatable_str_object(
-            ",".join(str(x) for x in value), 256
+            ",".join(str(x) for x in value), MAX_ATTR_VAL_BYTES
         )
     else:
         logger.warning(
