@@ -19,8 +19,8 @@ from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.tools.cloud_trace_propagator import (
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.propagators.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
 )
 
@@ -30,7 +30,7 @@ RequestsInstrumentor().instrument()
 # Tracer boilerplate
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(CloudTraceSpanExporter())
+    BatchSpanProcessor(CloudTraceSpanExporter())
 )
 
 # Using the X-Cloud-Trace-Context header

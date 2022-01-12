@@ -13,13 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opentelemetry.ext.requests
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.propagators.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
 )
@@ -27,7 +28,7 @@ from opentelemetry.propagators.cloud_trace_propagator import (
 from flask import Flask
 
 # Instrumenting requests
-opentelemetry.ext.requests.RequestsInstrumentor().instrument()
+RequestsInstrumentor().instrument()
 
 # Instrumenting flask
 app = Flask(__name__)
@@ -36,7 +37,7 @@ FlaskInstrumentor().instrument_app(app)
 # Tracer boilerplate
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(CloudTraceSpanExporter())
+    BatchSpanProcessor(CloudTraceSpanExporter())
 )
 
 # Using the X-Cloud-Trace-Context header
