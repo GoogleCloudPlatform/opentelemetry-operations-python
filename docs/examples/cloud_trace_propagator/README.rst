@@ -19,9 +19,11 @@ To use this feature you first need to:
 
     pip install opentelemetry-api \
       opentelemetry-sdk \
+      opentelemetry-instrumentation-flask \
+      opentelemetry-instrumentation-requests \
       opentelemetry-exporter-gcp-trace \
-      opentelemetry-exporter-gcp-monitoring \
-      opentelemetry-propagator-gcp
+      opentelemetry-propagator-gcp \
+      Flask
 
 * Create a server that uses the Cloud Trace header
 
