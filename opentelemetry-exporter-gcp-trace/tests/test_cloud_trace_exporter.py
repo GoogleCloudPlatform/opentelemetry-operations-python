@@ -96,6 +96,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         cls.example_span_id = "95bb5edabd45950f"
         cls.example_time_in_ns = 1589919268850900051
         cls.example_time_stamp = _get_time_from_ns(cls.example_time_in_ns)
+        cls.str_20kb = "a" * 20 * 1024
+        cls.str_16kb = "a" * 16 * 1024
         cls.str_300 = "a" * 300
         cls.str_256 = "a" * 256
         cls.str_128 = "a" * 128
@@ -326,11 +328,24 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
 
     def test_attribute_value_truncation(self):
+        # shouldn't truncate
         self.assertEqual(
             _format_attribute_value(self.str_300),
             AttributeValue(
                 string_value=TruncatableString(
-                    value=self.str_256, truncated_byte_count=300 - 256
+                    value=self.str_300,
+                    truncated_byte_count=0,
+                )
+            ),
+        )
+
+        # huge string should truncate
+        self.assertEqual(
+            _format_attribute_value(self.str_20kb),
+            AttributeValue(
+                string_value=TruncatableString(
+                    value=self.str_16kb,
+                    truncated_byte_count=(20 - 16) * 1024,
                 )
             ),
         )
