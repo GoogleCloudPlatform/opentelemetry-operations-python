@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add entry point for Cloud Trace exporter to work with auto instrumentation
+  ([#179](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/179))
+
 ## Version 1.1.0
 
 Released 2022-01-13
