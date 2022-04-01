@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
-NANOS_PER_SECOND = 10 ** 9
+NANOS_PER_SECOND = 10**9
 
 OT_RESOURCE_LABEL_TO_GCP = {
     "gce_instance": {
@@ -95,7 +95,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
         self.unique_identifier = None
         if add_unique_identifier:
             self.unique_identifier = "{:08x}".format(
-                random.randint(0, 16 ** 8)
+                random.randint(0, 16**8)
             )
 
         (
