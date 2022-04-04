@@ -44,6 +44,28 @@ When not debugging, make sure to use
 :class:`opentelemetry.sdk.trace.export.BatchSpanProcessor` with the
 default parameters for performance reasons.
 
+Auto-instrumentation
+--------------------
+
+This exporter can also be used with `OpenTelemetry auto-instrumentation
+<https://opentelemetry.io/docs/instrumentation/python/automatic/>`_:
+
+.. code-block:: sh
+
+    opentelemetry-instrument --traces_exporter gcp_trace <command> <args>
+
+Configuration is supported through environment variables
+(:mod:`opentelemetry.exporter.cloud_trace.environment_variables`) or the corresponding command
+line arguments to ``opentelemetry-instrument``:
+
+.. code-block:: sh
+
+    opentelemetry-instrument --traces_exporter gcp_trace \\
+        --exporter_gcp_trace_project_id my-project \\
+        <command> <args>
+
+See ``opentelemetry-instrument --help`` for all configuration options.
+
 API
 ---
 """
@@ -51,6 +73,7 @@ API
 import logging
 import re
 from collections.abc import Sequence as SequenceABC
+from os import environ
 from typing import (
     Any,
     Dict,
@@ -67,8 +90,14 @@ import opentelemetry.trace as trace_api
 import pkg_resources
 from google.cloud.trace_v2 import BatchWriteSpansRequest, TraceServiceClient
 from google.cloud.trace_v2 import types as trace_types
-from google.protobuf.timestamp_pb2 import Timestamp
+from google.protobuf.timestamp_pb2 import (  # pylint: disable=no-name-in-module
+    Timestamp,
+)
 from google.rpc import code_pb2, status_pb2
+from opentelemetry.exporter.cloud_trace.environment_variables import (
+    OTEL_EXPORTER_GCP_TRACE_PROJECT_ID,
+    OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX,
+)
 from opentelemetry.exporter.cloud_trace.version import __version__
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
@@ -97,11 +126,13 @@ class CloudTraceSpanExporter(SpanExporter):
     """Cloud Trace span exporter for OpenTelemetry.
 
     Args:
-        project_id: ID of the cloud project that will receive the traces.
+        project_id: GCP project ID for the project to send spans to. Alternatively, can be
+            configured with :envvar:`OTEL_EXPORTER_GCP_TRACE_PROJECT_ID`.
         client: Cloud Trace client. If not given, will be taken from gcloud
             default credentials
-        resource_regex: Resource attributes with keys matching this regex will be
-          added to exported spans as labels (default: None).
+        resource_regex: Resource attributes with keys matching this regex will be added to
+            exported spans as labels (default: None). Alternatively, can be configured with
+            :envvar:`OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX`.
     """
 
     def __init__(
@@ -112,9 +143,15 @@ class CloudTraceSpanExporter(SpanExporter):
     ):
         self.client: TraceServiceClient = client or TraceServiceClient()
         if not project_id:
-            _, self.project_id = google.auth.default()
-        else:
-            self.project_id = project_id
+            project_id = environ.get(OTEL_EXPORTER_GCP_TRACE_PROJECT_ID)
+        if not project_id:
+            _, project_id = google.auth.default()
+        self.project_id = project_id
+
+        if not resource_regex:
+            resource_regex = environ.get(
+                OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX
+            )
         self.resource_regex = (
             re.compile(resource_regex) if resource_regex else None
         )
