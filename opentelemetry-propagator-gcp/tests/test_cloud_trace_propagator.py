@@ -115,6 +115,13 @@ class TestCloudTraceFormatPropagator(unittest.TestCase):
         self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
         self.assertTrue(new_span_context.is_remote)
 
+        header = "{}/{}".format(format_trace_id(self.valid_trace_id), 345)
+        new_span_context = self._extract_span_context(header)
+        self.assertEqual(new_span_context.trace_id, self.valid_trace_id)
+        self.assertEqual(new_span_context.span_id, 345)
+        self.assertEqual(new_span_context.trace_flags, TraceFlags(0))
+        self.assertTrue(new_span_context.is_remote)
+
     def test_mixed_case_header_key(self):
         header_value = "{}/{};o=1".format(
             format_trace_id(self.valid_trace_id), self.valid_span_id
