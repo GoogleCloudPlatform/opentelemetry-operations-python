@@ -94,6 +94,7 @@ from google.protobuf.timestamp_pb2 import (  # pylint: disable=no-name-in-module
     Timestamp,
 )
 from google.rpc import code_pb2, status_pb2
+from opentelemetry.exporter.cloud_trace import _util
 from opentelemetry.exporter.cloud_trace.environment_variables import (
     OTEL_EXPORTER_GCP_TRACE_PROJECT_ID,
     OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX,
@@ -141,20 +142,21 @@ class CloudTraceSpanExporter(SpanExporter):
         client=None,
         resource_regex=None,
     ):
-        self.client: TraceServiceClient = client or TraceServiceClient()
-        if not project_id:
-            project_id = environ.get(OTEL_EXPORTER_GCP_TRACE_PROJECT_ID)
-        if not project_id:
-            _, project_id = google.auth.default()
-        self.project_id = project_id
+        with _util.without_autoinstrumentation():
+            self.client: TraceServiceClient = client or TraceServiceClient()
+            if not project_id:
+                project_id = environ.get(OTEL_EXPORTER_GCP_TRACE_PROJECT_ID)
+            if not project_id:
+                _, project_id = google.auth.default()
+            self.project_id = project_id
 
-        if not resource_regex:
-            resource_regex = environ.get(
-                OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX
+            if not resource_regex:
+                resource_regex = environ.get(
+                    OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX
+                )
+            self.resource_regex = (
+                re.compile(resource_regex) if resource_regex else None
             )
-        self.resource_regex = (
-            re.compile(resource_regex) if resource_regex else None
-        )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         """Export the spans to Cloud Trace.
