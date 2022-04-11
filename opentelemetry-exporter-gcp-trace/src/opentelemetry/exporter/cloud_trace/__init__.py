@@ -175,6 +175,7 @@ class CloudTraceSpanExporter(SpanExporter):
             )
         # pylint: disable=broad-except
         except Exception as ex:
+            print(f"Error while writing to Cloud Trace: f{ex}")
             logger.error("Error while writing to Cloud Trace", exc_info=ex)
             return SpanExportResult.FAILURE
 
