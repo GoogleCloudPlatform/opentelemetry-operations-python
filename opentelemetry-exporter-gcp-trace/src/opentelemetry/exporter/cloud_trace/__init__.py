@@ -462,6 +462,7 @@ LABELS_MAPPING = {
     "http.status_code": "/http/status_code",
     "http.url": "/http/url",
     "http.user_agent": "/http/user_agent",
+    "service.name": "g.co/gae/app/module",
 }
 
 
