@@ -22,7 +22,7 @@ from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import SpanContext, TraceFlags, format_trace_id
 
 _TRACE_CONTEXT_HEADER_NAME = "x-cloud-trace-context"
-_TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20});o=(?P<trace_flags>\d+)"
+_TRACE_CONTEXT_HEADER_FORMAT = r"(?P<trace_id>[0-9a-f]{32})\/(?P<span_id>[\d]{1,20})(;o=(?P<trace_flags>\d+))?"
 _TRACE_CONTEXT_HEADER_RE = re.compile(_TRACE_CONTEXT_HEADER_FORMAT)
 _FIELDS = {_TRACE_CONTEXT_HEADER_NAME}
 
@@ -71,7 +71,7 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
 
         trace_id = match.group("trace_id")
         span_id = match.group("span_id")
-        trace_options = match.group("trace_flags")
+        trace_options = match.group("trace_flags") or "0"
 
         if trace_id == "0" * 32 or int(span_id) == 0:
             return context
