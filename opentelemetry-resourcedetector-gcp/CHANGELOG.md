@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- remove google-auth dependency for resource detection
+  ([#176](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/176))
+
 ## Version 1.2.0a0
 
 Released 2022-04-05
