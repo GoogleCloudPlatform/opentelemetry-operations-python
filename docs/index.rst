@@ -49,9 +49,10 @@ To install the GCP trace propagator:
    :maxdepth: 1
    :caption: Exporters
    :name: exporters
+   :glob:
 
-   cloud_monitoring/cloud_monitoring
-   cloud_trace/cloud_trace
+   cloud_monitoring/**
+   cloud_trace/**
 
 
 .. toctree::

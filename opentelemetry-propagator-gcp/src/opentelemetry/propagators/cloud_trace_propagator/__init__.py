@@ -11,7 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
+"""Cloud Trace Span Propagator for X-Cloud-Trace-Context format.
+
+Usage
+-----
+
+.. code-block:: python
+
+    from opentelemetry.propagate import set_global_textmap
+    from opentelemetry.propagators.cloud_trace_propagator import (
+        CloudTraceFormatPropagator,
+    )
+
+    # Set the X-Cloud-Trace-Context header
+    set_global_textmap(CloudTraceFormatPropagator())
+
+Auto-instrumentation
+--------------------
+
+This exporter can also be used with the :envvar:`OTEL_PROPAGATORS` environment variable as
+``OTEL_PROPAGATORS=gcp_trace``.
+
+This also works with `OpenTelemetry auto-instrumentation
+<https://opentelemetry.io/docs/instrumentation/python/automatic/>`_:
+
+.. code-block:: sh
+
+    opentelemetry-instrument --propagator gcp_trace <command> <args>
+
+API
+---
+"""
 
 import re
 import typing
