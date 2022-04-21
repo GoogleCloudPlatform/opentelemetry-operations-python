@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.3.0
+
+Released 2022-04-21
+
 - Add entry point for x-cloud-trace-context propagator
   ([#183](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/183))
 - Make the trace flags optional when parsing x-cloud-trace-context
