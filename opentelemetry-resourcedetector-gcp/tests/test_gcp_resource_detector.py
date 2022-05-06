@@ -86,6 +86,7 @@ class TestGKEResourceFinder(unittest.TestCase):
     def tearDown(self) -> None:
         clear_gke_env_vars()
 
+    # pylint: disable=unused-argument
     def test_not_running_on_gke(self, getter):
         pop_environ_key(KUBERNETES_SERVICE_HOST)
         found_resources = get_gke_resources()
@@ -107,7 +108,7 @@ class TestGKEResourceFinder(unittest.TestCase):
                 "cloud.zone": "zone",
                 "cloud.provider": "gcp",
                 "gcp.resource_type": "gke_container",
-            }
+            },
         )
 
     # pylint: disable=unused-argument
