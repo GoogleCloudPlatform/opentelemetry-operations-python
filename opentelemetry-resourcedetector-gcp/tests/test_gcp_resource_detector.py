@@ -88,7 +88,20 @@ class TestGKEResourceFinder(unittest.TestCase):
     # pylint: disable=unused-argument
     def test_missing_container_name(self, getter):
         pop_environ_key(CONTAINER_NAME)
-        self.assertEqual(get_gke_resources(), {})
+        found_resources = get_gke_resources()
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "k8s.cluster.name": "cluster_name",
+                "k8s.namespace.name": "",
+                "host.id": "instance_id",
+                "k8s.pod.name": "",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "gke_container",
+            }
+        )
 
     # pylint: disable=unused-argument
     def test_environment_empty_strings(self, getter):
