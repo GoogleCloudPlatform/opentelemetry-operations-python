@@ -62,6 +62,9 @@ def get_gce_resources():
 def get_gke_resources():
     """Resource finder for GKE attributes"""
 
+    if os.getenv("KUBERNETES_SERVICE_HOST") is None:
+        return {}
+
     (
         common_attributes,
         all_metadata,
