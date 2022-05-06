@@ -61,14 +61,15 @@ def get_gce_resources():
 
 def get_gke_resources():
     """Resource finder for GKE attributes"""
-    # The user must specify the container name via the Downward API
-    container_name = os.getenv("CONTAINER_NAME")
-    if container_name is None:
-        return {}
+
     (
         common_attributes,
         all_metadata,
     ) = _get_google_metadata_and_common_attributes()
+
+    container_name = os.getenv("CONTAINER_NAME")
+    if container_name is not None:
+        common_attributes["container.name"] = container_name
 
     # Fallback to reading namespace from a file is the env var is not set
     pod_namespace = os.getenv("NAMESPACE")
@@ -89,7 +90,6 @@ def get_gke_resources():
             "k8s.namespace.name": pod_namespace,
             "k8s.pod.name": os.getenv("POD_NAME", os.getenv("HOSTNAME", "")),
             "host.id": all_metadata["instance"]["id"],
-            "container.name": container_name,
             "gcp.resource_type": "gke_container",
         }
     )
