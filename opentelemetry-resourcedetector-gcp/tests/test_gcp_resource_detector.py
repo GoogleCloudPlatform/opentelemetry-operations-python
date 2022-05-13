@@ -29,6 +29,7 @@ NAMESPACE = "NAMESPACE"
 CONTAINER_NAME = "CONTAINER_NAME"
 HOSTNAME = "HOSTNAME"
 POD_NAME = "POD_NAME"
+KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST"
 
 GCE_RESOURCES_JSON_STRING = {
     "instance": {"id": "instance_id", "zone": "projects/123/zones/zone"},
@@ -86,12 +87,33 @@ class TestGKEResourceFinder(unittest.TestCase):
         clear_gke_env_vars()
 
     # pylint: disable=unused-argument
+    def test_not_running_on_gke(self, getter):
+        pop_environ_key(KUBERNETES_SERVICE_HOST)
+        found_resources = get_gke_resources()
+        self.assertEqual(found_resources, {})
+
+    # pylint: disable=unused-argument
     def test_missing_container_name(self, getter):
+        os.environ[KUBERNETES_SERVICE_HOST] = "10.0.0.1"
         pop_environ_key(CONTAINER_NAME)
-        self.assertEqual(get_gke_resources(), {})
+        found_resources = get_gke_resources()
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "k8s.cluster.name": "cluster_name",
+                "k8s.namespace.name": "",
+                "host.id": "instance_id",
+                "k8s.pod.name": "",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "gke_container",
+            },
+        )
 
     # pylint: disable=unused-argument
     def test_environment_empty_strings(self, getter):
+        os.environ[KUBERNETES_SERVICE_HOST] = "10.0.0.1"
         os.environ[CONTAINER_NAME] = ""
         os.environ[NAMESPACE] = ""
         found_resources = get_gke_resources()
@@ -111,6 +133,7 @@ class TestGKEResourceFinder(unittest.TestCase):
         )
 
     def test_missing_namespace_file(self, getter):
+        os.environ[KUBERNETES_SERVICE_HOST] = "10.0.0.1"
         os.environ[CONTAINER_NAME] = "container_name"
         found_resources = get_gke_resources()
         self.assertEqual(
@@ -129,6 +152,7 @@ class TestGKEResourceFinder(unittest.TestCase):
         )
 
     def test_finding_gke_resources(self, getter):
+        os.environ[KUBERNETES_SERVICE_HOST] = "10.0.0.1"
         os.environ[NAMESPACE] = "namespace"
         os.environ[CONTAINER_NAME] = "container_name"
         os.environ[HOSTNAME] = "host_name"
@@ -150,6 +174,7 @@ class TestGKEResourceFinder(unittest.TestCase):
         )
 
     def test_finding_gke_resources_with_pod_name(self, getter):
+        os.environ[KUBERNETES_SERVICE_HOST] = "10.0.0.1"
         os.environ[NAMESPACE] = "namespace"
         os.environ[CONTAINER_NAME] = "container_name"
         os.environ[HOSTNAME] = "host_name"
@@ -182,6 +207,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
     def test_finding_gce_resources(self, getter):
         # The necessary env variables were not set for GKE resource detection
         # to succeed. We should be falling back to detecting GCE resources
+        pop_environ_key(KUBERNETES_SERVICE_HOST)
         resource_finder = GoogleCloudResourceDetector()
         getter.return_value.json.return_value = GCE_RESOURCES_JSON_STRING
         found_resources = resource_finder.detect()
@@ -219,7 +245,7 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
     def test_finding_gke_resources(self, getter):
         # The necessary env variables were set for GKE resource detection
         # to succeed. No GCE resource info should be extracted
-
+        os.environ[KUBERNETES_SERVICE_HOST] = "10.0.0.1"
         os.environ[NAMESPACE] = "namespace"
         os.environ[CONTAINER_NAME] = "container_name"
         os.environ[HOSTNAME] = "host_name"
