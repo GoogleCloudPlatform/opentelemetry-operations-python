@@ -15,27 +15,30 @@
 
 import time
 
-from opentelemetry import metrics
+from opentelemetry._metrics import get_meter_provider, set_meter_provider
 from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
-from opentelemetry.sdk.metrics import MeterProvider
-
-metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__)
-metrics.get_meter_provider().start_pipeline(
-    meter, CloudMonitoringMetricsExporter(), 5
+from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics.export import (
+    PeriodicExportingMetricReader,
 )
+
+
+exporter = CloudMonitoringMetricsExporter()
+reader = PeriodicExportingMetricReader(exporter, 1)
+provider = MeterProvider(metric_readers=[reader])
+set_meter_provider(provider)
+
+meter = get_meter_provider().get_meter("example", "0.1.0")
 
 requests_counter = meter.create_counter(
     name="request_counter",
     description="number of requests",
     unit="1",
-    value_type=int,
 )
-
 staging_labels = {"environment": "staging"}
 
 for i in range(20):
     requests_counter.add(25, staging_labels)
-    time.sleep(10)
+    time.sleep(1)

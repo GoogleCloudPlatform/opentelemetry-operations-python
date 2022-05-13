@@ -24,9 +24,11 @@ from google.cloud.monitoring_v3.gapic.transports import (
 from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
-from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk import _metrics as metrics
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk._metrics.export import (
+    PeriodicExportingMetricReader,
+)
 from test_common import BaseExporterIntegrationTest
 
 logger = logging.getLogger(__name__)
@@ -42,8 +44,9 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
         exporter = CloudMonitoringMetricsExporter(
             self.project_id, client=client
         )
-
+        reader = PeriodicExportingMetricReader(exporter, 1)
         meter_provider = metrics.MeterProvider(
+            metric_readers=[reader],
             resource=Resource.create(
                 {
                     "cloud.account.id": "some_account_id",
@@ -52,27 +55,23 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
                     "host.id": 654321,
                     "gcp.resource_type": "gce_instance",
                 }
-            )
+            ),
         )
         meter = meter_provider.get_meter(__name__)
         counter = meter.create_counter(
             # TODO: remove "opentelemetry/" prefix which is a hack
             # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/84
             name="opentelemetry/name",
-            description="desc",
+            description="description",
             unit="1",
-            value_type=int,
         )
-        # interval doesn't matter, we don't start the thread and just run
-        # tick() instead
-        controller = PushController(meter, exporter, 10)
 
         counter.add(10, {"env": "test"})
 
         with patch(
             "opentelemetry.exporter.cloud_monitoring.logger"
         ) as mock_logger:
-            controller.tick()
+            meter_provider.force_flush()
 
             # run tox tests with `-- -log-cli-level=0` to see mock calls made
             logger.debug(client.create_time_series.mock_calls)

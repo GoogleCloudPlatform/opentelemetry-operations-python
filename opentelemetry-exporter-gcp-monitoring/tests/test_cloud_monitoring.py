@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import unittest
-from collections import OrderedDict
 from typing import Optional
 from unittest import mock
 
@@ -22,6 +21,7 @@ from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
     NANOS_PER_SECOND,
@@ -29,14 +29,14 @@ from opentelemetry.exporter.cloud_monitoring import (
     WRITE_INTERVAL,
     CloudMonitoringMetricsExporter,
 )
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import ExportRecord
-from opentelemetry.sdk.metrics.export.aggregate import (
-    HistogramAggregator,
-    SumAggregator,
-    ValueObserverAggregator,
+from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics.point import (
+    AggregationTemporality,
+    Sum,
 )
 from opentelemetry.sdk.resources import Resource
+
+import metrictestutil
 
 
 class UnsupportedAggregator:
@@ -51,9 +51,8 @@ class MockBatcher:
 def mock_meter(stateful: Optional[bool] = None):
     # create an autospec of Meter from an instance in order to capture instance
     # variables (meter.processor)
-    meter = MeterProvider(stateful).get_meter(__name__)
+    meter = MeterProvider().get_meter(__name__)
     meter_mock = mock.create_autospec(meter, spec_set=True)
-    meter_mock.processor.stateful = meter.processor.stateful
     return meter_mock
 
 
@@ -62,14 +61,11 @@ class MockMetric:
         self,
         name="name",
         description="description",
-        value_type=int,
         meter=None,
-        stateful=True,
     ):
         self.name = name
         self.description = description
-        self.value_type = value_type
-        self.meter = meter or mock_meter(stateful)
+        self.meter = meter or mock_meter()
 
 
 # pylint: disable=protected-access
@@ -145,22 +141,17 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         self.assertIsNone(
             exporter._get_metric_descriptor(
-                ExportRecord(
-                    MockMetric(),
-                    (),
-                    UnsupportedAggregator(),
-                    Resource.get_empty(),
-                )
+                metrictestutil._generate_unsupported_metric("name")
             )
         )
 
-        record = ExportRecord(
-            MockMetric(),
-            (("label1", "value1"),),
-            SumAggregator(),
-            Resource.get_empty(),
+        metric = metrictestutil._generate_sum(
+            "name",
+            0,
+            attributes=BoundedAttributes(attributes={"label1": "value1"}),
+            description="description",
         )
-        metric_descriptor = exporter._get_metric_descriptor(record)
+        metric_descriptor = exporter._get_metric_descriptor(metric)
         client.create_metric_descriptor.assert_called_with(
             self.project_name,
             MetricDescriptor(
@@ -179,22 +170,24 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         )
 
         # Getting a cached metric descriptor shouldn't use another call
-        cached_metric_descriptor = exporter._get_metric_descriptor(record)
+        cached_metric_descriptor = exporter._get_metric_descriptor(metric)
         self.assertEqual(client.create_metric_descriptor.call_count, 1)
         self.assertEqual(metric_descriptor, cached_metric_descriptor)
 
         # Drop labels with values that aren't string, int or bool
         exporter._get_metric_descriptor(
-            ExportRecord(
-                MockMetric(name="name2", value_type=float),
-                (
-                    ("label1", "value1"),
-                    ("label2", dict()),
-                    ("label3", 3),
-                    ("label4", False),
+            metrictestutil._generate_sum(
+                "name2",
+                0.0,
+                attributes=BoundedAttributes(
+                    attributes={
+                        "label1": "value1",
+                        "label2": dict(),
+                        "label3": 0,
+                        "label4": True,
+                    }
                 ),
-                SumAggregator(),
-                Resource.get_empty(),
+                description="description",
             )
         )
         client.create_metric_descriptor.assert_called_with(
@@ -222,13 +215,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             project_id=self.project_id, client=client
         )
         exporter.project_name = self.project_name
-        record = ExportRecord(
-            MockMetric(),
-            (),
-            ValueObserverAggregator(),
-            Resource.get_empty(),
+        metric = metrictestutil._generate_gauge(
+            "name",
+            0,
+            attributes=BoundedAttributes(attributes={}),
+            description="description",
         )
-        exporter._get_metric_descriptor(record)
+        exporter._get_metric_descriptor(metric)
         client.create_metric_descriptor.assert_called_with(
             self.project_name,
             MetricDescriptor(
@@ -257,18 +250,6 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
 
         exporter.project_name = self.project_name
 
-        exporter.export(
-            [
-                ExportRecord(
-                    MockMetric(),
-                    (("label1", "value1"),),
-                    UnsupportedAggregator(),
-                    Resource.get_empty(),
-                )
-            ]
-        )
-        client.create_time_series.assert_not_called()
-
         client.create_metric_descriptor.return_value = MetricDescriptor(
             **{
                 "name": None,
@@ -296,31 +277,26 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        sum_agg_one = SumAggregator()
-        sum_agg_one.checkpoint = 1
-        sum_agg_one.last_update_timestamp = (
-            WRITE_INTERVAL + 1
-        ) * NANOS_PER_SECOND
         exporter.export(
             [
-                ExportRecord(
-                    MockMetric(meter=mock_meter()),
-                    (
-                        ("label1", "value1"),
-                        ("label2", 1),
+                metrictestutil._generate_sum(
+                    "name",
+                    1,
+                    attributes=BoundedAttributes(
+                        attributes={"label1": "value1", "label2": 1}
                     ),
-                    sum_agg_one,
-                    resource,
+                    description="description",
+                    resource=resource,
                 ),
-                ExportRecord(
-                    MockMetric(meter=mock_meter()),
-                    (
-                        ("label1", "value2"),
-                        ("label2", 2),
+                metrictestutil._generate_sum(
+                    "name",
+                    1,
+                    attributes=BoundedAttributes(
+                        attributes={"label1": "value2", "label2": 2}
                     ),
-                    sum_agg_one,
-                    resource,
-                ),
+                    description="description",
+                    resource=resource
+                )
             ]
         )
         expected_resource = MonitoredResource(
@@ -335,10 +311,10 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         series1.metric.labels["label2"] = "1"
         point = series1.points.add()
         point.value.int64_value = 1
-        point.interval.end_time.seconds = WRITE_INTERVAL + 1
-        point.interval.end_time.nanos = 0
-        point.interval.start_time.seconds = 1
-        point.interval.start_time.nanos = 0
+        point.interval.end_time.seconds = 1641946016
+        point.interval.end_time.nanos = 139533244
+        point.interval.start_time.seconds = 1641946015
+        point.interval.start_time.nanos = 139533244
 
         series2 = TimeSeries(resource=expected_resource)
         series2.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
@@ -347,10 +323,10 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         series2.metric.labels["label2"] = "2"
         point = series2.points.add()
         point.value.int64_value = 1
-        point.interval.end_time.seconds = WRITE_INTERVAL + 1
-        point.interval.end_time.nanos = 0
-        point.interval.start_time.seconds = 1
-        point.interval.start_time.nanos = 0
+        point.interval.end_time.seconds = 1641946016
+        point.interval.end_time.nanos = 139533244
+        point.interval.start_time.seconds = 1641946015
+        point.interval.start_time.nanos = 139533244
 
         client.create_time_series.assert_has_calls(
             [mock.call(self.project_name, [series1, series2])]
@@ -359,48 +335,39 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         # Attempting to export too soon after another export with the exact
         # same labels leads to it being dropped
 
-        sum_agg_two = SumAggregator()
-        sum_agg_two.checkpoint = 1
-        sum_agg_two.last_update_timestamp = (
-            WRITE_INTERVAL + 2
-        ) * NANOS_PER_SECOND
         exporter.export(
             [
-                ExportRecord(
-                    MockMetric(),
-                    (
-                        ("label1", "value1"),
-                        ("label2", 1),
+                metrictestutil._generate_sum(
+                    "name",
+                    1,
+                    attributes=BoundedAttributes(
+                        attributes={"label1": "value1", "label2": 1}
                     ),
-                    sum_agg_two,
-                    Resource.get_empty(),
+                    description="description",
                 ),
-                ExportRecord(
-                    MockMetric(),
-                    (
-                        ("label1", "value2"),
-                        ("label2", 2),
+                metrictestutil._generate_sum(
+                    "name",
+                    1,
+                    attributes=BoundedAttributes(
+                        attributes={"label1": "value2", "label2": 2}
                     ),
-                    sum_agg_two,
-                    Resource.get_empty(),
-                ),
+                    description="description",
+                )
             ]
         )
         self.assertEqual(client.create_time_series.call_count, 1)
 
         # But exporting with different labels is fine
-        sum_agg_two.checkpoint = 2
         exporter.export(
             [
-                ExportRecord(
-                    MockMetric(),
-                    (
-                        ("label1", "changed_label"),
-                        ("label2", 2),
+                metrictestutil._generate_sum(
+                    "name",
+                    2,
+                    attributes=BoundedAttributes(
+                        attributes={"label1": "changed_label", "label2": 2}
                     ),
-                    sum_agg_two,
-                    Resource.get_empty(),
-                ),
+                    description="description",
+                )
             ]
         )
         series3 = TimeSeries()
@@ -410,10 +377,10 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         series3.metric.labels["label2"] = "2"
         point = series3.points.add()
         point.value.int64_value = 2
-        point.interval.end_time.seconds = WRITE_INTERVAL + 2
-        point.interval.end_time.nanos = 0
-        point.interval.start_time.seconds = 1
-        point.interval.start_time.nanos = 0
+        point.interval.end_time.seconds = 1641946016
+        point.interval.end_time.nanos = 139533244
+        point.interval.start_time.seconds = 1641946015
+        point.interval.start_time.nanos = 139533244
 
         client.create_time_series.assert_has_calls(
             [
@@ -447,18 +414,13 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        aggregator = ValueObserverAggregator()
-        aggregator.checkpoint = aggregator._TYPE(1, 2, 3, 4, 5)
-        aggregator.last_update_timestamp = (
-            WRITE_INTERVAL + 1
-        ) * NANOS_PER_SECOND
         exporter.export(
             [
-                ExportRecord(
-                    MockMetric(meter=mock_meter()),
-                    (),
-                    aggregator,
-                    Resource.get_empty(),
+                metrictestutil._generate_gauge(
+                    "name",
+                    5,
+                    attributes=BoundedAttributes(attributes={}),
+                    description="description",
                 )
             ]
         )
@@ -468,10 +430,10 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         series.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         point = series.points.add()
         point.value.int64_value = 5
-        point.interval.end_time.seconds = WRITE_INTERVAL + 1
-        point.interval.end_time.nanos = 0
-        point.interval.start_time.seconds = WRITE_INTERVAL + 1
-        point.interval.start_time.nanos = 0
+        point.interval.end_time.seconds = 1641946016
+        point.interval.end_time.nanos = 139533244
+        point.interval.start_time.seconds = 1641946016
+        point.interval.start_time.nanos = 139533244
         client.create_time_series.assert_has_calls(
             [mock.call(self.project_name, [series])]
         )
@@ -501,18 +463,17 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        aggregator = HistogramAggregator(config={"bounds": [2, 4, 6]})
-        aggregator.checkpoint = OrderedDict([(2, 1), (4, 2), (6, 4), (">", 3)])
-        aggregator.last_update_timestamp = (
-            WRITE_INTERVAL + 1
-        ) * NANOS_PER_SECOND
         exporter.export(
             [
-                ExportRecord(
-                    MockMetric(meter=mock_meter()),
-                    (),
-                    aggregator,
-                    Resource.get_empty(),
+                metrictestutil._generate_histogram(
+                    "name",
+                    [1, 2, 4, 3],
+                    [0, 2, 4, 6],
+                    0.5,
+                    6.5,
+                    10,
+                    attributes=BoundedAttributes(attributes={}),
+                    description="description",
                 )
             ]
         )
@@ -522,14 +483,14 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         series.metric.type = "custom.googleapis.com/OpenTelemetry/name"
         point = {
             "interval": {
-                "start_time": {"seconds": 1},
-                "end_time": {"seconds": 11},
+                "start_time": {"seconds": 1641946015, "nanos": 139533244},
+                "end_time": {"seconds": 1641946016, "nanos": 139533244},
             },
             "value": {
                 "distribution_value": {
                     "count": 10,
                     "bucket_options": {
-                        "explicit_buckets": {"bounds": [2.0, 4.0, 6.0]}
+                        "explicit_buckets": {"bounds": [0.0, 2.0, 4.0, 6.0]}
                     },
                     "bucket_counts": [1, 2, 4, 3],
                 }
@@ -549,6 +510,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             exporter = CloudMonitoringMetricsExporter(
                 project_id=self.project_id,
                 client=client,
+                add_unique_identifier=True,
             )
 
         client.create_metric_descriptor.return_value = MetricDescriptor(
@@ -567,53 +529,69 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        agg = SumAggregator()
-        agg.checkpoint = 1
-        agg.last_update_timestamp = (WRITE_INTERVAL + 1) * NANOS_PER_SECOND
-
-        metric_record = ExportRecord(
-            MockMetric(stateful=False), (), agg, Resource.get_empty()
+        metric = metrictestutil._generate_metric(
+            "name",
+            Sum(
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                is_monotonic=True,
+                start_time_unix_nano=1641946015139533244,
+                time_unix_nano=1641946016139533244,
+                value=0.0,
+            ),
+            attributes=BoundedAttributes(attributes={}),
+            description="description",
+            unit=None,
         )
 
-        exporter.export([metric_record])
+        exporter.export([metric])
 
         exports_1 = client.create_time_series.call_args_list[0]
 
         # verify the first metric started at exporter start time
         self.assertEqual(
-            exports_1[0][1][0].points[0].interval.start_time.seconds, 1
+            exports_1[0][1][0].points[0].interval.start_time.seconds,
+            1641946015,
         )
         self.assertEqual(
-            exports_1[0][1][0].points[0].interval.start_time.nanos, 0
+            exports_1[0][1][0].points[0].interval.start_time.nanos, 139533244
         )
 
         self.assertEqual(
-            exports_1[0][1][0].points[0].interval.end_time.seconds,
-            WRITE_INTERVAL + 1,
+            exports_1[0][1][0].points[0].interval.end_time.seconds, 1641946016
         )
 
-        agg.last_update_timestamp = (WRITE_INTERVAL * 2 + 2) * NANOS_PER_SECOND
-
-        metric_record = ExportRecord(
-            MockMetric(stateful=False), (), agg, Resource.get_empty()
+        metric = metrictestutil._generate_metric(
+            "name",
+            Sum(
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                is_monotonic=True,
+                start_time_unix_nano=1641946015139533244
+                + (WRITE_INTERVAL + 1) * NANOS_PER_SECOND,
+                time_unix_nano=1641946016139533244
+                + (WRITE_INTERVAL + 1) * NANOS_PER_SECOND,
+                value=1.0,
+            ),
+            attributes=BoundedAttributes(attributes={}),
+            description="description",
+            unit=None,
         )
 
-        exporter.export([metric_record])
+        exporter.export([metric])
 
         exports_2 = client.create_time_series.call_args_list[1]
 
         # 1ms ahead of end time of last export
         self.assertEqual(
             exports_2[0][1][0].points[0].interval.start_time.seconds,
-            WRITE_INTERVAL + 1,
+            1641946015 + WRITE_INTERVAL + 1,
         )
         self.assertEqual(
-            exports_2[0][1][0].points[0].interval.start_time.nanos, 1e6
+            exports_2[0][1][0].points[0].interval.start_time.nanos, 139533244
         )
 
         self.assertEqual(
             exports_2[0][1][0].points[0].interval.end_time.seconds,
-            WRITE_INTERVAL * 2 + 2,
+            1641946016 + WRITE_INTERVAL + 1,
         )
 
     def test_unique_identifier(self):
@@ -647,10 +625,11 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             }
         )
 
-        sum_agg_one = SumAggregator()
-        sum_agg_one.update(1)
-        metric_record = ExportRecord(
-            MockMetric(), (), sum_agg_one, Resource.get_empty()
+        metric_record = metrictestutil._generate_sum(
+            "name",
+            0.0,
+            attributes=BoundedAttributes(attributes={}),
+            description="description",
         )
         exporter1.export([metric_record])
         exporter2.export([metric_record])

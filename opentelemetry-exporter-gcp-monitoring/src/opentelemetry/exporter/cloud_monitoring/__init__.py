@@ -14,6 +14,7 @@
 
 import logging
 import random
+import threading
 from typing import Optional, Sequence
 
 import google.auth
@@ -24,16 +25,16 @@ from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
 from opentelemetry.exporter.cloud_monitoring._time import time_ns
-from opentelemetry.sdk.metrics import UpDownCounter
-from opentelemetry.sdk.metrics.export import (
-    ExportRecord,
-    MetricsExporter,
-    MetricsExportResult,
+from opentelemetry.sdk._metrics import UpDownCounter
+from opentelemetry.sdk._metrics.export import (
+    Metric,
+    MetricExporter,
+    MetricExportResult,
 )
-from opentelemetry.sdk.metrics.export.aggregate import (
-    HistogramAggregator,
-    SumAggregator,
-    ValueObserverAggregator,
+from opentelemetry.sdk._metrics.point import (
+    Histogram,
+    Sum,
+    Gauge,
 )
 from opentelemetry.sdk.resources import Resource
 
@@ -65,7 +66,7 @@ OT_RESOURCE_LABEL_TO_GCP = {
 # pylint: disable=no-member
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
-class CloudMonitoringMetricsExporter(MetricsExporter):
+class CloudMonitoringMetricsExporter(MetricExporter):
     """Implementation of Metrics Exporter to Google Cloud Monitoring
 
         You can manually pass in project_id and client, or else the
@@ -102,6 +103,7 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             self._exporter_start_time_seconds,
             self._exporter_start_time_nanos,
         ) = divmod(time_ns(), NANOS_PER_SECOND)
+        self.lock = threading.Lock()
 
     @staticmethod
     def _get_monitored_resource(
@@ -149,31 +151,32 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             write_ind += MAX_BATCH_WRITE
 
     def _get_metric_descriptor(
-        self, record: ExportRecord
+        self, metric: Metric
     ) -> Optional[MetricDescriptor]:
         """We can map Metric to MetricDescriptor using Metric.name or
         MetricDescriptor.type. We create the MetricDescriptor if it doesn't
         exist already and cache it. Note that recreating MetricDescriptors is
         a no-op if it already exists.
 
-        :param record:
+        :param metric:
         :return:
         """
-        instrument = record.instrument
+        self.lock.acquire()
         descriptor_type = "custom.googleapis.com/OpenTelemetry/{}".format(
-            instrument.name
+            metric.name
         )
         if descriptor_type in self._metric_descriptors:
+            self.lock.release()
             return self._metric_descriptors[descriptor_type]
 
         descriptor = {  # type: ignore[var-annotated] # TODO #56
             "name": None,
             "type": descriptor_type,
-            "display_name": instrument.name,
-            "description": instrument.description,
+            "display_name": metric.name,
+            "description": metric.description,
             "labels": [],
         }
-        for key, value in record.labels:
+        for key, value in list(metric.attributes.items()):
             if isinstance(value, str):
                 descriptor["labels"].append(  # type: ignore[union-attr] # TODO #56
                     LabelDescriptor(key=key, value_type="STRING")
@@ -197,30 +200,31 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY, value_type="STRING")
             )
 
-        # SumAggregator is best represented as a cumulative, but it can't be
+        # SumAggregation is best represented as a cumulative, but it can't be
         # represented that way if it can decrement. So we need to make sure
         # that the instrument is not an UpDownCounter
-        if isinstance(record.aggregator, SumAggregator) and not isinstance(
-            record.instrument, UpDownCounter
+        if isinstance(metric.point, Sum) and not isinstance(
+            metric.point, UpDownCounter
         ):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
-        elif isinstance(record.aggregator, ValueObserverAggregator):
+        elif isinstance(metric.point, Gauge):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
-        elif isinstance(record.aggregator, HistogramAggregator):
+        elif isinstance(metric.point, Histogram):
             descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
         else:
             logger.warning(
                 "Unsupported instrument/aggregator combo, types %s and %s, ignoring it",
-                type(record.instrument).__name__,
-                type(record.aggregator).__name__,
+                type(metric).__name__,
+                type(metric.point).__name__,
             )
+            self.lock.release()
             return None
 
-        if isinstance(record.aggregator, HistogramAggregator):
+        if isinstance(metric.point, Histogram):
             descriptor["value_type"] = MetricDescriptor.ValueType.DISTRIBUTION
-        elif instrument.value_type == int:
+        elif isinstance(metric.point.value, int):
             descriptor["value_type"] = MetricDescriptor.ValueType.INT64
-        elif instrument.value_type == float:
+        elif isinstance(metric.point.value, float):
             descriptor["value_type"] = MetricDescriptor.ValueType.DOUBLE
 
         proto_descriptor = MetricDescriptor(**descriptor)
@@ -235,74 +239,54 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
                 proto_descriptor,
                 exc_info=ex,
             )
+            self.lock.release()
             return None
         self._metric_descriptors[descriptor_type] = descriptor
+        self.lock.release()
         return descriptor
 
-    def _set_start_end_times(self, point_dict, record, metric_descriptor):
-        updated_key = (metric_descriptor.type, record.labels)
-        seconds, nanos = divmod(
-            record.aggregator.last_update_timestamp, NANOS_PER_SECOND
+    def _set_start_end_times(
+        self, point_dict, metric: Metric, metric_descriptor
+    ):
+        updated_key = (
+            metric_descriptor.type,
+            frozenset(metric.attributes.items()),
         )
-
-        if (
-            metric_descriptor.metric_kind
-            == MetricDescriptor.MetricKind.CUMULATIVE
-        ):
-            if (
-                record.instrument.meter.processor.stateful
-                or updated_key not in self._last_updated
-            ):
-                # The aggregation has not reset since the exporter
-                # has started up, so that is the start time
-                point_dict["interval"]["start_time"] = {
-                    "seconds": self._exporter_start_time_seconds,
-                    "nanos": self._exporter_start_time_nanos,
-                }
-            else:
-                # The aggregation reset the last time it was exported
-                # Add 1ms to guarantee there is no overlap from the previous export
-                # (see https://cloud.google.com/monitoring/api/ref_v3/rpc/google.monitoring.v3#timeinterval)
-                (start_seconds, start_nanos,) = divmod(
-                    self._last_updated[updated_key] + int(1e6),
-                    NANOS_PER_SECOND,
-                )
-                point_dict["interval"]["start_time"] = {
-                    "seconds": start_seconds,
-                    "nanos": start_nanos,
-                }
-        else:
-            point_dict["interval"]["start_time"] = {
-                "seconds": seconds,
-                "nanos": nanos,
-            }
-
-        self._last_updated[
-            updated_key
-        ] = record.aggregator.last_update_timestamp
-
-        point_dict["interval"]["end_time"] = {
-            "seconds": seconds,
-            "nanos": nanos,
+        start_time_unix_nano = (
+            metric.point.time_unix_nano
+            if isinstance(metric.point, Gauge)
+            else metric.point.start_time_unix_nano
+        )
+        start_seconds, start_nanos = divmod(
+            start_time_unix_nano, NANOS_PER_SECOND
+        )
+        point_dict["interval"]["start_time"] = {
+            "seconds": start_seconds,
+            "nanos": start_nanos,
         }
 
-    def export(
-        self, export_records: Sequence[ExportRecord]
-    ) -> "MetricsExportResult":
+        end_time_unix_nano = metric.point.time_unix_nano
+        end_seconds, end_nanos = divmod(end_time_unix_nano, NANOS_PER_SECOND)
+        point_dict["interval"]["end_time"] = {
+            "seconds": end_seconds,
+            "nanos": end_nanos,
+        }
+        self._last_updated[updated_key] = end_time_unix_nano
+
+    def export(self, metrics: Sequence[Metric]) -> "MetricExportResult":
         all_series = []
-        for record in export_records:
-            instrument = record.instrument
-            metric_descriptor = self._get_metric_descriptor(record)
+        for metric in metrics:
+            metric_descriptor = self._get_metric_descriptor(metric)
             if not metric_descriptor:
                 continue
             series = TimeSeries(
-                resource=self._get_monitored_resource(record.resource),
+                resource=self._get_monitored_resource(metric.resource),
                 # TODO: remove
                 # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/84
                 metric_kind=metric_descriptor.metric_kind,
             )
             series.metric.type = metric_descriptor.type
-            for key, value in record.labels:
+            for key, value in list(metric.attributes.items()):
                 series.metric.labels[key] = str(value)
 
             if self.unique_identifier:
@@ -312,46 +296,43 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
 
             point_dict = {"interval": {}}  # type: ignore[var-annotated] # TODO #56
 
-            if isinstance(record.aggregator, HistogramAggregator):
-                bucket_bounds = list(record.aggregator.checkpoint.keys())
-                bucket_values = list(record.aggregator.checkpoint.values())
-
+            if isinstance(metric.point, Histogram):
+                bucket_bounds = list(metric.point.explicit_bounds)
+                bucket_values = list(metric.point.bucket_counts)
                 point_dict["value"] = {
                     "distribution_value": Distribution(
                         count=sum(bucket_values),
                         bucket_counts=bucket_values,
                         bucket_options={
-                            "explicit_buckets": {
-                                # don't put in > bucket
-                                "bounds": bucket_bounds[:-1]
-                            }
+                            "explicit_buckets": {"bounds": bucket_bounds}
                         },
                     )
                 }
             else:
-                if isinstance(record.aggregator, SumAggregator):
-                    data_point = record.aggregator.checkpoint
-                elif isinstance(record.aggregator, ValueObserverAggregator):
-                    data_point = record.aggregator.checkpoint.last
+                if isinstance(metric.point, Sum):
+                    data_point = metric.point.value
+                elif isinstance(metric.point, Gauge):
+                    data_point = metric.point.value
 
-                if instrument.value_type == int:
+                if isinstance(data_point, int):
                     point_dict["value"] = {"int64_value": data_point}
-                elif instrument.value_type == float:
+                elif isinstance(data_point, float):
                     point_dict["value"] = {"double_value": data_point}
 
-            seconds = (
-                record.aggregator.last_update_timestamp // NANOS_PER_SECOND
-            )
+            seconds = metric.point.time_unix_nano // NANOS_PER_SECOND
 
             # Cloud Monitoring API allows, for any combination of labels and
             # metric name, one update per WRITE_INTERVAL seconds
-            updated_key = (metric_descriptor.type, record.labels)
+            updated_key = (
+                metric_descriptor.type,
+                frozenset(metric.attributes.items()),
+            )
             last_updated_time = self._last_updated.get(updated_key, 0)
             last_updated_time_seconds = last_updated_time // NANOS_PER_SECOND
             if seconds <= last_updated_time_seconds + WRITE_INTERVAL:
                 continue
 
-            self._set_start_end_times(point_dict, record, metric_descriptor)
+            self._set_start_end_times(point_dict, metric, metric_descriptor)
             series.points.add(**point_dict)
             all_series.append(series)
         try:
@@ -361,5 +342,8 @@ class CloudMonitoringMetricsExporter(MetricsExporter):
             logger.error(
                 "Error while writing to Cloud Monitoring", exc_info=ex
             )
-            return MetricsExportResult.FAILURE
-        return MetricsExportResult.SUCCESS
+            return MetricExportResult.FAILURE
+        return MetricExportResult.SUCCESS
+
+    def shutdown(self) -> None:
+        pass
