@@ -21,7 +21,7 @@ from unittest import mock
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
-from google.cloud.monitoring_v3.proto.metric_pb2 import TimeSeries
+from google.cloud.monitoring_v3 import TimeSeries
 from opentelemetry.exporter.cloud_monitoring import (
     MAX_BATCH_WRITE,
     NANOS_PER_SECOND,
@@ -30,11 +30,11 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import ExportRecord
-from opentelemetry.sdk.metrics.export.aggregate import (
-    HistogramAggregator,
-    SumAggregator,
-    ValueObserverAggregator,
+from opentelemetry.sdk.metrics.export import Metric
+from opentelemetry.sdk.metrics.export import (
+    Histogram,
+    Sum,
+    Gauge,
 )
 from opentelemetry.sdk.resources import Resource
 
