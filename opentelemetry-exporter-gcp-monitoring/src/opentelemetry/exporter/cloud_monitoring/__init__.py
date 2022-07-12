@@ -229,8 +229,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         self._metric_descriptors[descriptor_type] = proto_descriptor
         return proto_descriptor
 
-    @staticmethod
     def _metric_to_timeseries(
+            self,
             metric: Metric,
             metrics_descriptor: MetricDescriptor,
             resource: Optional[MonitoredResource]
@@ -301,11 +301,14 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         series.metric.type = metrics_descriptor.type
         for k, v in labels.items():
             series.metric.labels[k] = v
+        if self.unique_identifier:
+            series.metric.labels[
+                UNIQUE_IDENTIFIER_KEY
+            ] = self.unique_identifier
         if resource:
             series.resource.type = resource.type
             for k in resource.labels:
                 series.resource.labels[k] = resource.labels[k]
-
         series.metric_kind = metrics_descriptor.metric_kind
         series.points = [Point(point_dict)]
         series.unit = metrics_descriptor.unit

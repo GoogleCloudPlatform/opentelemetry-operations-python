@@ -451,7 +451,8 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             name="name",
             description="description",
             unit=None,
-            value=1
+            value=1,
+            attributes={}
         )
         exporter._get_metric_descriptor(metric)
         client.create_metric_descriptor.assert_called_with(
@@ -845,7 +846,7 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
             scope=_scope,
             metrics=[
                 _generate_sum_metric(
-                    "name",
+                    name="name",
                     value=1
                 )
             ]
@@ -853,17 +854,16 @@ class TestCloudMonitoringMetricsExporter(unittest.TestCase):
         exporter1.export(metric_data)
         exporter2.export(metric_data)
 
-        (
-            first_call,
-            second_call,
-        ) = client.create_metric_descriptor.call_args_list
-        self.assertEqual(first_call[0][1].labels[0].key, UNIQUE_IDENTIFIER_KEY)
-        self.assertEqual(
-            second_call[0][1].labels[0].key, UNIQUE_IDENTIFIER_KEY
-        )
+        create_md_calls = client.create_metric_descriptor.call_args_list
 
-        first_call, second_call = client.create_time_series.call_args_list
+        for call in create_md_calls:
+            self.assertEqual(
+                call[1]['request']['metric_descriptor'].labels[0].key,
+                UNIQUE_IDENTIFIER_KEY
+            )
+
+        create_ts_calls = client.create_time_series.call_args_list
         self.assertNotEqual(
-            first_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
-            second_call[0][1][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
+            create_ts_calls[0][1]['request']["time_series"][0].metric.labels[UNIQUE_IDENTIFIER_KEY],
+            create_ts_calls[1][1]['request']["time_series"][0].metric.labels[UNIQUE_IDENTIFIER_KEY]
         )
