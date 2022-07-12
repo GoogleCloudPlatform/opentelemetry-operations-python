@@ -18,14 +18,16 @@ from unittest.mock import MagicMock, patch
 
 import grpc
 from google.cloud.monitoring_v3 import MetricServiceClient
-from google.cloud.monitoring_v3.gapic.transports import (
-    metric_service_grpc_transport,
+from google.cloud.monitoring_v3.services.metric_service.transports import (
+    MetricServiceGrpcTransport,
 )
 from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics.export.controller import PushController
+from opentelemetry.sdk.metrics.export import (
+     PeriodicExportingMetricReader,
+ )
 from opentelemetry.sdk.resources import Resource
 from test_common import BaseExporterIntegrationTest
 
@@ -35,15 +37,16 @@ logger = logging.getLogger(__name__)
 class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
     def test_export(self):
         channel = grpc.insecure_channel(self.address)
-        transport = metric_service_grpc_transport.MetricServiceGrpcTransport(
+        transport = MetricServiceGrpcTransport(
             channel=channel
         )
         client = MagicMock(wraps=MetricServiceClient(transport=transport))
         exporter = CloudMonitoringMetricsExporter(
             self.project_id, client=client
         )
-
+        reader = PeriodicExportingMetricReader(exporter, 1)
         meter_provider = metrics.MeterProvider(
+            metric_readers=[reader],
             resource=Resource.create(
                 {
                     "cloud.account.id": "some_account_id",
@@ -59,20 +62,16 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
             # TODO: remove "opentelemetry/" prefix which is a hack
             # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/84
             name="opentelemetry/name",
-            description="desc",
-            unit="1",
-            value_type=int,
+            description="description",
+            unit="1"
         )
-        # interval doesn't matter, we don't start the thread and just run
-        # tick() instead
-        controller = PushController(meter, exporter, 10)
 
         counter.add(10, {"env": "test"})
 
         with patch(
             "opentelemetry.exporter.cloud_monitoring.logger"
         ) as mock_logger:
-            controller.tick()
+            meter_provider.force_flush()
 
             # run tox tests with `-- -log-cli-level=0` to see mock calls made
             logger.debug(client.create_time_series.mock_calls)
