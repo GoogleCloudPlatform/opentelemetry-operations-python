@@ -44,7 +44,7 @@ class TestCloudMonitoringSpanExporter(BaseExporterIntegrationTest):
         exporter = CloudMonitoringMetricsExporter(
             self.project_id, client=client
         )
-        reader = PeriodicExportingMetricReader(exporter, 1)
+        reader = PeriodicExportingMetricReader(exporter)
         meter_provider = metrics.MeterProvider(
             metric_readers=[reader],
             resource=Resource.create(
