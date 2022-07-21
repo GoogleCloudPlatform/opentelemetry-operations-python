@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import random
 from typing import Optional, Sequence
+from time import time_ns
 
 import google.auth
 from google.api.distribution_pb2 import Distribution
@@ -23,7 +23,6 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import MetricServiceClient
 from google.cloud.monitoring_v3 import TimeSeries, Point, TimeInterval
-from opentelemetry.exporter.cloud_monitoring._time import time_ns
 from opentelemetry.sdk.metrics.export import (
     MetricExporter,
     MetricExportResult,
@@ -36,8 +35,9 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.metrics._internal.point import MetricsData
+from app.core.log import logger
 
-logger = logging.getLogger(__name__)
+
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
@@ -81,7 +81,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
 
     def __init__(
             self, project_id=None, client=None, add_unique_identifier=False
-    ):
+    ) -> None:
         self.client = client or MetricServiceClient()
         if not project_id:
             _, self.project_id = google.auth.default()
@@ -115,7 +115,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         resource_attributes = resource.attributes
         if resource_attributes.get("cloud.provider") != "gcp":
             return None
-        resource_type = resource_attributes["gcp.resource_type"]
+        resource_type = resource_attributes.get("gcp.resource_type")
         if (
                 not isinstance(resource_type, str)
                 or resource_type not in OT_RESOURCE_LABEL_TO_GCP
@@ -134,6 +134,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         """
         write_ind = 0
         while write_ind < len(series):
+            logger.debug(f"Batch create timeseries from {write_ind}")
             self.client.create_time_series(request={
                 "name": self.project_name,
                 "time_series": series[write_ind:write_ind + MAX_BATCH_WRITE],
@@ -169,7 +170,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             proto_descriptor.labels.append(labels)
 
         for number_data_point in metric.data.data_points:
-            for key, value in number_data_point.attributes.items():
+            for key, value in number_data_point.attributes:
                 if isinstance(value, bool):
                     labels = LabelDescriptor()
                     labels.key = key
@@ -203,15 +204,18 @@ class CloudMonitoringMetricsExporter(MetricExporter):
 
         if isinstance(metric.data, Histogram):
             proto_descriptor.value_type = MetricDescriptor.ValueType.DISTRIBUTION
-        elif not metric.data.data_points:
-            logger.warning("No data point in Metric")
-            return None
-        elif isinstance(metric.data.data_points[0].value, int):
-            proto_descriptor.value_type = MetricDescriptor.ValueType.INT64
-        elif isinstance(metric.data.data_points[0].value, float):
-            proto_descriptor.value_type = MetricDescriptor.ValueType.DOUBLE
+        else:
+            data_points_ls = list(metric.data.data_points)
+            if not data_points_ls:
+                logger.warning("No data point in Metric")
+                return None
+            elif isinstance(data_points_ls[0].value, int):
+                proto_descriptor.value_type = MetricDescriptor.ValueType.INT64
+            elif isinstance(data_points_ls[0].value, float):
+                proto_descriptor.value_type = MetricDescriptor.ValueType.DOUBLE
 
         try:
+            logger.debug(f"Create metric descriptor with name: {proto_descriptor.metric_kind}")
             proto_descriptor = self.client.create_metric_descriptor(
                 request={
                     "name": self.project_name,
@@ -234,19 +238,23 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             metric: Metric,
             metrics_descriptor: MetricDescriptor,
             resource: Optional[MonitoredResource]
-    ) -> TimeSeries:
+    ) -> Optional[TimeSeries]:
         labels = {}
-        for attr in [pt.attributes for pt in metric.data.data_points]:
+        data_points_ls = list(metric.data.data_points)
+        if not data_points_ls:
+            return None
+        for attr in [pt.attributes for pt in data_points_ls]:
             for k, v in attr.items():
                 labels[k] = str(v)
+
         point_dict = {}
-        if metric.data.data_points[-1].start_time_unix_nano:
+        if data_points_ls[-1].start_time_unix_nano:
             start_seconds, start_nanos = divmod(
-                metric.data.data_points[-1].start_time_unix_nano,
+                data_points_ls[-1].start_time_unix_nano,
                 NANOS_PER_SECOND
             )
             end_seconds, end_nanos = divmod(
-                metric.data.data_points[-1].time_unix_nano,
+                data_points_ls[-1].time_unix_nano,
                 NANOS_PER_SECOND
             )
             point_dict['interval'] = TimeInterval({
@@ -261,7 +269,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             })
         else:
             end_seconds, end_nanos = divmod(
-                metric.data.data_points[-1].time_unix_nano,
+                data_points_ls[-1].time_unix_nano,
                 NANOS_PER_SECOND
             )
             point_dict['interval'] = TimeInterval({
@@ -277,7 +285,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             elif isinstance(result, float):
                 point_dict['value'] = {"double_value": result}
         elif isinstance(metric.data, Gauge):
-            v = metric.data.data_points[-1].value
+            v = data_points_ls[-1].value
             if isinstance(v, int):
                 point_dict['value'] = {"int64_value": v}
             elif isinstance(v, float):
@@ -285,12 +293,12 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         elif isinstance(metric.data, Histogram):
             point_dict['value'] = {
                 "distribution_value": Distribution(
-                    count=metric.data.data_points[-1].count,
-                    bucket_counts=metric.data.data_points[-1].bucket_counts,
+                    count=list(metric.data.data_points)[-1].count,
+                    bucket_counts=list(metric.data.data_points)[-1].bucket_counts,
                     bucket_options={
                         "explicit_buckets": {
                             # don't put in > bucket
-                            "bounds": metric.data.data_points[-1].explicit_bounds
+                            "bounds": list(metric.data.data_points)[-1].explicit_bounds
                         }
                     },
                 )
@@ -332,7 +340,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                     metrics_descriptor=metric_descriptor,
                     resource=resource
                 )
-                all_series.append(series)
+                if series:
+                    all_series.append(series)
         try:
             self._batch_write(all_series)
         # pylint: disable=broad-except
