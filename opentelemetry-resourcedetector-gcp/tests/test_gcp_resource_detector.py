@@ -52,12 +52,20 @@ GKE_RESOURCES_JSON_STRING = {
 }
 
 CLOUDRUN_RESOURCES_JSON_STRING = {
-    "instance": {"id": "instance_id", "zone": "projects/123/zones/zone", "region": "projects/123/regions/region"},
+    "instance": {
+        "id": "instance_id",
+        "zone": "projects/123/zones/zone",
+        "region": "projects/123/regions/region",
+    },
     "project": {"projectId": "project_id"},
 }
 
 CLOUDFUNCTIONS_RESOURCES_JSON_STRING = {
-    "instance": {"id": "instance_id", "zone": "projects/123/zones/zone", "region": "projects/123/regions/region"},
+    "instance": {
+        "id": "instance_id",
+        "zone": "projects/123/zones/zone",
+        "region": "projects/123/regions/region",
+    },
     "project": {"projectId": "project_id"},
 }
 
@@ -491,7 +499,9 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         os.environ[K_REVISION] = "revision"
 
         resource_finder = GoogleCloudResourceDetector()
-        getter.return_value.json.return_value = CLOUDFUNCTIONS_RESOURCES_JSON_STRING
+        getter.return_value.json.return_value = (
+            CLOUDFUNCTIONS_RESOURCES_JSON_STRING
+        )
         found_resources = resource_finder.detect()
         self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
         self.assertEqual(
