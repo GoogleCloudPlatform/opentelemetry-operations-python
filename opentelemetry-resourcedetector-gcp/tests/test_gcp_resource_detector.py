@@ -214,6 +214,7 @@ class TestGKEResourceFinder(unittest.TestCase):
 
 
 def clear_cloudrun_env_vars():
+    pop_environ_key(K_CONFIGURATION)
     pop_environ_key(K_SERVICE)
     pop_environ_key(K_REVISION)
 
@@ -295,6 +296,7 @@ class TestCloudRunResourceFinder(unittest.TestCase):
 
 
 def clear_cloudfunctions_env_vars():
+    pop_environ_key(FUNCTION_TARGET)
     pop_environ_key(K_SERVICE)
     pop_environ_key(K_REVISION)
 
@@ -386,6 +388,8 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         # The necessary env variables were not set for GKE resource detection
         # to succeed. We should be falling back to detecting GCE resources
         pop_environ_key(KUBERNETES_SERVICE_HOST)
+        pop_environ_key(K_CONFIGURATION)
+        pop_environ_key(FUNCTION_TARGET)
         resource_finder = GoogleCloudResourceDetector()
         getter.return_value.json.return_value = GCE_RESOURCES_JSON_STRING
         found_resources = resource_finder.detect()
@@ -402,11 +406,11 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
                 }
             ),
         )
-        self.assertEqual(getter.call_count, 3)
+        self.assertEqual(getter.call_count, 1)
 
         # Found resources should be cached and not require another network call
         found_resources = resource_finder.detect()
-        self.assertEqual(getter.call_count, 3)
+        self.assertEqual(getter.call_count, 1)
         self.assertEqual(
             found_resources,
             Resource(

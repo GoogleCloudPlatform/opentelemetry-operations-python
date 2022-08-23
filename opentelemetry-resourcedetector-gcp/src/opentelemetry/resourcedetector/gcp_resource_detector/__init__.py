@@ -112,11 +112,11 @@ def get_cloudrun_resources():
 
     faas_name = os.getenv("K_SERVICE")
     if faas_name is not None:
-        common_attributes["faas.name"] = faas_name
+        common_attributes["faas.name"] = str(faas_name)
 
     faas_version = os.getenv("K_REVISION")
     if faas_version is not None:
-        common_attributes["faas.version"] = faas_version
+        common_attributes["faas.version"] = str(faas_version)
 
     common_attributes.update(
         {
@@ -142,11 +142,11 @@ def get_cloudfunctions_resources():
 
     faas_name = os.getenv("K_SERVICE")
     if faas_name is not None:
-        common_attributes["faas.name"] = faas_name
+        common_attributes["faas.name"] = str(faas_name)
 
     faas_version = os.getenv("K_REVISION")
     if faas_version is not None:
-        common_attributes["faas.version"] = faas_version
+        common_attributes["faas.version"] = str(faas_version)
 
     common_attributes.update(
         {
