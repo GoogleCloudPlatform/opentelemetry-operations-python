@@ -99,12 +99,80 @@ def get_gke_resources():
     return common_attributes
 
 
+def get_cloudrun_resources():
+    """Resource finder for Cloud Run attributes"""
+
+    if os.getenv("K_CONFIGURATION") is None:
+        return {}
+
+    (
+        common_attributes,
+        all_metadata,
+    ) = _get_google_metadata_and_common_attributes()
+
+    faas_name = os.getenv("K_SERVICE")
+    if faas_name is not None:
+        common_attributes["faas.name"] = faas_name
+
+    faas_version = os.getenv("K_REVISION")
+    if faas_version is not None:
+        common_attributes["faas.version"] = faas_version
+
+    faas_id = os.getenv("K_REVISION")
+    if faas_id is not None:
+        common_attributes["faas.id"] = all_metadata["instance"]["id"]
+
+    common_attributes.update(
+        {
+            "cloud.platform": "gcp_cloud_run",
+            "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
+            "gcp.resource_type": "cloud_run",
+        }
+    )
+    return common_attributes
+
+
+def get_cloudfunctions_resources():
+    """Resource finder for Cloud Functions attributes"""
+
+    if os.getenv("FUNCTION_TARGET") is None:
+        return {}
+
+    (
+        common_attributes,
+        all_metadata,
+    ) = _get_google_metadata_and_common_attributes()
+
+    faas_name = os.getenv("K_SERVICE")
+    if faas_name is not None:
+        common_attributes["faas.name"] = faas_name
+
+    faas_version = os.getenv("K_REVISION")
+    if faas_version is not None:
+        common_attributes["faas.version"] = faas_version
+
+    faas_id = os.getenv("K_REVISION")
+    if faas_id is not None:
+        common_attributes["faas.id"] = all_metadata["instance"]["id"]
+
+    common_attributes.update(
+        {
+            "cloud.platform": "gcp_cloud_functions",
+            "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
+            "gcp.resource_type": "cloud_functions",
+        }
+    )
+    return common_attributes
+
+
 # Order here matters. Since a GKE_CONTAINER is a specialized type of GCE_INSTANCE
 # We need to first check if it matches the criteria for being a GKE_CONTAINER
 # before falling back and checking if its a GCE_INSTANCE.
 # This list should be sorted from most specialized to least specialized.
 _RESOURCE_FINDERS = [
     ("gke_container", get_gke_resources),
+    ("cloud_run", get_cloudrun_resources),
+    ("cloud_functions", get_cloudfunctions_resources),
     ("gce_instance", get_gce_resources),
 ]
 
