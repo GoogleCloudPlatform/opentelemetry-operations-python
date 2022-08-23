@@ -20,10 +20,10 @@ from opentelemetry.resourcedetector.gcp_resource_detector import (
     _GCP_METADATA_URL,
     GoogleCloudResourceDetector,
     NoGoogleResourcesFound,
+    get_cloudfunctions_resources,
+    get_cloudrun_resources,
     get_gce_resources,
     get_gke_resources,
-    get_cloudrun_resources,
-    get_cloudfunctions_resources,
 )
 from opentelemetry.sdk.resources import Resource
 
