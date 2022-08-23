@@ -118,14 +118,11 @@ def get_cloudrun_resources():
     if faas_version is not None:
         common_attributes["faas.version"] = faas_version
 
-    faas_id = os.getenv("K_REVISION")
-    if faas_id is not None:
-        common_attributes["faas.id"] = all_metadata["instance"]["id"]
-
     common_attributes.update(
         {
             "cloud.platform": "gcp_cloud_run",
             "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
+            "faas.id": all_metadata["instance"]["id"],
             "gcp.resource_type": "cloud_run",
         }
     )
@@ -151,14 +148,11 @@ def get_cloudfunctions_resources():
     if faas_version is not None:
         common_attributes["faas.version"] = faas_version
 
-    faas_id = os.getenv("K_REVISION")
-    if faas_id is not None:
-        common_attributes["faas.id"] = all_metadata["instance"]["id"]
-
     common_attributes.update(
         {
             "cloud.platform": "gcp_cloud_functions",
             "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
+            "faas.id": all_metadata["instance"]["id"],
             "gcp.resource_type": "cloud_functions",
         }
     )
