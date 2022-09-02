@@ -138,3 +138,20 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
     @property
     def fields(self) -> typing.Set[str]:
         return _FIELDS
+
+class CloudTraceReadonlyPropagator(CloudTraceFormatPropagator):
+    """This class extracts Trace Context in the Google Cloud format, but does
+    not inject this header. It is intended for use in a Composite Propagator to
+    inject context in a different format than was received.
+    """
+    def inject(
+        self,
+        carrier: textmap.CarrierT,
+        context: typing.Optional[Context] = None,
+        setter: textmap.Setter = textmap.default_setter,
+    ) -> None:
+        return
+
+    @property
+    def fields(self) -> typing.Set[str]:
+        return []
