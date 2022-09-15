@@ -30,6 +30,7 @@ steps:
     args:
       - gce
       - --image=$_TEST_SERVER_IMAGE
+      - --health-check-timeout=5m
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:
