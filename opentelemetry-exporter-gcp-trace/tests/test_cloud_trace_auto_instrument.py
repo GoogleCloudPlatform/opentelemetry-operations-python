@@ -24,8 +24,10 @@ class TestCloudTraceAutoInstrument(TestCase):
     def test_loads_cloud_trace_exporter(self):
         """Test that OTel configuration internals can load the trace exporter from entrypoint
         by name"""
-        trace_exporters, _ = _import_exporters(
-            trace_exporter_names=["gcp_trace"], log_exporter_names=[]
+        trace_exporters, _, _ = _import_exporters(
+            trace_exporter_names=["gcp_trace"],
+            log_exporter_names=[],
+            metric_exporter_names=[],
         )
         self.assertEqual(
             trace_exporters, {"gcp_trace": CloudTraceSpanExporter}
