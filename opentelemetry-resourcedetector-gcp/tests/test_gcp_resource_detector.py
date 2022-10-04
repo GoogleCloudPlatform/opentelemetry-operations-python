@@ -20,6 +20,8 @@ from opentelemetry.resourcedetector.gcp_resource_detector import (
     _GCP_METADATA_URL,
     GoogleCloudResourceDetector,
     NoGoogleResourcesFound,
+    get_cloudfunctions_resources,
+    get_cloudrun_resources,
     get_gce_resources,
     get_gke_resources,
 )
@@ -30,6 +32,10 @@ CONTAINER_NAME = "CONTAINER_NAME"
 HOSTNAME = "HOSTNAME"
 POD_NAME = "POD_NAME"
 KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST"
+K_CONFIGURATION = "K_CONFIGURATION"
+FUNCTION_TARGET = "FUNCTION_TARGET"
+K_SERVICE = "K_SERVICE"
+K_REVISION = "K_REVISION"
 
 GCE_RESOURCES_JSON_STRING = {
     "instance": {"id": "instance_id", "zone": "projects/123/zones/zone"},
@@ -41,6 +47,24 @@ GKE_RESOURCES_JSON_STRING = {
         "id": "instance_id",
         "zone": "projects/123/zones/zone",
         "attributes": {"cluster-name": "cluster_name"},
+    },
+    "project": {"projectId": "project_id"},
+}
+
+CLOUDRUN_RESOURCES_JSON_STRING = {
+    "instance": {
+        "id": "instance_id",
+        "zone": "projects/123/zones/zone",
+        "region": "projects/123/regions/region",
+    },
+    "project": {"projectId": "project_id"},
+}
+
+CLOUDFUNCTIONS_RESOURCES_JSON_STRING = {
+    "instance": {
+        "id": "instance_id",
+        "zone": "projects/123/zones/zone",
+        "region": "projects/123/regions/region",
     },
     "project": {"projectId": "project_id"},
 }
@@ -197,6 +221,170 @@ class TestGKEResourceFinder(unittest.TestCase):
         )
 
 
+def clear_cloudrun_env_vars():
+    pop_environ_key(K_CONFIGURATION)
+    pop_environ_key(K_SERVICE)
+    pop_environ_key(K_REVISION)
+
+
+@mock.patch(
+    "opentelemetry.resourcedetector.gcp_resource_detector.requests.get",
+    **{"return_value.json.return_value": CLOUDRUN_RESOURCES_JSON_STRING}
+)
+class TestCloudRunResourceFinder(unittest.TestCase):
+    def tearDown(self) -> None:
+        clear_cloudrun_env_vars()
+
+    # pylint: disable=unused-argument
+    def test_not_running_on_cloudrun(self, getter):
+        pop_environ_key(K_CONFIGURATION)
+        found_resources = get_cloudrun_resources()
+        self.assertEqual(found_resources, {})
+
+    # pylint: disable=unused-argument
+    def test_missing_service_name(self, getter):
+        os.environ[K_CONFIGURATION] = "cloudrun_config"
+        pop_environ_key(K_SERVICE)
+        pop_environ_key(K_REVISION)
+        found_resources = get_cloudrun_resources()
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "cloud.platform": "gcp_cloud_run",
+                "cloud.region": "region",
+                "faas.id": "instance_id",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "cloud_run",
+            },
+        )
+
+    # pylint: disable=unused-argument
+    def test_environment_empty_strings(self, getter):
+        os.environ[K_CONFIGURATION] = "cloudrun_config"
+        os.environ[K_SERVICE] = ""
+        os.environ[K_REVISION] = ""
+        found_resources = get_cloudrun_resources()
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "cloud.platform": "gcp_cloud_run",
+                "cloud.region": "region",
+                "faas.id": "instance_id",
+                "faas.name": "",
+                "faas.version": "",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "cloud_run",
+            },
+        )
+
+    def test_finding_cloudrun_resources(self, getter):
+        os.environ[K_CONFIGURATION] = "cloudrun_config"
+        os.environ[K_SERVICE] = "service"
+        os.environ[K_REVISION] = "revision"
+        found_resources = get_cloudrun_resources()
+        self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "cloud.platform": "gcp_cloud_run",
+                "cloud.region": "region",
+                "faas.id": "instance_id",
+                "faas.name": "service",
+                "faas.version": "revision",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "cloud_run",
+            },
+        )
+
+
+def clear_cloudfunctions_env_vars():
+    pop_environ_key(FUNCTION_TARGET)
+    pop_environ_key(K_SERVICE)
+    pop_environ_key(K_REVISION)
+
+
+@mock.patch(
+    "opentelemetry.resourcedetector.gcp_resource_detector.requests.get",
+    **{"return_value.json.return_value": CLOUDFUNCTIONS_RESOURCES_JSON_STRING}
+)
+class TestCloudFunctionsResourceFinder(unittest.TestCase):
+    def tearDown(self) -> None:
+        clear_cloudfunctions_env_vars()
+
+    # pylint: disable=unused-argument
+    def test_not_running_on_cloudfunctions(self, getter):
+        pop_environ_key(FUNCTION_TARGET)
+        found_resources = get_cloudfunctions_resources()
+        self.assertEqual(found_resources, {})
+
+    # pylint: disable=unused-argument
+    def test_missing_service_name(self, getter):
+        os.environ[FUNCTION_TARGET] = "function"
+        pop_environ_key(K_SERVICE)
+        pop_environ_key(K_REVISION)
+        found_resources = get_cloudfunctions_resources()
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "cloud.platform": "gcp_cloud_functions",
+                "cloud.region": "region",
+                "faas.id": "instance_id",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "cloud_functions",
+            },
+        )
+
+    # pylint: disable=unused-argument
+    def test_environment_empty_strings(self, getter):
+        os.environ[FUNCTION_TARGET] = "function"
+        os.environ[K_SERVICE] = ""
+        os.environ[K_REVISION] = ""
+        found_resources = get_cloudfunctions_resources()
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "cloud.platform": "gcp_cloud_functions",
+                "cloud.region": "region",
+                "faas.id": "instance_id",
+                "faas.name": "",
+                "faas.version": "",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "cloud_functions",
+            },
+        )
+
+    def test_finding_cloudfunctions_resources(self, getter):
+        os.environ[FUNCTION_TARGET] = "function"
+        os.environ[K_SERVICE] = "service"
+        os.environ[K_REVISION] = "revision"
+        found_resources = get_cloudfunctions_resources()
+        self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
+        self.assertEqual(
+            found_resources,
+            {
+                "cloud.account.id": "project_id",
+                "cloud.platform": "gcp_cloud_functions",
+                "cloud.region": "region",
+                "faas.id": "instance_id",
+                "faas.name": "service",
+                "faas.version": "revision",
+                "cloud.zone": "zone",
+                "cloud.provider": "gcp",
+                "gcp.resource_type": "cloud_functions",
+            },
+        )
+
+
 @mock.patch(
     "opentelemetry.resourcedetector.gcp_resource_detector.requests.get"
 )
@@ -208,6 +396,8 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
         # The necessary env variables were not set for GKE resource detection
         # to succeed. We should be falling back to detecting GCE resources
         pop_environ_key(KUBERNETES_SERVICE_HOST)
+        pop_environ_key(K_CONFIGURATION)
+        pop_environ_key(FUNCTION_TARGET)
         resource_finder = GoogleCloudResourceDetector()
         getter.return_value.json.return_value = GCE_RESOURCES_JSON_STRING
         found_resources = resource_finder.detect()
@@ -267,6 +457,66 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
                     "cloud.zone": "zone",
                     "cloud.provider": "gcp",
                     "gcp.resource_type": "gke_container",
+                }
+            ),
+        )
+        self.assertEqual(getter.call_count, 1)
+
+    def test_finding_cloudrun_resources(self, getter):
+        # The necessary env variables were set for CloudRun resource detection
+        # to succeed. No GCE resource info should be extracted
+        os.environ[K_CONFIGURATION] = "cloudrun_config"
+        os.environ[K_SERVICE] = "service"
+        os.environ[K_REVISION] = "revision"
+
+        resource_finder = GoogleCloudResourceDetector()
+        getter.return_value.json.return_value = CLOUDRUN_RESOURCES_JSON_STRING
+        found_resources = resource_finder.detect()
+        self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
+        self.assertEqual(
+            found_resources,
+            Resource(
+                attributes={
+                    "cloud.account.id": "project_id",
+                    "cloud.platform": "gcp_cloud_run",
+                    "cloud.region": "region",
+                    "faas.id": "instance_id",
+                    "faas.name": "service",
+                    "faas.version": "revision",
+                    "cloud.zone": "zone",
+                    "cloud.provider": "gcp",
+                    "gcp.resource_type": "cloud_run",
+                }
+            ),
+        )
+        self.assertEqual(getter.call_count, 1)
+
+    def test_finding_cloudfunctions_resources(self, getter):
+        # The necessary env variables were set for Cloudfunctions resource detection
+        # to succeed. No GCE resource info should be extracted
+        os.environ[FUNCTION_TARGET] = "function"
+        os.environ[K_SERVICE] = "service"
+        os.environ[K_REVISION] = "revision"
+
+        resource_finder = GoogleCloudResourceDetector()
+        getter.return_value.json.return_value = (
+            CLOUDFUNCTIONS_RESOURCES_JSON_STRING
+        )
+        found_resources = resource_finder.detect()
+        self.assertEqual(getter.call_args_list[0][0][0], _GCP_METADATA_URL)
+        self.assertEqual(
+            found_resources,
+            Resource(
+                attributes={
+                    "cloud.account.id": "project_id",
+                    "cloud.platform": "gcp_cloud_functions",
+                    "cloud.region": "region",
+                    "faas.id": "instance_id",
+                    "faas.name": "service",
+                    "faas.version": "revision",
+                    "cloud.zone": "zone",
+                    "cloud.provider": "gcp",
+                    "gcp.resource_type": "cloud_functions",
                 }
             ),
         )
