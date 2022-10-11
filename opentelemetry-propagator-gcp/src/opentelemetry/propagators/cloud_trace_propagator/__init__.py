@@ -140,7 +140,7 @@ class CloudTraceFormatPropagator(textmap.TextMapPropagator):
         return _FIELDS
 
 
-class CloudTraceReadonlyPropagator(CloudTraceFormatPropagator):
+class CloudTraceOneWayPropagator(CloudTraceFormatPropagator):
     """This class extracts Trace Context in the Google Cloud format, but does
     not inject this header. It is intended for use in a Composite Propagator to
     inject context in a different format than was received.
@@ -156,4 +156,4 @@ class CloudTraceReadonlyPropagator(CloudTraceFormatPropagator):
 
     @property
     def fields(self) -> typing.Set[str]:
-        return []
+        return set()

@@ -21,7 +21,7 @@ Installation
 Usage
 -----
 
-The ``CloudTraceReadonlyPropagator`` reads the Google Cloud
+The ``CloudTraceOneWayPropagator`` reads the Google Cloud
 ``X-Cloud-Trace-Context`` format, but does not write the
 ``X-Cloud-Trace-Context`` header on outgoing requests. It is intended for use
 with a CompositePropagator as below.
@@ -31,10 +31,10 @@ with a CompositePropagator as below.
     from opentelemetry.propagate import set_global_textmap
     from opentelemetry.propagators.composite import CompositePropagator
     from opentelemetry.propagators.cloud_trace_propagator import (
-        CloudTraceReadonlyPropagator,
+        CloudTraceOneWayPropagator,
     )
     set_global_textmap(CompositePropagator([
-        CloudTraceReadonlyPropagator(),
+        CloudTraceOneWayPropagator(),
         propagate.get_global_textmap()
     ]
     ))
