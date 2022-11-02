@@ -33,11 +33,12 @@ with a CompositePropagator as below.
     from opentelemetry.propagators.cloud_trace_propagator import (
         CloudTraceOneWayPropagator,
     )
-    set_global_textmap(CompositePropagator([
-        CloudTraceOneWayPropagator(),
-        propagate.get_global_textmap()
-    ]
-    ))
+    set_global_textmap(
+        CompositePropagator([
+            CloudTraceOneWayPropagator(),
+            propagate.get_global_textmap(),
+        ]),
+    )
 
 The ``CloudTraceFormatPropagator`` reads and writes the
 ``X-Cloud-Trace-Context`` header formats. Note that when using this propagator,
