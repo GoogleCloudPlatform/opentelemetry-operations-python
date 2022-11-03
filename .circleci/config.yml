@@ -5,7 +5,7 @@ executors:
   # in tox.ini
   dev_python:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.10
 
 commands:
   run_with_pip_cache:
@@ -50,7 +50,7 @@ commands:
     description: Checkout code and install tox
     steps:
       - checkout
-      - run: sudo pip install tox-factor
+      - run: pip install tox-factor
 
 jobs:
   lint:
@@ -58,7 +58,7 @@ jobs:
     steps:
       - setup
       - run_with_pip_cache:
-          cache_key_base: lint-python3.9
+          cache_key_base: lint-python3.10
           steps:
             - run: tox -s false -f lint-ci
 
@@ -67,7 +67,7 @@ jobs:
     steps:
       - setup
       - run_with_pip_cache:
-          cache_key_base: lint-python3.9
+          cache_key_base: lint-python3.10
           steps:
             - run: tox -s false -f docs-ci
       - run:
@@ -84,7 +84,7 @@ jobs:
     steps:
       - setup
       - run_with_pip_cache:
-          cache_key_base: mypy-python3.9
+          cache_key_base: mypy-python3.10
           steps:
             - run: tox -s false -f mypy-ci
       - store_test_results_command
@@ -95,7 +95,7 @@ jobs:
         type: integer
         description: The x in python3.x
     docker:
-      - image: circleci/python:3.<< parameters.python3_minor >>
+      - image: cimg/python:3.<< parameters.python3_minor >>
     steps:
       - setup
       - run_with_pip_cache:
@@ -120,4 +120,4 @@ workflows:
           name: tests-python3.<< matrix.python3_minor >>
           matrix:
             parameters:
-              python3_minor: [6, 7, 8, 9]
+              python3_minor: [7, 8, 9, 10, 11]
