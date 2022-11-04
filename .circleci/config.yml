@@ -120,4 +120,4 @@ workflows:
           name: tests-python3.<< matrix.python3_minor >>
           matrix:
             parameters:
-              python3_minor: [7, 8, 9, 10, 11]
+              python3_minor: [7, 8, 9, 10]
