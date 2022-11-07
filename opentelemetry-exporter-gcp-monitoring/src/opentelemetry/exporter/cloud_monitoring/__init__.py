@@ -326,8 +326,6 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                         )
                         series = TimeSeries(
                             resource=monitored_resource,
-                            # TODO: remove
-                            # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/84
                             metric_kind=descriptor.metric_kind,
                             points=[point],
                             metric=GMetric(
