@@ -1,0 +1,76 @@
+{
+  "/google.monitoring.v3.MetricService/CreateMetricDescriptor": [
+    {
+      "metricDescriptor": {
+        "description": "foo",
+        "displayName": "myhistogram",
+        "labels": [
+          {
+            "key": "string"
+          },
+          {
+            "key": "int"
+          },
+          {
+            "key": "float"
+          }
+        ],
+        "metricKind": "CUMULATIVE",
+        "type": "workload.googleapis.com/myhistogram",
+        "valueType": "DISTRIBUTION"
+      },
+      "name": "projects/fakeproject"
+    }
+  ],
+  "/google.monitoring.v3.MetricService/CreateTimeSeries": [
+    {
+      "name": "projects/fakeproject",
+      "timeSeries": [
+        {
+          "metric": {
+            "labels": {
+              "float": "123.4",
+              "int": "123",
+              "string": "string"
+            },
+            "type": "workload.googleapis.com/myhistogram"
+          },
+          "metricKind": "CUMULATIVE",
+          "points": [
+            {
+              "interval": {
+                "endTime": "str",
+                "startTime": "str"
+              },
+              "value": {
+                "distributionValue": {
+                  "bucketCounts": [
+                    "6",
+                    "9994"
+                  ],
+                  "bucketOptions": {
+                    "explicitBuckets": {
+                      "bounds": [
+                        5.5
+                      ]
+                    }
+                  },
+                  "count": "10000",
+                  "mean": 4999.5
+                }
+              }
+            }
+          ],
+          "resource": {
+            "labels": {
+              "location": "global",
+              "namespace": "",
+              "node_id": ""
+            },
+            "type": "generic_node"
+          }
+        }
+      ]
+    }
+  ]
+}

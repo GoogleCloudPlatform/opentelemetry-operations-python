@@ -28,17 +28,19 @@ tox -e py310-ci-test-cloudmonitoring -- --snapshot-update
 Be sure to review the changes.
 """
 
-from typing import Iterable
+from typing import Union
 
 import pytest
-from fixtures.gcmfake import GcmFake
+from fixtures.gcmfake import GcmFake, GcmFakeMeterProvider
 from google.auth.credentials import AnonymousCredentials
 from google.cloud.monitoring_v3 import MetricServiceClient
 from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.view import (
+    ExplicitBucketHistogramAggregation,
+    View,
+)
 from opentelemetry.util.types import Attributes
 
 PROJECT_ID = "fakeproject"
@@ -49,35 +51,83 @@ LABELS: Attributes = {
 }
 
 
-@pytest.fixture(name="meter_provider")
-def fixture_meter_provider(gcmfake: GcmFake) -> Iterable[MeterProvider]:
-    mp = MeterProvider(
-        metric_readers=[
-            PeriodicExportingMetricReader(
-                CloudMonitoringMetricsExporter(
-                    project_id=PROJECT_ID, client=gcmfake.client
-                )
-            )
-        ],
-        shutdown_on_exit=False,
-    )
-    yield mp
-    mp.shutdown()
-
-
 def test_create_monitoring_exporter() -> None:
     client = MetricServiceClient(credentials=AnonymousCredentials())
     CloudMonitoringMetricsExporter(project_id=PROJECT_ID, client=client)
 
 
+@pytest.mark.parametrize(
+    "value", [pytest.param(123, id="int"), pytest.param(45.6, id="float")]
+)
 def test_counter(
-    meter_provider: MeterProvider,
+    value: Union[float, int],
+    gcmfake_meter_provider: GcmFakeMeterProvider,
     gcmfake: GcmFake,
     snapshot_gcmcalls,
 ) -> None:
+    meter_provider = gcmfake_meter_provider()
     counter = meter_provider.get_meter(__name__).create_counter(
         "mycounter", description="foo", unit="{myunit}"
     )
-    counter.add(123, LABELS)
+    counter.add(value, LABELS)
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+@pytest.mark.parametrize(
+    "value", [pytest.param(123, id="int"), pytest.param(45.6, id="float")]
+)
+def test_up_down_counter(
+    value: Union[float, int],
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    meter_provider = gcmfake_meter_provider()
+    updowncounter = meter_provider.get_meter(__name__).create_up_down_counter(
+        "myupdowncounter", description="foo", unit="{myunit}"
+    )
+    updowncounter.add(value, LABELS)
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+def test_histogram_default_buckets(
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    meter_provider = gcmfake_meter_provider()
+    histogram = meter_provider.get_meter(__name__).create_histogram(
+        "myhistogram", description="foo", unit="{myunit}"
+    )
+    for value in range(10_000):
+        histogram.record(value, LABELS)
+
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+def test_histogram_single_bucket(
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    meter_provider = gcmfake_meter_provider(
+        views=[
+            View(
+                instrument_name="myhistogram",
+                aggregation=ExplicitBucketHistogramAggregation(
+                    boundaries=[5.5]
+                ),
+            )
+        ]
+    )
+    histogram = meter_provider.get_meter(__name__).create_histogram(
+        "myhistogram", description="foo", unit="{myunit}"
+    )
+    for value in range(10_000):
+        histogram.record(value, LABELS)
+
     meter_provider.force_flush()
     assert gcmfake.get_calls() == snapshot_gcmcalls

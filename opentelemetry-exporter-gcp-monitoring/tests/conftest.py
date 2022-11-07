@@ -15,5 +15,5 @@
 # pylint: disable=unused-import
 
 # import fixtures to be made available to other tests
-from fixtures.gcmfake import fixture_gcmfake
+from fixtures.gcmfake import fixture_gcmfake, fixture_make_meter_provider
 from fixtures.snapshot_gcmcalls import fixture_snapshot_gcmcalls
