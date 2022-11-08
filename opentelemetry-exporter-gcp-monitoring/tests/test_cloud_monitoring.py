@@ -28,7 +28,7 @@ tox -e py310-ci-test-cloudmonitoring -- --snapshot-update
 Be sure to review the changes.
 """
 
-from typing import Union
+from typing import List, Union
 
 import pytest
 from fixtures.gcmfake import GcmFake, GcmFakeMeterProvider
@@ -37,6 +37,7 @@ from google.cloud.monitoring_v3 import MetricServiceClient
 from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
+from opentelemetry.metrics import CallbackOptions, Observation
 from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     View,
@@ -129,5 +130,74 @@ def test_histogram_single_bucket(
     for value in range(10_000):
         histogram.record(value, LABELS)
 
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+@pytest.mark.parametrize(
+    "value", [pytest.param(123, id="int"), pytest.param(45.6, id="float")]
+)
+def test_observable_counter(
+    value: Union[float, int],
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    def callback(_: CallbackOptions) -> List[Observation]:
+        return [Observation(value, LABELS)]
+
+    meter_provider = gcmfake_meter_provider()
+    meter_provider.get_meter(__name__).create_observable_counter(
+        "myobservablecounter",
+        callbacks=[callback],
+        description="foo",
+        unit="{myunit}",
+    )
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+@pytest.mark.parametrize(
+    "value", [pytest.param(123, id="int"), pytest.param(45.6, id="float")]
+)
+def test_observable_updowncounter(
+    value: Union[float, int],
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    def callback(_: CallbackOptions) -> List[Observation]:
+        return [Observation(value, LABELS)]
+
+    meter_provider = gcmfake_meter_provider()
+    meter_provider.get_meter(__name__).create_observable_up_down_counter(
+        "myobservableupdowncounter",
+        callbacks=[callback],
+        description="foo",
+        unit="{myunit}",
+    )
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+@pytest.mark.parametrize(
+    "value", [pytest.param(123, id="int"), pytest.param(45.6, id="float")]
+)
+def test_observable_gauge(
+    value: Union[float, int],
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    def callback(_: CallbackOptions) -> List[Observation]:
+        return [Observation(value, LABELS)]
+
+    meter_provider = gcmfake_meter_provider()
+    meter_provider.get_meter(__name__).create_observable_gauge(
+        "myobservablegauge",
+        callbacks=[callback],
+        description="foo",
+        unit="{myunit}",
+    )
     meter_provider.force_flush()
     assert gcmfake.get_calls() == snapshot_gcmcalls
