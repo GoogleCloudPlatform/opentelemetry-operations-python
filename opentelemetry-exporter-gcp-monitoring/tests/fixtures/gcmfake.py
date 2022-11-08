@@ -15,7 +15,7 @@
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Mapping, Tuple
+from typing import Callable, Iterable, List, Mapping, Tuple, Type
 
 import grpc
 import pytest
@@ -40,9 +40,16 @@ from grpc import (
     method_handlers_generic_handler,
     unary_unary_rpc_method_handler,
 )
+from opentelemetry.exporter.cloud_monitoring import (
+    CloudMonitoringMetricsExporter,
+)
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
 # Mapping of fully qualified GCM API method names to list of requests received
 GcmCalls = Mapping[str, List[Message]]
+
+PROJECT_ID = "fakeproject"
 
 
 class FakeHandler(GenericRpcHandler):
@@ -134,3 +141,39 @@ def fixture_gcmfake() -> Iterable[GcmFake]:
     finally:
         if server:
             server.stop(None)
+
+
+GcmFakeMeterProvider = Type[MeterProvider]
+
+
+@pytest.fixture(name="gcmfake_meter_provider")
+def fixture_make_meter_provider(
+    gcmfake: GcmFake,
+) -> Iterable[GcmFakeMeterProvider]:
+    """A factory fixture to create MeterProviders with GCM exporting pointing to the gcmfake
+
+    Uses https://docs.pytest.org/en/7.1.x/how-to/fixtures.html#factories-as-fixtures pattern.
+    Shuts down all created MeterProviders once the test is over.
+    """
+    mps: List[MeterProvider] = []
+
+    def make_meter_provider(**kwargs) -> MeterProvider:
+        mp = MeterProvider(
+            **{
+                "metric_readers": [
+                    PeriodicExportingMetricReader(
+                        CloudMonitoringMetricsExporter(
+                            project_id=PROJECT_ID, client=gcmfake.client
+                        )
+                    )
+                ],
+                "shutdown_on_exit": False,
+                **kwargs,
+            }
+        )
+        mps.append(mp)
+        return mp
+
+    yield make_meter_provider
+    for mp in mps:
+        mp.shutdown()

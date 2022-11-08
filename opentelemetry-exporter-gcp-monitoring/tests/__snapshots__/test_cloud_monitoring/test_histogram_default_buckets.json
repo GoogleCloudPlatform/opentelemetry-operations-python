@@ -1,0 +1,104 @@
+{
+  "/google.monitoring.v3.MetricService/CreateMetricDescriptor": [
+    {
+      "metricDescriptor": {
+        "description": "foo",
+        "displayName": "myhistogram",
+        "labels": [
+          {
+            "key": "string"
+          },
+          {
+            "key": "int"
+          },
+          {
+            "key": "float"
+          }
+        ],
+        "metricKind": "CUMULATIVE",
+        "type": "workload.googleapis.com/myhistogram",
+        "valueType": "DISTRIBUTION"
+      },
+      "name": "projects/fakeproject"
+    }
+  ],
+  "/google.monitoring.v3.MetricService/CreateTimeSeries": [
+    {
+      "name": "projects/fakeproject",
+      "timeSeries": [
+        {
+          "metric": {
+            "labels": {
+              "float": "123.4",
+              "int": "123",
+              "string": "string"
+            },
+            "type": "workload.googleapis.com/myhistogram"
+          },
+          "metricKind": "CUMULATIVE",
+          "points": [
+            {
+              "interval": {
+                "endTime": "str",
+                "startTime": "str"
+              },
+              "value": {
+                "distributionValue": {
+                  "bucketCounts": [
+                    "1",
+                    "5",
+                    "5",
+                    "15",
+                    "25",
+                    "25",
+                    "25",
+                    "150",
+                    "250",
+                    "250",
+                    "250",
+                    "1500",
+                    "2500",
+                    "2500",
+                    "2499",
+                    "0"
+                  ],
+                  "bucketOptions": {
+                    "explicitBuckets": {
+                      "bounds": [
+                        0.0,
+                        5.0,
+                        10.0,
+                        25.0,
+                        50.0,
+                        75.0,
+                        100.0,
+                        250.0,
+                        500.0,
+                        750.0,
+                        1000.0,
+                        2500.0,
+                        5000.0,
+                        7500.0,
+                        10000.0
+                      ]
+                    }
+                  },
+                  "count": "10000",
+                  "mean": 4999.5
+                }
+              }
+            }
+          ],
+          "resource": {
+            "labels": {
+              "location": "global",
+              "namespace": "",
+              "node_id": ""
+            },
+            "type": "generic_node"
+          }
+        }
+      ]
+    }
+  ]
+}
