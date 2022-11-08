@@ -1,0 +1,61 @@
+{
+  "/google.monitoring.v3.MetricService/CreateMetricDescriptor": [
+    {
+      "metricDescriptor": {
+        "description": "foo",
+        "displayName": "myobservableupdowncounter",
+        "labels": [
+          {
+            "key": "string"
+          },
+          {
+            "key": "int"
+          },
+          {
+            "key": "float"
+          }
+        ],
+        "metricKind": "GAUGE",
+        "type": "workload.googleapis.com/myobservableupdowncounter",
+        "valueType": "DOUBLE"
+      },
+      "name": "projects/fakeproject"
+    }
+  ],
+  "/google.monitoring.v3.MetricService/CreateTimeSeries": [
+    {
+      "name": "projects/fakeproject",
+      "timeSeries": [
+        {
+          "metric": {
+            "labels": {
+              "float": "123.4",
+              "int": "123",
+              "string": "string"
+            },
+            "type": "workload.googleapis.com/myobservableupdowncounter"
+          },
+          "metricKind": "GAUGE",
+          "points": [
+            {
+              "interval": {
+                "endTime": "str"
+              },
+              "value": {
+                "doubleValue": 45.6
+              }
+            }
+          ],
+          "resource": {
+            "labels": {
+              "location": "global",
+              "namespace": "",
+              "node_id": ""
+            },
+            "type": "generic_node"
+          }
+        }
+      ]
+    }
+  ]
+}
