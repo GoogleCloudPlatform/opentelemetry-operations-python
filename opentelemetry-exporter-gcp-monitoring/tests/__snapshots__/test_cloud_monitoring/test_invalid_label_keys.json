@@ -1,0 +1,54 @@
+{
+  "/google.monitoring.v3.MetricService/CreateMetricDescriptor": [
+    {
+      "metricDescriptor": {
+        "description": "foo",
+        "displayName": "mycounter",
+        "labels": [
+          {
+            "key": "key_1some_invalid__key"
+          }
+        ],
+        "metricKind": "CUMULATIVE",
+        "type": "workload.googleapis.com/mycounter",
+        "valueType": "INT64"
+      },
+      "name": "projects/fakeproject"
+    }
+  ],
+  "/google.monitoring.v3.MetricService/CreateTimeSeries": [
+    {
+      "name": "projects/fakeproject",
+      "timeSeries": [
+        {
+          "metric": {
+            "labels": {
+              "key_1some_invalid__key": "value"
+            },
+            "type": "workload.googleapis.com/mycounter"
+          },
+          "metricKind": "CUMULATIVE",
+          "points": [
+            {
+              "interval": {
+                "endTime": "str",
+                "startTime": "str"
+              },
+              "value": {
+                "int64Value": "12"
+              }
+            }
+          ],
+          "resource": {
+            "labels": {
+              "location": "global",
+              "namespace": "",
+              "node_id": ""
+            },
+            "type": "generic_node"
+          }
+        }
+      ]
+    }
+  ]
+}

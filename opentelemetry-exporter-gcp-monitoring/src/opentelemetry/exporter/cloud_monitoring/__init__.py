@@ -169,7 +169,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                 if key in seen_keys:
                     continue
                 seen_keys.add(key)
-                descriptor["labels"].append(LabelDescriptor(key=key))  # type: ignore[union-attr] # TODO #56
+                descriptor["labels"].append(LabelDescriptor(key=_normalize_label_key(key)))  # type: ignore[union-attr] # TODO #56
 
         if self.unique_identifier:
             descriptor["labels"].append(  # type: ignore[union-attr] # TODO #56
@@ -312,7 +312,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
 
                     for data_point in metric.data.data_points:
                         labels = {
-                            key: str(value)
+                            _normalize_label_key(key): str(value)
                             for key, value in (
                                 data_point.attributes or {}
                             ).items()
@@ -357,3 +357,17 @@ def _timestamp_from_nanos(nanos: int) -> Timestamp:
     ts = Timestamp()
     ts.FromNanoseconds(nanos)
     return ts
+
+
+def _normalize_label_key(key: str) -> str:
+    """Makes the key into a valid GCM label key
+
+    See reference impl
+    https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/e955c204f4f2bfdc92ff0ad52786232b975efcc2/exporter/metric/metric.go#L595-L604
+    """
+    sanitized = "".join(
+        c if c.isalpha() or c.isnumeric() else "_" for c in key
+    )
+    if sanitized[0].isdigit():
+        sanitized = "key_" + sanitized
+    return sanitized
