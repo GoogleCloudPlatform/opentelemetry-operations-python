@@ -201,3 +201,17 @@ def test_observable_gauge(
     )
     meter_provider.force_flush()
     assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+def test_invalid_label_keys(
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    meter_provider = gcmfake_meter_provider()
+    counter = meter_provider.get_meter(__name__).create_counter(
+        "mycounter", description="foo", unit="{myunit}"
+    )
+    counter.add(12, {"1some.invalid$\\key": "value"})
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
