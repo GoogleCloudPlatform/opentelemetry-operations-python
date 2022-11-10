@@ -471,9 +471,9 @@ def _extract_attributes(
     add_agent_attr: bool = False,
 ) -> trace_types.Span.Attributes:
     """Convert span.attributes to dict."""
-    attributes_dict = BoundedDict(
-        num_attrs_limit
-    )  # type: BoundedDict[str, trace_types.AttributeValue]
+    attributes_dict: BoundedDict[
+        str, trace_types.AttributeValue
+    ] = BoundedDict(num_attrs_limit)
     invalid_value_dropped_count = 0
     for ot_key, ot_value in attrs.items() if attrs else []:
         key = _truncate_str(ot_key, MAX_ATTR_KEY_BYTES)[0]
