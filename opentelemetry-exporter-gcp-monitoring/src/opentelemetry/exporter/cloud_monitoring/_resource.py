@@ -214,6 +214,8 @@ def _create_monitored_resource(
         if mr_value is None:
             mr_value = map_config.fallback
 
+        # OTel attribute values can be any of str, bool, int, float, or Sequence of any of
+        # them. Encode any non-strings as json string
         if not isinstance(mr_value, str):
             mr_value = json.dumps(
                 mr_value, sort_keys=True, indent=None, separators=(",", ":")
