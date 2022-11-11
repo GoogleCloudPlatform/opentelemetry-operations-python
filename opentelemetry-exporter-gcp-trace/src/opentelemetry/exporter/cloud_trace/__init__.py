@@ -230,8 +230,8 @@ class CloudTraceSpanExporter(SpanExporter):
                         MAX_SPAN_ATTRS,
                         add_agent_attr=True,
                     ),
-                    links=_extract_links(span.links),  # type: ignore[has-type]
-                    status=_extract_status(span.status),  # type: ignore[arg-type]
+                    links=_extract_links(span.links),
+                    status=_extract_status(span.status),
                     time_events=_extract_events(span.events),
                     span_kind=_extract_span_kind(span.kind),
                 )
@@ -281,7 +281,7 @@ def _extract_status(status: trace_api.Status) -> Optional[status_pb2.Status]:
         status_proto = status_pb2.Status(code=code_pb2.OK)
     elif status.status_code is StatusCode.ERROR:
         status_proto = status_pb2.Status(
-            code=code_pb2.UNKNOWN, message=status.description
+            code=code_pb2.UNKNOWN, message=status.description or ""
         )
     # future added value
     else:
@@ -290,7 +290,7 @@ def _extract_status(status: trace_api.Status) -> Optional[status_pb2.Status]:
             status.status_code,
         )
         status_proto = status_pb2.Status(
-            code=code_pb2.UNKNOWN, message=status.description
+            code=code_pb2.UNKNOWN, message=status.description or ""
         )
 
     return status_proto
@@ -471,9 +471,9 @@ def _extract_attributes(
     add_agent_attr: bool = False,
 ) -> trace_types.Span.Attributes:
     """Convert span.attributes to dict."""
-    attributes_dict = BoundedDict(
-        num_attrs_limit
-    )  # type: BoundedDict[str, trace_types.AttributeValue]
+    attributes_dict: BoundedDict[
+        str, trace_types.AttributeValue
+    ] = BoundedDict(num_attrs_limit)
     invalid_value_dropped_count = 0
     for ot_key, ot_value in attrs.items() if attrs else []:
         key = _truncate_str(ot_key, MAX_ATTR_KEY_BYTES)[0]

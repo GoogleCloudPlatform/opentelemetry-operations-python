@@ -15,6 +15,7 @@
 import logging
 import random
 from dataclasses import replace
+from time import time_ns
 from typing import Dict, List, NoReturn, Optional, Set, Union
 
 import google.auth
@@ -38,7 +39,6 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from opentelemetry.exporter.cloud_monitoring._resource import (
     get_monitored_resource,
 )
-from opentelemetry.exporter.cloud_monitoring._time import time_ns
 from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
@@ -141,37 +141,37 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         if descriptor_type in self._metric_descriptors:
             return self._metric_descriptors[descriptor_type]
 
-        descriptor = {  # type: ignore[var-annotated] # TODO #56
-            "name": None,
-            "type": descriptor_type,
-            "display_name": metric.name,
-            "description": metric.description,
-            "labels": [],
-        }
+        descriptor = MetricDescriptor(
+            type=descriptor_type,
+            display_name=metric.name,
+            description=metric.description or "",
+        )
         seen_keys: Set[str] = set()
         for data_point in metric.data.data_points:
             for key in data_point.attributes or {}:
                 if key in seen_keys:
                     continue
                 seen_keys.add(key)
-                descriptor["labels"].append(LabelDescriptor(key=_normalize_label_key(key)))  # type: ignore[union-attr] # TODO #56
+                descriptor.labels.append(
+                    LabelDescriptor(key=_normalize_label_key(key))
+                )
 
         if self.unique_identifier:
-            descriptor["labels"].append(  # type: ignore[union-attr] # TODO #56
+            descriptor.labels.append(
                 LabelDescriptor(key=UNIQUE_IDENTIFIER_KEY)
             )
 
         data = metric.data
         if isinstance(data, Sum):
-            descriptor["metric_kind"] = (
+            descriptor.metric_kind = (
                 MetricDescriptor.MetricKind.CUMULATIVE
                 if data.is_monotonic
                 else MetricDescriptor.MetricKind.GAUGE
             )
         elif isinstance(data, Gauge):
-            descriptor["metric_kind"] = MetricDescriptor.MetricKind.GAUGE
+            descriptor.metric_kind = MetricDescriptor.MetricKind.GAUGE
         elif isinstance(data, Histogram):
-            descriptor["metric_kind"] = MetricDescriptor.MetricKind.CUMULATIVE
+            descriptor.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
         else:
             # Exhaustive check
             _: NoReturn = data
@@ -183,13 +183,13 @@ class CloudMonitoringMetricsExporter(MetricExporter):
 
         first_point = data.data_points[0] if len(data.data_points) else None
         if isinstance(first_point, NumberDataPoint):
-            descriptor["value_type"] = (
+            descriptor.value_type = (
                 MetricDescriptor.ValueType.INT64
                 if isinstance(first_point.value, int)
                 else MetricDescriptor.ValueType.DOUBLE
             )
         elif isinstance(first_point, HistogramDataPoint):
-            descriptor["value_type"] = MetricDescriptor.ValueType.DISTRIBUTION
+            descriptor.value_type = MetricDescriptor.ValueType.DISTRIBUTION
         elif first_point is None:
             pass
         else:
@@ -200,22 +200,21 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                 type(first_point).__name__,
             )
 
-        proto_descriptor = MetricDescriptor(**descriptor)
         try:
-            descriptor = self.client.create_metric_descriptor(
+            response_descriptor = self.client.create_metric_descriptor(
                 CreateMetricDescriptorRequest(
-                    name=self.project_name, metric_descriptor=proto_descriptor
+                    name=self.project_name, metric_descriptor=descriptor
                 )
             )
         # pylint: disable=broad-except
         except Exception as ex:
             logger.error(
                 "Failed to create metric descriptor %s",
-                proto_descriptor,
+                descriptor,
                 exc_info=ex,
             )
             return None
-        self._metric_descriptors[descriptor_type] = descriptor
+        self._metric_descriptors[descriptor_type] = response_descriptor
         return descriptor
 
     @staticmethod
