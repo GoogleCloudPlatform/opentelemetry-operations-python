@@ -35,6 +35,9 @@ from google.cloud.monitoring_v3 import (
 
 # pylint: disable=no-name-in-module
 from google.protobuf.timestamp_pb2 import Timestamp
+from opentelemetry.exporter.cloud_monitoring._resource import (
+    get_monitored_resource,
+)
 from opentelemetry.exporter.cloud_monitoring._time import time_ns
 from opentelemetry.sdk.metrics.export import (
     Gauge,
@@ -104,24 +107,6 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             self._exporter_start_time_seconds,
             self._exporter_start_time_nanos,
         ) = divmod(time_ns(), NANOS_PER_SECOND)
-
-    @staticmethod
-    def _get_monitored_resource(
-        _: Resource,
-    ) -> Optional[MonitoredResource]:
-        """Add Google resource specific information (e.g. instance id, region).
-
-        See
-        https://cloud.google.com/monitoring/custom-metrics/creating-metrics#custom-metric-resources
-        for supported types
-        Args:
-            resource: OTel resource
-        """
-        # TODO: implement new monitored resource mapping spec
-        return MonitoredResource(
-            type="generic_node",
-            labels={"location": "global", "namespace": "", "node_id": ""},
-        )
 
     def _batch_write(self, series: List[TimeSeries]) -> None:
         """Cloud Monitoring allows writing up to 200 time series at once
@@ -290,7 +275,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         all_series = []
 
         for resource_metric in metrics_data.resource_metrics:
-            monitored_resource = self._get_monitored_resource(
+            monitored_resource = get_monitored_resource(
                 resource_metric.resource
             )
             for scope_metric in resource_metric.scope_metrics:

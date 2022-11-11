@@ -1,0 +1,64 @@
+{
+  "/google.monitoring.v3.MetricService/CreateMetricDescriptor": [
+    {
+      "metricDescriptor": {
+        "description": "foo",
+        "displayName": "mycounter",
+        "labels": [
+          {
+            "key": "string"
+          },
+          {
+            "key": "int"
+          },
+          {
+            "key": "float"
+          }
+        ],
+        "metricKind": "CUMULATIVE",
+        "type": "workload.googleapis.com/mycounter",
+        "valueType": "INT64"
+      },
+      "name": "projects/fakeproject"
+    }
+  ],
+  "/google.monitoring.v3.MetricService/CreateTimeSeries": [
+    {
+      "name": "projects/fakeproject",
+      "timeSeries": [
+        {
+          "metric": {
+            "labels": {
+              "float": "123.4",
+              "int": "123",
+              "string": "string"
+            },
+            "type": "workload.googleapis.com/mycounter"
+          },
+          "metricKind": "CUMULATIVE",
+          "points": [
+            {
+              "interval": {
+                "endTime": "str",
+                "startTime": "str"
+              },
+              "value": {
+                "int64Value": "12"
+              }
+            }
+          ],
+          "resource": {
+            "labels": {
+              "cluster_name": "mycluster",
+              "container_name": "mycontainer",
+              "location": "myavailzone",
+              "namespace_name": "myns",
+              "pod_name": "mypod"
+            },
+            "type": "k8s_container"
+          }
+        }
+      ]
+    }
+  ]
+}
