@@ -42,6 +42,7 @@ from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     View,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.util.types import Attributes
 
 PROJECT_ID = "fakeproject"
@@ -213,5 +214,31 @@ def test_invalid_label_keys(
         "mycounter", description="foo", unit="{myunit}"
     )
     counter.add(12, {"1some.invalid$\\key": "value"})
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+# See additional tests in test_resource.py
+def test_with_resource(
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    meter_provider = gcmfake_meter_provider(
+        resource=Resource.create(
+            {
+                "cloud.platform": "gcp_kubernetes_engine",
+                "cloud.availability_zone": "myavailzone",
+                "k8s.cluster.name": "mycluster",
+                "k8s.namespace.name": "myns",
+                "k8s.pod.name": "mypod",
+                "k8s.container.name": "mycontainer",
+            },
+        )
+    )
+    counter = meter_provider.get_meter(__name__).create_counter(
+        "mycounter", description="foo", unit="{myunit}"
+    )
+    counter.add(12, LABELS)
     meter_provider.force_flush()
     assert gcmfake.get_calls() == snapshot_gcmcalls
