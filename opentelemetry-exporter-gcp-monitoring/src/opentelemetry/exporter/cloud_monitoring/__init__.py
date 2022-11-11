@@ -15,6 +15,7 @@
 import logging
 import random
 from dataclasses import replace
+from time import time_ns
 from typing import Dict, List, NoReturn, Optional, Set, Union
 
 import google.auth
@@ -35,7 +36,6 @@ from google.cloud.monitoring_v3 import (
 
 # pylint: disable=no-name-in-module
 from google.protobuf.timestamp_pb2 import Timestamp
-from opentelemetry.exporter.cloud_monitoring._time import time_ns
 from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
