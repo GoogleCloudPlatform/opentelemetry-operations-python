@@ -75,7 +75,7 @@ class MapConfig:
     value.
     """
 
-    fallback: str = ""
+    fallback: str
     """If none of the otelKeys are present in the Resource, fallback to this literal value"""
 
     def __init__(self, *otel_keys: str, fallback: str = ""):
