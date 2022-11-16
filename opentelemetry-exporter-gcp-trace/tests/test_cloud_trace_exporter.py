@@ -17,6 +17,9 @@ import unittest
 from unittest import mock
 
 import pkg_resources
+from google.cloud.trace_v2.services.trace_service.transports import (
+    TraceServiceGrpcTransport,
+)
 from google.cloud.trace_v2.types import AttributeValue, BatchWriteSpansRequest
 from google.cloud.trace_v2.types import Span as ProtoSpan
 from google.cloud.trace_v2.types import TruncatableString
@@ -51,13 +54,18 @@ from opentelemetry.trace.status import StatusCode
 # pylint: disable=too-many-public-methods
 class TestCloudTraceSpanExporter(unittest.TestCase):
     def setUp(self):
-        self.client_patcher = mock.patch(
-            "opentelemetry.exporter.cloud_trace.TraceServiceClient"
-        )
-        self.client_patcher.start()
+        self.patchers = [
+            mock.patch(
+                "opentelemetry.exporter.cloud_trace.TraceServiceClient"
+            ),
+            mock.patch.object(TraceServiceGrpcTransport, "create_channel"),
+        ]
+        for patcher in self.patchers:
+            patcher.start()
 
     def tearDown(self):
-        self.client_patcher.stop()
+        for patcher in self.patchers:
+            patcher.stop()
 
     @classmethod
     def setUpClass(cls):

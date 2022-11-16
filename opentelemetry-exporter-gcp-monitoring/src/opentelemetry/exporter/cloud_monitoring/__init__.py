@@ -19,11 +19,11 @@ from time import time_ns
 from typing import Dict, List, NoReturn, Optional, Set, Union
 
 import google.auth
+import pkg_resources
 from google.api.distribution_pb2 import Distribution
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import Metric as GMetric
 from google.api.metric_pb2 import MetricDescriptor
-from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import (
     CreateMetricDescriptorRequest,
     CreateTimeSeriesRequest,
@@ -33,12 +33,16 @@ from google.cloud.monitoring_v3 import (
     TimeSeries,
     TypedValue,
 )
+from google.cloud.monitoring_v3.services.metric_service.transports.grpc import (
+    MetricServiceGrpcTransport,
+)
 
 # pylint: disable=no-name-in-module
 from google.protobuf.timestamp_pb2 import Timestamp
 from opentelemetry.exporter.cloud_monitoring._resource import (
     get_monitored_resource,
 )
+from opentelemetry.exporter.cloud_monitoring.version import __version__
 from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
@@ -50,13 +54,24 @@ from opentelemetry.sdk.metrics.export import (
     NumberDataPoint,
     Sum,
 )
-from opentelemetry.sdk.resources import Resource
 
 logger = logging.getLogger(__name__)
 MAX_BATCH_WRITE = 200
 WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
 NANOS_PER_SECOND = 10**9
+
+_OTEL_SDK_VERSION = pkg_resources.get_distribution("opentelemetry-sdk").version
+_USER_AGENT = f"opentelemetry-python {_OTEL_SDK_VERSION}; google-cloud-metric-exporter {__version__}"
+
+# Set user-agent metadata, see https://github.com/grpc/grpc/issues/23644 and default options
+# from
+# https://github.com/googleapis/python-monitoring/blob/v2.11.3/google/cloud/monitoring_v3/services/metric_service/transports/grpc.py#L175-L178
+_OPTIONS = [
+    ("grpc.max_send_message_length", -1),
+    ("grpc.max_receive_message_length", -1),
+    ("grpc.primary_user_agent", _USER_AGENT),
+]
 
 
 # pylint is unable to resolve members of protobuf objects
@@ -88,7 +103,13 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         # Default preferred_temporality is all CUMULATIVE so need to customize
         super().__init__()
 
-        self.client = client or MetricServiceClient()
+        self.client = client or MetricServiceClient(
+            transport=MetricServiceGrpcTransport(
+                channel=MetricServiceGrpcTransport.create_channel(
+                    options=_OPTIONS,
+                )
+            )
+        )
         self.project_id: str
         if not project_id:
             _, default_project_id = google.auth.default()
@@ -122,7 +143,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                     time_series=series[
                         write_ind : write_ind + MAX_BATCH_WRITE
                     ],
-                )
+                ),
             )
             write_ind += MAX_BATCH_WRITE
 

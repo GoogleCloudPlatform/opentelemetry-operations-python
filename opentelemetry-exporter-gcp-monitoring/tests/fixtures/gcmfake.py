@@ -15,7 +15,9 @@
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Mapping, Tuple, Type
+from functools import partial
+from typing import Callable, Iterable, List, Mapping, Tuple, Type, cast
+from unittest.mock import patch
 
 import grpc
 import pytest
@@ -23,7 +25,6 @@ from google.api.metric_pb2 import MetricDescriptor
 from google.cloud.monitoring_v3 import (
     CreateMetricDescriptorRequest,
     CreateTimeSeriesRequest,
-    MetricServiceClient,
 )
 from google.cloud.monitoring_v3.services.metric_service.transports import (
     MetricServiceGrpcTransport,
@@ -34,8 +35,8 @@ from google.protobuf.empty_pb2 import Empty
 from google.protobuf.message import Message
 from grpc import (
     GenericRpcHandler,
-    RpcContext,
     RpcMethodHandler,
+    ServicerContext,
     insecure_channel,
     method_handlers_generic_handler,
     unary_unary_rpc_method_handler,
@@ -46,8 +47,14 @@ from opentelemetry.exporter.cloud_monitoring import (
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
-# Mapping of fully qualified GCM API method names to list of requests received
-GcmCalls = Mapping[str, List[Message]]
+
+@dataclass
+class GcmCall:
+    message: Message
+    user_agent: str
+
+
+GcmCalls = Mapping[str, List[GcmCall]]
 
 PROJECT_ID = "fakeproject"
 
@@ -89,12 +96,16 @@ class FakeHandler(GenericRpcHandler):
     def _make_impl(
         self,
         method: str,
-        behavior: Callable[[Message, RpcContext], Message],
+        behavior: Callable[[Message, ServicerContext], Message],
         deserializer,
         serializer,
     ) -> Tuple[str, RpcMethodHandler]:
-        def impl(req: Message, context: RpcContext) -> Message:
-            self._calls[f"/{self._service}/{method}"].append(req)
+        def impl(req: Message, context: ServicerContext) -> Message:
+            metadata_dict = dict(context.invocation_metadata())
+            user_agent = cast(str, metadata_dict["user-agent"])
+            self._calls[f"/{self._service}/{method}"].append(
+                GcmCall(message=req, user_agent=user_agent)
+            )
             return behavior(req, context)
 
         return method, unary_unary_rpc_method_handler(
@@ -114,7 +125,7 @@ class FakeHandler(GenericRpcHandler):
 
 @dataclass
 class GcmFake:
-    client: MetricServiceClient
+    exporter: CloudMonitoringMetricsExporter
     get_calls: Callable[[], GcmCalls]
 
 
@@ -131,10 +142,17 @@ def fixture_gcmfake() -> Iterable[GcmFake]:
             server = grpc.server(executor, handlers=[handler])
             port = server.add_insecure_port("localhost:0")
             server.start()
-            with insecure_channel(f"localhost:{port}") as channel:
+
+            # patch MetricServiceGrpcTransport.create_channel staticmethod to return an insecure
+            # channel but otherwise respect any parameters passed to it
+            with patch.object(
+                MetricServiceGrpcTransport,
+                "create_channel",
+                partial(insecure_channel, target=f"localhost:{port}"),
+            ):
                 yield GcmFake(
-                    client=MetricServiceClient(
-                        transport=MetricServiceGrpcTransport(channel=channel),
+                    exporter=CloudMonitoringMetricsExporter(
+                        project_id=PROJECT_ID
                     ),
                     get_calls=handler.get_calls,
                 )
@@ -161,11 +179,7 @@ def fixture_make_meter_provider(
         mp = MeterProvider(
             **{
                 "metric_readers": [
-                    PeriodicExportingMetricReader(
-                        CloudMonitoringMetricsExporter(
-                            project_id=PROJECT_ID, client=gcmfake.client
-                        )
-                    )
+                    PeriodicExportingMetricReader(gcmfake.exporter)
                 ],
                 "shutdown_on_exit": False,
                 **kwargs,
