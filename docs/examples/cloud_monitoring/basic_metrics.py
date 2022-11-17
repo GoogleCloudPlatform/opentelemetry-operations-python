@@ -20,22 +20,36 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
 
-metrics.set_meter_provider(MeterProvider())
-meter = metrics.get_meter(__name__)
-metrics.get_meter_provider().start_pipeline(
-    meter, CloudMonitoringMetricsExporter(), 5
+metrics.set_meter_provider(
+    MeterProvider(
+        metric_readers=[
+            PeriodicExportingMetricReader(
+                CloudMonitoringMetricsExporter(), export_interval_millis=5000
+            )
+        ],
+        resource=Resource.create(
+            {
+                "service.name": "basic_metrics",
+                "service.namespace": "examples",
+                "service.instance.id": "instance123",
+            }
+        ),
+    )
 )
+meter = metrics.get_meter(__name__)
 
+# Creates metric workload.googleapis.com/request_counter with monitored resource generic_task
 requests_counter = meter.create_counter(
     name="request_counter",
     description="number of requests",
     unit="1",
-    value_type=int,
 )
 
 staging_labels = {"environment": "staging"}
 
 for i in range(20):
     requests_counter.add(25, staging_labels)
-    time.sleep(10)
+    time.sleep(5)
