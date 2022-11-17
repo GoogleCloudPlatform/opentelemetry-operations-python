@@ -17,6 +17,7 @@
         ],
         "metricKind": "CUMULATIVE",
         "type": "workload.googleapis.com/myhistogram",
+        "unit": "{myunit}",
         "valueType": "DISTRIBUTION"
       },
       "name": "projects/fakeproject"
@@ -96,7 +97,8 @@
               "node_id": ""
             },
             "type": "generic_node"
-          }
+          },
+          "unit": "{myunit}"
         }
       ]
     }

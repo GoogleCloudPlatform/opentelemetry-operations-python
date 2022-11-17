@@ -17,6 +17,7 @@
         ],
         "metricKind": "GAUGE",
         "type": "workload.googleapis.com/myobservablegauge",
+        "unit": "{myunit}",
         "valueType": "INT64"
       },
       "name": "projects/fakeproject"
@@ -53,7 +54,8 @@
               "node_id": ""
             },
             "type": "generic_node"
-          }
+          },
+          "unit": "{myunit}"
         }
       ]
     }
