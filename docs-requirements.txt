@@ -1,9 +1,6 @@
 -c dev-constraints.txt
 Sphinx
 sphinx-autodoc-typehints
-# unpin these entirely once the metrics SDK is available in a new version
-opentelemetry-api==1.10a0
-opentelemetry-sdk==1.10a0
 -e ./opentelemetry-exporter-gcp-trace
 -e ./opentelemetry-exporter-gcp-monitoring
 -e ./opentelemetry-propagator-gcp
