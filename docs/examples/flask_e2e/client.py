@@ -14,17 +14,31 @@
 # limitations under the License.
 
 import requests
-from opentelemetry import trace
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.cloud_monitoring import (
+    CloudMonitoringMetricsExporter,
+)
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
 )
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 set_global_textmap(CloudTraceFormatPropagator())
+
+resource = Resource.create(
+    {
+        "service.name": "flask_e2e_client",
+        "service.namespace": "examples",
+        "service.instance.id": "instance554",
+    }
+)
 
 tracer_provider = TracerProvider()
 cloud_trace_exporter = CloudTraceSpanExporter()
@@ -34,9 +48,21 @@ tracer_provider.add_span_processor(
     # tweaked to optimize your performance
     BatchSpanProcessor(cloud_trace_exporter)
 )
+
+meter_provider = MeterProvider(
+    metric_readers=[
+        PeriodicExportingMetricReader(
+            CloudMonitoringMetricsExporter(), export_interval_millis=5000
+        )
+    ],
+    resource=resource,
+)
+
 trace.set_tracer_provider(tracer_provider)
+metrics.set_meter_provider(meter_provider)
 
 tracer = trace.get_tracer(__name__)
+meter = metrics.get_meter(__name__)
 
 RequestsInstrumentor().instrument()
 

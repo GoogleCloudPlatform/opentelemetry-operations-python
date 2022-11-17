@@ -17,6 +17,7 @@
         ],
         "metricKind": "CUMULATIVE",
         "type": "workload.googleapis.com/mycounter",
+        "unit": "{myunit}",
         "valueType": "INT64"
       },
       "name": "projects/fakeproject"
@@ -54,7 +55,8 @@
               "node_id": ""
             },
             "type": "generic_node"
-          }
+          },
+          "unit": "{myunit}"
         }
       ]
     }
