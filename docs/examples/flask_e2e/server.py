@@ -18,13 +18,19 @@
 import time
 
 from flask import Flask
-from opentelemetry import trace
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.cloud_monitoring import (
+    CloudMonitoringMetricsExporter,
+)
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
 )
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -38,7 +44,15 @@ set_global_textmap(CloudTraceFormatPropagator())
 
 # [START opentelemetry_flask_setup_exporter]
 
-tracer_provider = TracerProvider()
+resource = Resource.create(
+    {
+        "service.name": "flask_e2e_server",
+        "service.namespace": "examples",
+        "service.instance.id": "instance123",
+    }
+)
+
+tracer_provider = TracerProvider(resource=resource)
 cloud_trace_exporter = CloudTraceSpanExporter()
 tracer_provider.add_span_processor(
     # BatchSpanProcessor buffers spans and sends them in batches in a
@@ -46,9 +60,21 @@ tracer_provider.add_span_processor(
     # tweaked to optimize your performance
     BatchSpanProcessor(cloud_trace_exporter)
 )
+
+meter_provider = MeterProvider(
+    metric_readers=[
+        PeriodicExportingMetricReader(
+            CloudMonitoringMetricsExporter(), export_interval_millis=5000
+        )
+    ],
+    resource=resource,
+)
+
 trace.set_tracer_provider(tracer_provider)
+metrics.set_meter_provider(meter_provider)
 
 tracer = trace.get_tracer(__name__)
+meter = metrics.get_meter(__name__)
 
 # [END opentelemetry_flask_setup_exporter]
 
