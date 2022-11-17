@@ -145,6 +145,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             type=descriptor_type,
             display_name=metric.name,
             description=metric.description or "",
+            unit=metric.unit or "",
         )
         seen_keys: Set[str] = set()
         for data_point in metric.data.data_points:
