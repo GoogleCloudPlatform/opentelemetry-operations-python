@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.4.0
+
+Released 2022-12-05
+
 - Drop support for Python 3.6, add 3.10
   ([#203](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/203))
 - Create a Readonly Propagator to match the golang "One Way" propagator
