@@ -90,6 +90,9 @@ import opentelemetry.trace as trace_api
 import pkg_resources
 from google.cloud.trace_v2 import BatchWriteSpansRequest, TraceServiceClient
 from google.cloud.trace_v2 import types as trace_types
+from google.cloud.trace_v2.services.trace_service.transports import (
+    TraceServiceGrpcTransport,
+)
 from google.protobuf.timestamp_pb2 import (  # pylint: disable=no-name-in-module
     Timestamp,
 )
@@ -112,6 +115,18 @@ from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
+
+_OTEL_SDK_VERSION = pkg_resources.get_distribution("opentelemetry-sdk").version
+_USER_AGENT = f"opentelemetry-python {_OTEL_SDK_VERSION}; google-cloud-trace-exporter {__version__}"
+
+# Set user-agent metadata, see https://github.com/grpc/grpc/issues/23644 and default options
+# from
+# https://github.com/googleapis/python-trace/blob/v1.7.3/google/cloud/trace_v1/services/trace_service/transports/grpc.py#L177-L180
+_OPTIONS = [
+    ("grpc.max_send_message_length", -1),
+    ("grpc.max_receive_message_length", -1),
+    ("grpc.primary_user_agent", _USER_AGENT),
+]
 
 MAX_NUM_LINKS = 128
 MAX_NUM_EVENTS = 32
@@ -141,7 +156,14 @@ class CloudTraceSpanExporter(SpanExporter):
         client=None,
         resource_regex=None,
     ):
-        self.client: TraceServiceClient = client or TraceServiceClient()
+        self.client: TraceServiceClient = client or TraceServiceClient(
+            transport=TraceServiceGrpcTransport(
+                channel=TraceServiceGrpcTransport.create_channel(
+                    options=_OPTIONS
+                )
+            )
+        )
+
         if not project_id:
             project_id = environ.get(OTEL_EXPORTER_GCP_TRACE_PROJECT_ID)
         if not project_id:

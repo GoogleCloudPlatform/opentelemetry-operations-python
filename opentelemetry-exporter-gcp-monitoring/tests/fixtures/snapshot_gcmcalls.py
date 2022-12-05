@@ -43,20 +43,20 @@ class GcmCallsSnapshotExtension(JSONSnapshotExtension):
         exclude: Optional[PropertyFilter] = None,
         matcher: Optional[PropertyMatcher] = None,
     ) -> SerializedData:
-        calls = cast(GcmCalls, data)
+        gcmcalls = cast(GcmCalls, data)
         json = {}
-        for method, requests in calls.items():
+        for method, calls in gcmcalls.items():
             dict_requests = []
-            for request in requests:
-                if isinstance(request, proto.message.Message):
-                    request = type(request).pb(request)
-                elif isinstance(request, google.protobuf.message.Message):
+            for call in calls:
+                if isinstance(call.message, proto.message.Message):
+                    call.message = type(call.message).pb(call.message)
+                elif isinstance(call.message, google.protobuf.message.Message):
                     pass
                 else:
                     raise ValueError(
-                        f"Excepted a proto-plus or protobuf message, got {type(request)}"
+                        f"Excepted a proto-plus or protobuf message, got {type(call)}"
                     )
-                dict_requests.append(json_format.MessageToDict(request))
+                dict_requests.append(json_format.MessageToDict(call.message))
             json[method] = dict_requests
 
         return super().serialize(json, exclude=exclude, matcher=matcher)
