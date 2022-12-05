@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Set gRPC user-agent when calling google APIs
+  ([#216](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/216))
+- Drop support for Python 3.6, add 3.10
+  ([#203](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/203))
+
 ## Version 1.3.0
 
 Released 2022-04-21
