@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Set gRPC user-agent when calling google APIs
+  ([#216](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/216))
+- Implement OTel resource to monitored resource mapping
+  ([#214](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/214))
+- Update cloud monitoring exporter to work with opentelemetry 1.x
+  ([#204](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/204))
+- Drop support for Python 3.6, add 3.10
+  ([#203](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/203))
+
 ## Version 1.3.0a0
 
 Released 2022-04-21

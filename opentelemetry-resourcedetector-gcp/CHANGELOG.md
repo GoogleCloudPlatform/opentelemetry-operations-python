@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Drop support for Python 3.6, add 3.10
+  ([#203](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/203))
+- Update no container name behaviour
+  ([#186](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/186))
+
 ## Version 1.3.0a0
 
 Released 2022-04-21
