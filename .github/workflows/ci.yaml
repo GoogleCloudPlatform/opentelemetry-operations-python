@@ -3,9 +3,71 @@ on:
     branches: [main]
   pull_request:
 name: ci
+env:
+  # Bump this to invalidate all caches
+  cache-version: 1
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py:
+          - {version: "3.7", tox: "37"}
+          - {version: "3.8", tox: "38"}
+          - {version: "3.9", tox: "39"}
+          - {version: "3.10", tox: "310"}
+    env:
+      run-matrix-combo: ${{ matrix.py.version }}
+
+    name: Test ${{ matrix.py.version }}
     steps:
       - uses: actions/checkout@v3
-      - run: echo "hello world"
+      - name: Set up Python ${{ matrix.py.version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.py.version }}
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ env.cache-version }}-${{ env.run-matrix-combo }}-pip-${{ hashFiles('tox.ini', 'dev-constraints.txt') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ env.run-matrix-combo }}-pip
+      - name: Install tox
+        # Pin tox 3 because of https://github.com/rpkilby/tox-factor/issues/18
+        run: pip install -U tox==3.27.1 tox-factor
+      - name: Run tox test factors for python ${{ matrix.py.version }}
+        run: >
+          tox
+          --skip-missing-interpreters=true
+          -f py${{ matrix.py.tox }}-ci
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [lint-ci, docs-ci, mypy-ci]
+        py:
+          - {version: "3.10"}
+
+    env:
+      run-matrix-combo: ${{ matrix.py.version }}-${{ matrix.target }}
+
+    name: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.py.version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.py.version }}
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ env.cache-version }}-${{ env.run-matrix-combo }}-pip-${{ hashFiles('tox.ini', 'dev-constraints.txt') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ env.run-matrix-combo }}-pip
+      - name: Install tox
+        # Pin tox 3 because of https://github.com/rpkilby/tox-factor/issues/18
+        run: pip install -U tox==3.27.1 tox-factor
+      - name: Run tox factors ${{ matrix.target }}
+        run: tox -f ${{ matrix.target }}
