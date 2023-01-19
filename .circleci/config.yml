@@ -50,7 +50,8 @@ commands:
     description: Checkout code and install tox
     steps:
       - checkout
-      - run: pip install tox-factor
+      # Pin tox 3 because of https://github.com/rpkilby/tox-factor/issues/18
+      - run: pip install -U tox==3.27.1 tox-factor
 
 jobs:
   lint:
