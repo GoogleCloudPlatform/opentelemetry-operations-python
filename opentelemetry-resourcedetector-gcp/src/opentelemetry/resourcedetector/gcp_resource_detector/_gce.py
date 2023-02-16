@@ -52,7 +52,7 @@ def host_id() -> str:
 
 
 def host_name() -> str:
-    return get_metadata()["instance"]["hostname"]
+    return get_metadata()["instance"]["name"]
 
 
 @dataclass

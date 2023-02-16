@@ -34,15 +34,15 @@ class Project(TypedDict):
 
 
 class Instance(TypedDict):
-    hostname: str
     id: str
     machineType: str
+    name: str
     zone: str
 
 
 class Metadata(TypedDict):
-    project: Project
     instance: Instance
+    project: Project
 
 
 class MetadataAccessException(Exception):

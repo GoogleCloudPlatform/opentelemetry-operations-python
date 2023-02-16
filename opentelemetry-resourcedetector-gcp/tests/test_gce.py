@@ -54,7 +54,7 @@ def test_detects_host_id(fake_get_metadata: MagicMock) -> None:
 
 
 def test_detects_host_name(fake_get_metadata: MagicMock) -> None:
-    fake_get_metadata.return_value = {"instance": {"hostname": "fake"}}
+    fake_get_metadata.return_value = {"instance": {"name": "fake"}}
     assert _gce.host_name() == "fake"
 
 

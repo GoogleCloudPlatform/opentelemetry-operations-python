@@ -57,7 +57,7 @@ def test_detects_gce(snapshot, fake_metadata: _metadata.Metadata):
         {
             "project": {"projectId": "fakeProject"},
             "instance": {
-                "hostname": "fakeHostname",
+                "name": "fakeName",
                 "id": "fakeId",
                 "machineType": "fakeMachineType",
                 "zone": "projects/233510669999/zones/us-east4-b",

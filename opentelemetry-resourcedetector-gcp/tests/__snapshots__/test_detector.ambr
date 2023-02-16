@@ -14,7 +14,7 @@
     'cloud.provider': 'gcp',
     'cloud.region': 'us-east4',
     'host.id': 'fakeId',
-    'host.name': 'fakeHostname',
+    'host.name': 'fakeName',
     'host.type': 'fakeMachineType',
     'service.name': 'unknown_service',
     'telemetry.sdk.language': 'python',
