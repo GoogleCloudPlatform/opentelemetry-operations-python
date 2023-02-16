@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add spec compliant GCE detection
+  ([#231](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/231))
+
 ## Version 1.4.0a0
 
 Released 2022-12-05
