@@ -22,3 +22,31 @@
     'telemetry.sdk.version': '1.15.0',
   })
 # ---
+# name: test_detects_gke[regional]
+  dict({
+    'cloud.account.id': 'fakeProject',
+    'cloud.platform': 'gcp_kubernetes_engine',
+    'cloud.provider': 'gcp',
+    'cloud.region': 'us-east4',
+    'host.id': 'fakeId',
+    'k8s.cluster.name': 'fakeClusterName',
+    'service.name': 'unknown_service',
+    'telemetry.sdk.language': 'python',
+    'telemetry.sdk.name': 'opentelemetry',
+    'telemetry.sdk.version': '1.15.0',
+  })
+# ---
+# name: test_detects_gke[zonal]
+  dict({
+    'cloud.account.id': 'fakeProject',
+    'cloud.availability_zone': 'us-east4-b',
+    'cloud.platform': 'gcp_kubernetes_engine',
+    'cloud.provider': 'gcp',
+    'host.id': 'fakeId',
+    'k8s.cluster.name': 'fakeClusterName',
+    'service.name': 'unknown_service',
+    'telemetry.sdk.language': 'python',
+    'telemetry.sdk.name': 'opentelemetry',
+    'telemetry.sdk.version': '1.15.0',
+  })
+# ---

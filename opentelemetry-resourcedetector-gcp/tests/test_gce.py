@@ -21,15 +21,14 @@ from opentelemetry.resourcedetector.gcp_resource_detector import (
 )
 
 
-@pytest.fixture(name="fake_get_metadata")
-def fixture_fake_get_metadata(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    mock = MagicMock()
-    monkeypatch.setattr(_gce, "get_metadata", mock)
-    return mock
-
-
+# Reset stuff before every test
 # pylint: disable=unused-argument
-def test_detects_on_gce(fake_get_metadata: MagicMock) -> None:
+@pytest.fixture(autouse=True)
+def autouse(fake_get_metadata, fake_environ):
+    pass
+
+
+def test_detects_on_gce() -> None:
     assert _gce.on_gce()
 
 
