@@ -14,12 +14,16 @@
 
 import contextlib
 import dataclasses
-from typing import Callable, Iterator, Mapping
+import os
+from typing import Any, Callable, Iterator, Mapping
 
 from google.rpc import code_pb2
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.propagators.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
+)
+from opentelemetry.resourcedetector.gcp_resource_detector._detector import (
+    GoogleCloudResourceDetector,
 )
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -44,7 +48,10 @@ class Response:
 
 
 @contextlib.contextmanager
-def _tracer_setup() -> Iterator[Tracer]:
+def _tracer_setup(
+    tracer_provider_config: Mapping[str, Any] = {},
+    exporter_config: Mapping[str, Any] = {},
+) -> Iterator[Tracer]:
     """\
     Context manager with common setup for tracing endpoints
 
@@ -52,9 +59,13 @@ def _tracer_setup() -> Iterator[Tracer]:
     spans created during the test after.
     """
 
-    tracer_provider = TracerProvider(sampler=ALWAYS_ON)
+    tracer_provider = TracerProvider(
+        sampler=ALWAYS_ON, **tracer_provider_config
+    )
     tracer_provider.add_span_processor(
-        BatchSpanProcessor(CloudTraceSpanExporter(project_id=PROJECT_ID))
+        BatchSpanProcessor(
+            CloudTraceSpanExporter(project_id=PROJECT_ID, **exporter_config)
+        )
     )
     tracer = tracer_provider.get_tracer(INSTRUMENTING_MODULE_NAME)
 
@@ -124,6 +135,33 @@ def basic_propagator(request: Request) -> Response:
     return Response(status_code=code_pb2.OK, headers={TRACE_ID: trace_id})
 
 
+def detect_resource(request: Request) -> Response:
+    """Create a trace with GCP resource detector"""
+
+    # Temporarily skip if on Cloud Run until it is implemented
+    if "K_CONFIGURATION" in os.environ:
+        return Response(
+            status_code=code_pb2.UNIMPLEMENTED,
+            data=b"Resource detection not yet implemented on Cloud Run",
+        )
+
+    with _tracer_setup(
+        tracer_provider_config={
+            "resource": GoogleCloudResourceDetector(
+                raise_on_error=True
+            ).detect()
+        },
+        exporter_config={"resource_regex": r".*"},
+    ) as tracer:
+        with tracer.start_span(
+            "resourceDetectionTrace",
+            attributes={TEST_ID: request.test_id},
+        ) as span:
+            trace_id = format_trace_id(span.get_span_context().trace_id)
+
+    return Response(status_code=code_pb2.OK, headers={TRACE_ID: trace_id})
+
+
 def not_implemented_handler(_: Request) -> Response:
     return Response(status_code=str(code_pb2.UNIMPLEMENTED))
 
@@ -133,4 +171,5 @@ SCENARIO_TO_HANDLER: dict[str, Callable[[Request], Response]] = {
     "/basicTrace": basic_trace,
     "/complexTrace": complex_trace,
     "/basicPropagator": basic_propagator,
+    "/detectResource": detect_resource,
 }

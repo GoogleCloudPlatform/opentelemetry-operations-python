@@ -62,15 +62,16 @@ def get_metadata() -> Metadata:
     Cached for the lifetime of the process.
     """
     try:
-        all_metadata = requests.get(
+        res = requests.get(
             f"{_GCP_METADATA_URL}",
             params=_RECURSIVE_PARAMS,
             headers=_GCP_METADATA_URL_HEADER,
             timeout=_TIMEOUT_SEC,
-        ).json()
+        )
+        res.raise_for_status()
+        all_metadata = res.json()
     except requests.RequestException as err:
         raise MetadataAccessException() from err
-
     return all_metadata
 
 
