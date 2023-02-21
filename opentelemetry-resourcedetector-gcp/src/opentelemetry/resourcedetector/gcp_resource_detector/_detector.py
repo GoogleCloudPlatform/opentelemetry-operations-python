@@ -19,33 +19,11 @@ from opentelemetry.resourcedetector.gcp_resource_detector import (
     _gke,
     _metadata,
 )
+from opentelemetry.resourcedetector.gcp_resource_detector._constants import (
+    ResourceAttributes,
+)
 from opentelemetry.sdk.resources import Resource, ResourceDetector
 from opentelemetry.util.types import AttributeValue
-
-
-# TODO: use opentelemetry-semantic-conventions package for these constants once it has
-# stabilized. Right now, pinning an unstable version would cause dependency conflicts for
-# users so these are copied in.
-class ResourceAttributes:
-    AWS_EC2 = "aws_ec2"
-    CLOUD_ACCOUNT_ID = "cloud.account.id"
-    CLOUD_AVAILABILITY_ZONE = "cloud.availability_zone"
-    CLOUD_PLATFORM_KEY = "cloud.platform"
-    CLOUD_PROVIDER = "cloud.provider"
-    CLOUD_REGION = "cloud.region"
-    GCP_COMPUTE_ENGINE = "gcp_compute_engine"
-    GCP_KUBERNETES_ENGINE = "gcp_kubernetes_engine"
-    HOST_ID = "host.id"
-    HOST_NAME = "host.name"
-    HOST_TYPE = "host.type"
-    K8S_CLUSTER_NAME = "k8s.cluster.name"
-    K8S_CONTAINER_NAME = "k8s.container.name"
-    K8S_NAMESPACE_NAME = "k8s.namespace.name"
-    K8S_NODE_NAME = "k8s.node.name"
-    K8S_POD_NAME = "k8s.pod.name"
-    SERVICE_INSTANCE_ID = "service.instance.id"
-    SERVICE_NAME = "service.name"
-    SERVICE_NAMESPACE = "service.namespace"
 
 
 class GoogleCloudResourceDetector(ResourceDetector):

@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import dataclasses
+
 import pytest
-from google.protobuf import json_format
-from opentelemetry.exporter.cloud_monitoring._resource import (
+from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
     get_monitored_resource,
 )
 from opentelemetry.sdk.resources import Attributes, LabelValue, Resource
@@ -213,13 +214,8 @@ def test_get_monitored_resource(
     otel_attributes: Attributes, snapshot: SnapshotAssertion
 ) -> None:
     resource = Resource.create(otel_attributes)
-    monitored_resource = get_monitored_resource(resource)
-
-    as_dict = (
-        json_format.MessageToDict(monitored_resource)
-        if monitored_resource
-        else None
-    )
+    monitored_resource_data = get_monitored_resource(resource)
+    as_dict = dataclasses.asdict(monitored_resource_data)
     assert as_dict == snapshot
 
 
@@ -236,8 +232,10 @@ def test_get_monitored_resource(
 )
 def test_non_string_values(value: LabelValue, expect: str):
     # host.id will end up in generic_node's node_id label
-    monitored_resource = get_monitored_resource(Resource({"host.id": value}))
-    assert monitored_resource is not None
+    monitored_resource_data = get_monitored_resource(
+        Resource({"host.id": value})
+    )
+    assert monitored_resource_data is not None
 
-    value_as_gcm_label = monitored_resource.labels["node_id"]
+    value_as_gcm_label = monitored_resource_data.labels["node_id"]
     assert value_as_gcm_label == expect

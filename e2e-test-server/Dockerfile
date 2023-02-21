@@ -28,6 +28,7 @@ FROM python-base as build-base
 # copy local dependencies
 COPY opentelemetry-exporter-gcp-trace opentelemetry-exporter-gcp-trace
 COPY opentelemetry-propagator-gcp opentelemetry-propagator-gcp
+COPY opentelemetry-resourcedetector-gcp opentelemetry-resourcedetector-gcp
 WORKDIR $SRC/e2e-test-server
 # copy requirements/constraints
 COPY e2e-test-server/requirements.txt e2e-test-server/constraints.txt ./

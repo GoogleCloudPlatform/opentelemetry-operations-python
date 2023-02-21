@@ -24,6 +24,7 @@ from google.api.distribution_pb2 import Distribution
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import Metric as GMetric
 from google.api.metric_pb2 import MetricDescriptor
+from google.api.monitored_resource_pb2 import MonitoredResource
 from google.cloud.monitoring_v3 import (
     CreateMetricDescriptorRequest,
     CreateTimeSeriesRequest,
@@ -39,10 +40,10 @@ from google.cloud.monitoring_v3.services.metric_service.transports.grpc import (
 
 # pylint: disable=no-name-in-module
 from google.protobuf.timestamp_pb2 import Timestamp
-from opentelemetry.exporter.cloud_monitoring._resource import (
+from opentelemetry.exporter.cloud_monitoring.version import __version__
+from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
     get_monitored_resource,
 )
-from opentelemetry.exporter.cloud_monitoring.version import __version__
 from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
@@ -296,9 +297,19 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         all_series = []
 
         for resource_metric in metrics_data.resource_metrics:
-            monitored_resource = get_monitored_resource(
+            monitored_resource_data = get_monitored_resource(
                 resource_metric.resource
             )
+            # convert it to proto
+            monitored_resource = (
+                MonitoredResource(
+                    type=monitored_resource_data.type,
+                    labels=monitored_resource_data.labels,
+                )
+                if monitored_resource_data
+                else None
+            )
+
             for scope_metric in resource_metric.scope_metrics:
                 for metric in scope_metric.metrics:
                     # Convert all data_points to Sequences, see
