@@ -33,7 +33,13 @@ class Project(TypedDict):
     projectId: str
 
 
+Attributes = TypedDict(
+    "Attributes", {"cluster-location": str, "cluster-name": str}
+)
+
+
 class Instance(TypedDict):
+    attributes: Attributes
     id: str
     machineType: str
     name: str

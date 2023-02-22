@@ -16,10 +16,7 @@ import logging
 import re
 from dataclasses import dataclass
 
-from opentelemetry.resourcedetector.gcp_resource_detector._metadata import (
-    MetadataAccessException,
-    get_metadata,
-)
+from opentelemetry.resourcedetector.gcp_resource_detector import _metadata
 
 # Format described in
 # https://cloud.google.com/compute/docs/metadata/default-metadata-values#vm_instance_metadata
@@ -32,8 +29,8 @@ _logger = logging.getLogger(__name__)
 
 def on_gce() -> bool:
     try:
-        get_metadata()["instance"]["machineType"]
-    except (MetadataAccessException, KeyError):
+        _metadata.get_metadata()["instance"]["machineType"]
+    except (_metadata.MetadataAccessException, KeyError):
         _logger.debug(
             "Could not fetch metadata attribute instance/machineType, "
             "assuming not on GCE.",
@@ -44,15 +41,15 @@ def on_gce() -> bool:
 
 
 def host_type() -> str:
-    return get_metadata()["instance"]["machineType"]
+    return _metadata.get_metadata()["instance"]["machineType"]
 
 
 def host_id() -> str:
-    return get_metadata()["instance"]["id"]
+    return _metadata.get_metadata()["instance"]["id"]
 
 
 def host_name() -> str:
-    return get_metadata()["instance"]["name"]
+    return _metadata.get_metadata()["instance"]["name"]
 
 
 @dataclass
@@ -62,7 +59,7 @@ class ZoneAndRegion:
 
 
 def availability_zone_and_region() -> ZoneAndRegion:
-    full_zone = get_metadata()["instance"]["zone"]
+    full_zone = _metadata.get_metadata()["instance"]["zone"]
     match = _ZONE_REGION_RE.search(full_zone)
     if not match:
         raise Exception(

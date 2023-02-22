@@ -95,20 +95,15 @@ def pop_environ_key(key):
         os.environ.pop(key)
 
 
-def clear_gke_env_vars():
-    pop_environ_key(CONTAINER_NAME)
-    pop_environ_key(NAMESPACE)
-    pop_environ_key(HOSTNAME)
-    pop_environ_key(POD_NAME)
+patch_env = mock.patch.dict(os.environ, {}, clear=True)
 
 
+@patch_env
 @mock.patch(
     "opentelemetry.resourcedetector.gcp_resource_detector.requests.get",
     **{"return_value.json.return_value": GKE_RESOURCES_JSON_STRING}
 )
 class TestGKEResourceFinder(unittest.TestCase):
-    def tearDown(self) -> None:
-        clear_gke_env_vars()
 
     # pylint: disable=unused-argument
     def test_not_running_on_gke(self, getter):
@@ -221,19 +216,12 @@ class TestGKEResourceFinder(unittest.TestCase):
         )
 
 
-def clear_cloudrun_env_vars():
-    pop_environ_key(K_CONFIGURATION)
-    pop_environ_key(K_SERVICE)
-    pop_environ_key(K_REVISION)
-
-
+@patch_env
 @mock.patch(
     "opentelemetry.resourcedetector.gcp_resource_detector.requests.get",
     **{"return_value.json.return_value": CLOUDRUN_RESOURCES_JSON_STRING}
 )
 class TestCloudRunResourceFinder(unittest.TestCase):
-    def tearDown(self) -> None:
-        clear_cloudrun_env_vars()
 
     # pylint: disable=unused-argument
     def test_not_running_on_cloudrun(self, getter):
@@ -303,20 +291,12 @@ class TestCloudRunResourceFinder(unittest.TestCase):
         )
 
 
-def clear_cloudfunctions_env_vars():
-    pop_environ_key(FUNCTION_TARGET)
-    pop_environ_key(K_SERVICE)
-    pop_environ_key(K_REVISION)
-
-
+@patch_env
 @mock.patch(
     "opentelemetry.resourcedetector.gcp_resource_detector.requests.get",
     **{"return_value.json.return_value": CLOUDFUNCTIONS_RESOURCES_JSON_STRING}
 )
 class TestCloudFunctionsResourceFinder(unittest.TestCase):
-    def tearDown(self) -> None:
-        clear_cloudfunctions_env_vars()
-
     # pylint: disable=unused-argument
     def test_not_running_on_cloudfunctions(self, getter):
         pop_environ_key(FUNCTION_TARGET)
@@ -385,13 +365,11 @@ class TestCloudFunctionsResourceFinder(unittest.TestCase):
         )
 
 
+@patch_env
 @mock.patch(
     "opentelemetry.resourcedetector.gcp_resource_detector.requests.get"
 )
 class TestGoogleCloudResourceDetector(unittest.TestCase):
-    def tearDown(self) -> None:
-        clear_gke_env_vars()
-
     def test_finding_gce_resources(self, getter):
         # The necessary env variables were not set for GKE resource detection
         # to succeed. We should be falling back to detecting GCE resources
