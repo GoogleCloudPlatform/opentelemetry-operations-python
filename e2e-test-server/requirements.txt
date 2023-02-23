@@ -1,6 +1,7 @@
 -c constraints.txt
 ../opentelemetry-exporter-gcp-trace
 ../opentelemetry-propagator-gcp
+../opentelemetry-resourcedetector-gcp
 opentelemetry-sdk
 opentelemetry-api
 Flask

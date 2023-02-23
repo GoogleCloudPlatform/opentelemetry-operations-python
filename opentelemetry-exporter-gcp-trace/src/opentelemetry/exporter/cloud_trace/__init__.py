@@ -102,6 +102,12 @@ from opentelemetry.exporter.cloud_trace.environment_variables import (
     OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX,
 )
 from opentelemetry.exporter.cloud_trace.version import __version__
+from opentelemetry.resourcedetector.gcp_resource_detector import (
+    _constants as _resource_constants,
+)
+from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
+    get_monitored_resource,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import (
@@ -127,6 +133,7 @@ _OPTIONS = [
     ("grpc.max_receive_message_length", -1),
     ("grpc.primary_user_agent", _USER_AGENT),
 ]
+
 
 MAX_NUM_LINKS = 128
 MAX_NUM_EVENTS = 32
@@ -420,24 +427,6 @@ def _strip_characters(ot_version):
     return "".join(filter(lambda x: x.isdigit() or x == ".", ot_version))
 
 
-OT_RESOURCE_ATTRIBUTE_TO_GCP = {
-    "gce_instance": {
-        "host.id": "instance_id",
-        "cloud.account.id": "project_id",
-        "cloud.zone": "zone",
-    },
-    "gke_container": {
-        "k8s.cluster.name": "cluster_name",
-        "k8s.namespace.name": "namespace_id",
-        "k8s.pod.name": "pod_id",
-        "host.id": "instance_id",
-        "container.name": "container_name",
-        "cloud.account.id": "project_id",
-        "cloud.zone": "zone",
-    },
-}
-
-
 def _extract_resources(
     resource: Resource, resource_regex: Optional[Pattern] = None
 ) -> Dict[str, str]:
@@ -451,24 +440,18 @@ def _extract_resources(
                 if resource_regex.match(k)
             }
         )
-    if resource_attributes.get("cloud.provider") != "gcp":
-        return extracted_attributes
-    resource_type = resource_attributes["gcp.resource_type"]
-    if (
-        not isinstance(resource_type, str)
-        or resource_type not in OT_RESOURCE_ATTRIBUTE_TO_GCP
+    monitored_resource = get_monitored_resource(resource)
+    # Do not map generic_task and generic_node to g.co/r/... span labels.
+    if monitored_resource and monitored_resource.type not in (
+        _resource_constants.GENERIC_NODE,
+        _resource_constants.GENERIC_TASK,
     ):
-        return extracted_attributes
-    extracted_attributes.update(
-        {
-            "g.co/r/{}/{}".format(resource_type, gcp_resource_key): str(
-                resource_attributes[ot_resource_key]
-            )
-            for ot_resource_key, gcp_resource_key in OT_RESOURCE_ATTRIBUTE_TO_GCP[
-                resource_type
-            ].items()
-        }
-    )
+        extracted_attributes.update(
+            {
+                "g.co/r/{}/{}".format(monitored_resource.type, k): v
+                for k, v in monitored_resource.labels.items()
+            }
+        )
     return extracted_attributes
 
 
