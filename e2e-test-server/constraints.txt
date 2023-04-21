@@ -16,8 +16,8 @@ Jinja2==2.11.3
 libcst==0.3.18
 MarkupSafe==1.1.1
 mypy-extensions==0.4.3
-opentelemetry-api==1.1.0
-opentelemetry-sdk==1.1.0
+opentelemetry-api==1.4.0
+opentelemetry-sdk==1.4.0
 opentelemetry-semantic-conventions==0.20b0
 packaging==20.9
 proto-plus==1.18.1

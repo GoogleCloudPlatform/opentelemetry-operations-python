@@ -97,6 +97,7 @@ from google.protobuf.timestamp_pb2 import (  # pylint: disable=no-name-in-module
     Timestamp,
 )
 from google.rpc import code_pb2, status_pb2
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.cloud_trace.environment_variables import (
     OTEL_EXPORTER_GCP_TRACE_PROJECT_ID,
     OTEL_EXPORTER_GCP_TRACE_RESOURCE_REGEX,
@@ -115,7 +116,6 @@ from opentelemetry.sdk.trace.export import (
     SpanExporter,
     SpanExportResult,
 )
-from opentelemetry.sdk.util import BoundedDict
 from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.util import types
@@ -476,9 +476,9 @@ def _extract_attributes(
     add_agent_attr: bool = False,
 ) -> trace_types.Span.Attributes:
     """Convert span.attributes to dict."""
-    attributes_dict: BoundedDict[
+    attributes_dict: BoundedAttributes[
         str, trace_types.AttributeValue
-    ] = BoundedDict(num_attrs_limit)
+    ] = BoundedAttributes(num_attrs_limit)
     invalid_value_dropped_count = 0
     for ot_key, ot_value in attrs.items() if attrs else []:
         key = _truncate_str(ot_key, MAX_ATTR_KEY_BYTES)[0]
