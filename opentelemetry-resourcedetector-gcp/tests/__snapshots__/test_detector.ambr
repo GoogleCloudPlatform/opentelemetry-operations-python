@@ -19,7 +19,7 @@
     'service.name': 'unknown_service',
     'telemetry.sdk.language': 'python',
     'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.16.0',
+    'telemetry.sdk.version': '1.17.0',
   })
 # ---
 # name: test_detects_gke[regional]
@@ -33,7 +33,7 @@
     'service.name': 'unknown_service',
     'telemetry.sdk.language': 'python',
     'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.16.0',
+    'telemetry.sdk.version': '1.17.0',
   })
 # ---
 # name: test_detects_gke[zonal]
@@ -47,6 +47,6 @@
     'service.name': 'unknown_service',
     'telemetry.sdk.language': 'python',
     'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.16.0',
+    'telemetry.sdk.version': '1.17.0',
   })
 # ---
