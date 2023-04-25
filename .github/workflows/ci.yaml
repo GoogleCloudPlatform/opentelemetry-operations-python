@@ -13,10 +13,11 @@ jobs:
     strategy:
       matrix:
         py:
-          - {version: "3.7", tox: "37"}
-          - {version: "3.8", tox: "38"}
-          - {version: "3.9", tox: "39"}
-          - {version: "3.10", tox: "310"}
+          - { version: "3.7", tox: "37" }
+          - { version: "3.8", tox: "38" }
+          - { version: "3.9", tox: "39" }
+          - { version: "3.10", tox: "310" }
+          - { version: "3.11", tox: "311" }
     env:
       run-matrix-combo: ${{ matrix.py.version }}
 
@@ -48,7 +49,7 @@ jobs:
       matrix:
         target: [lint-ci, docs-ci, mypy-ci]
         py:
-          - {version: "3.10"}
+          - { version: "3.10" }
 
     env:
       run-matrix-combo: ${{ matrix.py.version }}-${{ matrix.target }}

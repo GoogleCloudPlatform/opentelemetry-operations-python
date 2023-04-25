@@ -4,6 +4,8 @@
 
 - Add spec compliant GCE detection
   ([#231](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/231))
+- Add support for Python 3.11
+  ([#240](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/240))
 
 ## Version 1.4.0a0
 
