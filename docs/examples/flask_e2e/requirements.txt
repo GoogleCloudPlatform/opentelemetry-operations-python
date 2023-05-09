@@ -19,6 +19,7 @@ opentelemetry-api==1.14.0
 ../../../opentelemetry-exporter-gcp-monitoring
 ../../../opentelemetry-exporter-gcp-trace
 ../../../opentelemetry-propagator-gcp
+../../../opentelemetry-resourcedetector-gcp
 opentelemetry-instrumentation==0.35b0
 opentelemetry-instrumentation-requests==0.35b0
 opentelemetry-instrumentation-flask==0.35b0
