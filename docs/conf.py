@@ -99,3 +99,11 @@ html_theme_options = {
     "sidebar_width": "320px",
     "body_max_width": "800px",
 }
+
+html_context = {
+    "display_github": True, # Integrate GitHub
+    "github_user": "GoogleCloudPlatform", # Username
+    "github_repo": "opentelemetry-operations-python", # Repo name
+    "github_version": "main", # Version
+    "conf_py_path": "/docs/", # Path in the checkout to the docs root
+}
