@@ -56,6 +56,11 @@ LABELS: Attributes = {
 def test_create_monitoring_exporter() -> None:
     client = MetricServiceClient(credentials=AnonymousCredentials())
     CloudMonitoringMetricsExporter(project_id=PROJECT_ID, client=client)
+    CloudMonitoringMetricsExporter(
+        project_id=PROJECT_ID,
+        client=client,
+        prefix="custom.googleapis.com",
+    )
 
 
 @pytest.mark.parametrize(

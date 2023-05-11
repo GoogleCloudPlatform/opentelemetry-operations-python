@@ -93,6 +93,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             must be used when there exist two (or more) exporters that may
             export to the same metric name within WRITE_INTERVAL seconds of
             each other.
+        prefix: the prefix of the metric. It is "workload.googleapis.com" by
+            default if not specified.
     """
 
     def __init__(
@@ -100,6 +102,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         project_id: Optional[str] = None,
         client: Optional[MetricServiceClient] = None,
         add_unique_identifier: bool = False,
+        prefix: Optional[str] = "workload.googleapis.com",
     ):
         # Default preferred_temporality is all CUMULATIVE so need to customize
         super().__init__()
@@ -129,6 +132,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             self._exporter_start_time_seconds,
             self._exporter_start_time_nanos,
         ) = divmod(time_ns(), NANOS_PER_SECOND)
+        self._prefix = prefix
 
     def _batch_write(self, series: List[TimeSeries]) -> None:
         """Cloud Monitoring allows writing up to 200 time series at once
@@ -159,7 +163,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         :param record:
         :return:
         """
-        descriptor_type = f"workload.googleapis.com/{metric.name}"
+        descriptor_type = f"{self._prefix}/{metric.name}"
         if descriptor_type in self._metric_descriptors:
             return self._metric_descriptors[descriptor_type]
 
