@@ -7,14 +7,34 @@ The full code for this example is available `on Github
 
 This end-to-end example shows how to instrument a Flask app with with `Prometheus
 <https://prometheus.io/>`_ metrics linked to OpenTelemetry traces using exemplars. The example
-manually adds exemplars to a Prometheus Histogram which link the metric in Google Cloud managed service for Prometheus to
-Spans in Cloud Trace.
+manually adds exemplars to a Prometheus Histogram which link the metric in Google Cloud managed
+service for Prometheus to Spans in Cloud Trace.
 
 OpenTelemetry Python is configured to send traces to the `OpenTelemetry Collector
 <https://opentelemetry.io/docs/collector/>`_ and the Collector scrapes the python server's
 Prometheus endpoint. The Collector is configured to send metrics to `Google Cloud Managed
 Service for Prometheus <https://cloud.google.com/stackdriver/docs/managed-prometheus>`_ and
 traces to `Google Cloud Trace <https://cloud.google.com/trace/docs/overview>`_.
+
+.. graphviz::
+
+    digraph {
+        rankdir="LR"
+        nodesep=1
+
+        subgraph cluster {
+            server [label="Flask Application"]
+            col [label="OpenTelemetry Collector"]
+        }
+
+        gmp [label="Google Cloud Managed Service for Prometheus" shape="box"]
+        gct [label="Google Cloud Trace" shape="box"]
+
+        server->col [label="OTLP traces"]
+        col->server [label="Scrape Prometheus"]
+        col->gmp [label="metrics"]
+        col->gct [label="traces"]
+    }
 
 To run this example you first need to:
     * Create a Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
@@ -98,8 +118,8 @@ showing the distribution of request durations in the Python server.
 .. image:: heatmap.png
   :alt: Metrics explorer heatmap
 
-The circles on the heatmap are called "exemplars", which link to example span that fell within
-the given bucket on the heatmap. Notice that exemplars are plotted at the time when they 
+The circles on the heatmap are called "exemplars", which each link to an example span that fell
+within the given bucket on the heatmap. Notice that exemplars are plotted at the time when they
 occurred (x axis) and duration they took (y axis) in the heatmap. Clicking on an exemplar opens
 the Trace details flyout focused on the linked span.
 
