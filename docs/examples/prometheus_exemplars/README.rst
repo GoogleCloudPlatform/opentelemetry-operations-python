@@ -7,7 +7,7 @@ The full code for this example is available `on Github
 
 This end-to-end example shows how to instrument a Flask app with with `Prometheus
 <https://prometheus.io/>`_ metrics linked to OpenTelemetry traces using exemplars. The example
-manually adds exemplars to a Prometheus Histogram which link the metric in Cloud Monitoring to
+manually adds exemplars to a Prometheus Histogram which link the metric in Google Cloud managed service for Prometheus to
 Spans in Cloud Trace.
 
 OpenTelemetry Python is configured to send traces to the `OpenTelemetry Collector
