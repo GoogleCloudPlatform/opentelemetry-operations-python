@@ -17,6 +17,7 @@
 
 import time
 import random
+from typing import Dict, Optional
 
 from flask import Flask
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
@@ -38,7 +39,7 @@ from opentelemetry.sdk.trace.sampling import ParentBasedTraceIdRatio
 
 resource = Resource.create(
     {
-        "service.name": "flask_e2e_server",
+        "service.name": "prometheus_exemplars",
         "service.namespace": "examples",
         "service.instance.id": "instance123",
     }
@@ -79,7 +80,8 @@ hist = Histogram(
 
 @app.route("/")
 def hello_world():
-    # unfortunately, Histogram.time()'s return Timer doesn't let you set the exemplar. Instead, I'll time it manually.
+    # unfortunately, Histogram.time()'s returned Timer doesn't let you set the exemplar.
+    # Instead, time it manually.
     start = time.time_ns()
 
     with tracer.start_as_current_span("do_work"):
@@ -88,20 +90,30 @@ def hello_world():
     end = time.time_ns()
     duration_sec = (end - start) / 10**9
 
-    # [START opentelemetry_prom_exemplars_attach]
-    span_context = trace.get_current_span().get_span_context()
-    # only include the exemplar if it is sampled
-    if span_context.trace_flags.sampled:
-        # you must set the trace_id and span_id exemplar labels like this to link OTel and
-        # Prometheus
-        exemplar_attrs = {
-            "trace_id": trace.format_trace_id(span_context.trace_id),
-            "span_id": trace.format_span_id(span_context.span_id),
-        }
-        hist.labels(name="foo").observe(duration_sec, exemplar_attrs)
-    # [END opentelemetry_prom_exemplars_attach]
+    # observe with exemplars
+    # [START opentelemetry_prom_exemplars_observe]
+    hist.labels(name="foo").observe(duration_sec, get_prom_exemplars())
+    # [END opentelemetry_prom_exemplars_observe]
 
     return "Hello, World!"
 
 
 # [END opentelemetry_prom_exemplars_instrument]
+
+
+# [START opentelemetry_prom_exemplars_attach]
+def get_prom_exemplars() -> Optional[Dict[str, str]]:
+    """Generates an exemplar dictionary from the current implicit OTel context if available"""
+    span_context = trace.get_current_span().get_span_context()
+
+    # Only include the exemplar if it is valid and sampled
+    if span_context.is_valid and span_context.trace_flags.sampled:
+        # You must set the trace_id and span_id exemplar labels like this to link OTel and
+        # Prometheus. They must be formatted as hexadecimal strings.
+        return {
+            "trace_id": trace.format_trace_id(span_context.trace_id),
+            "span_id": trace.format_span_id(span_context.span_id),
+        }
+
+    return None
+    # [END opentelemetry_prom_exemplars_attach]

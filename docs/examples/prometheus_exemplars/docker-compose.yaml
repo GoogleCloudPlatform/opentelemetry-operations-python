@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-
 services:
   # OpenTelemetry collector. Make sure you set USERID and GOOGLE_APPLICATION_CREDENTIALS
   # environment variables for your container to authenticate correctly
@@ -43,4 +41,4 @@ services:
     build:
       context: .
       dockerfile: hey.dockerfile
-    command: -c 50 -n 1000000 http://python-server:6000
+    command: -c 50 -n 100000000 http://python-server:6000
