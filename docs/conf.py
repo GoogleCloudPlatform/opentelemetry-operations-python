@@ -59,6 +59,8 @@ extensions = [
     "sphinx.ext.githubpages",
     # Support external links to different versions in the Github repo
     "sphinx.ext.extlinks",
+    # Rendered graphviz graphs
+    "sphinx.ext.graphviz",
 ]
 
 intersphinx_mapping = {
@@ -101,9 +103,11 @@ html_theme_options = {
 }
 
 html_context = {
-    "display_github": True, # Integrate GitHub
-    "github_user": "GoogleCloudPlatform", # Username
-    "github_repo": "opentelemetry-operations-python", # Repo name
-    "github_version": "main", # Version
-    "conf_py_path": "/docs/", # Path in the checkout to the docs root
+    "display_github": True,  # Integrate GitHub
+    "github_user": "GoogleCloudPlatform",  # Username
+    "github_repo": "opentelemetry-operations-python",  # Repo name
+    "github_version": "main",  # Version
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
 }
+
+graphviz_output_format = "svg"
