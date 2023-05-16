@@ -10,7 +10,7 @@ Basic Example
 To use this exporter you first need to:
 
 * `Create a Google Cloud project <https://console.cloud.google.com/projectcreate>`_.
-* Enable `Application Default Credentials
+* Set up `Application Default Credentials
   <https://cloud.google.com/docs/authentication/provide-credentials-adc>`_ by `installing
   gcloud <https://cloud.google.com/sdk/install>`_ and running ``gcloud auth
   application-default login``.

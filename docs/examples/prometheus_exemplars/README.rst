@@ -39,7 +39,7 @@ traces to `Google Cloud Trace <https://cloud.google.com/trace/docs/overview>`_.
 To run this example you first need to:
 
 * Create a Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
-* Enable `Application Default Credentials
+* Set up `Application Default Credentials
   <https://cloud.google.com/docs/authentication/provide-credentials-adc>`_ by `installing
   gcloud <https://cloud.google.com/sdk/install>`_ and running ``gcloud auth
   application-default login``.
