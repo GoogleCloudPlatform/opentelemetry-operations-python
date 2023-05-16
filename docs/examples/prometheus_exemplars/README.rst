@@ -37,10 +37,13 @@ traces to `Google Cloud Trace <https://cloud.google.com/trace/docs/overview>`_.
     }
 
 To run this example you first need to:
-    * Create a Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
-    * Enable Cloud Trace API (listed in the Cloud Console as Stackdriver Trace API) in the project `here <https://console.cloud.google.com/apis/library?q=cloud%20trace&filter=visibility:public>`_. If the page says "API Enabled" then you're done! No need to do anything.
-    * Enable Default Application Credentials by creating setting `GOOGLE_APPLICATION_CREDENTIALS <https://cloud.google.com/docs/authentication/getting-started>`_ or by `installing gcloud sdk <https://cloud.google.com/sdk/install>`_ and calling ``gcloud auth application-default login``.
-    * Have docker and docker compose installed on your machine
+
+* Create a Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
+* Set up `Application Default Credentials
+  <https://cloud.google.com/docs/authentication/provide-credentials-adc>`_ by `installing
+  gcloud <https://cloud.google.com/sdk/install>`_ and running ``gcloud auth
+  application-default login``.
+* Have docker and docker compose installed on your machine
 
 Attaching Prometheus Exemplars
 ------------------------------

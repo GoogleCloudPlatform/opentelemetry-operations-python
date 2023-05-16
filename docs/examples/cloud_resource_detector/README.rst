@@ -9,12 +9,14 @@ Basic Example
 -------------
 
 To use this feature you first need to:
-    * Create a Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
-    * (If you want to send resource info to Cloud Trace) Enable `Cloud Trace API <https://console.cloud.google.com/apis/library?q=cloud%20trace&filter=visibility:public>`_ (listed in the Cloud Console as Stackdriver Trace API) in the project.
-    * (If you want to send resource info to Cloud Monitoring) Enable the `Cloud Monitoring API <https://console.cloud.google.com/apis/library?q=cloud_monitoring>`_ (aka Stackdriver Monitoring API) in the project.
-    * Enable Default Application Credentials by creating setting `GOOGLE_APPLICATION_CREDENTIALS <https://cloud.google.com/docs/authentication/getting-started>`_ or by `installing gcloud sdk <https://cloud.google.com/sdk/install>`_ and calling ``gcloud auth application-default login``.
-    * Setup a Google tool like `Google Compute Engine <https://cloud.google.com/compute/docs/quickstart-linux>`_ (GCE) or `Google Kubernetes Engine <https://cloud.google.com/kubernetes-engine/docs/quickstart>`_ (GKE).
-    * Run the below example in the Google tool.
+
+* Create a Google Cloud project. You can `create one here <https://console.cloud.google.com/projectcreate>`_.
+* Set up `Application Default Credentials
+  <https://cloud.google.com/docs/authentication/provide-credentials-adc>`_ by `installing
+  gcloud <https://cloud.google.com/sdk/install>`_ and running ``gcloud auth
+  application-default login``.
+* Setup a Google tool like `Google Compute Engine <https://cloud.google.com/compute/docs/quickstart-linux>`_ (GCE) or `Google Kubernetes Engine <https://cloud.google.com/kubernetes-engine/docs/quickstart>`_ (GKE).
+* Run the below example in the Google tool.
 
 * Installation
 
@@ -40,9 +42,10 @@ Checking Output
 --------------------------
 
 After running the metrics example:
-    * Go to the `Cloud Monitoring Metrics Explorer page <https://console.cloud.google.com/monitoring/metrics-explorer>`_.
-    * In "Find resource type and metric" enter "OpenTelemetry/request_counter_with_resource".
-    * You can filter by resource info and change the graphical output here as well.
+
+* Go to the `Cloud Monitoring Metrics Explorer page <https://console.cloud.google.com/monitoring/metrics-explorer>`_.
+* In "Find resource type and metric" enter "OpenTelemetry/request_counter_with_resource".
+* You can filter by resource info and change the graphical output here as well.
 
 Or, if you ran the tracing example, you can go to `Cloud Trace overview <https://console.cloud.google.com/traces/list>`_ to see the results.
 
