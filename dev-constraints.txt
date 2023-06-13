@@ -13,3 +13,8 @@ types-protobuf==3.20.4.2
 types-requests==2.28.11.2
 types-setuptools==65.5.0.2
 types-urllib3==1.26.25.1
+
+# pinned for snapshot tests. this should be bumped regularly and snapshots updated by running
+# tox -f py311-test -- --snapshot-update
+opentelemetry-api==1.18.0
+opentelemetry-sdk==1.18.0
