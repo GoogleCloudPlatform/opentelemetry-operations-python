@@ -32,7 +32,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "Google Cloud OpenTelemetry"
-copyright = "2020, Google"
+copyright = "2023, Google LLC"
 author = "Google"
 
 
