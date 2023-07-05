@@ -16,7 +16,6 @@ import re
 import unittest
 from unittest import mock
 
-import pkg_resources
 from google.cloud.trace_v2.services.trace_service.transports import (
     TraceServiceGrpcTransport,
 )
@@ -43,6 +42,7 @@ from opentelemetry.exporter.cloud_trace import (
     _truncate_str,
 )
 from opentelemetry.exporter.cloud_trace.version import __version__
+from opentelemetry.sdk import version as opentelemetry_sdk_version
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace import _Span as Span
@@ -94,9 +94,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
         cls.agent_code = _format_attribute_value(
             "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
-                _strip_characters(
-                    pkg_resources.get_distribution("opentelemetry-sdk").version
-                ),
+                _strip_characters(opentelemetry_sdk_version.__version__),
                 _strip_characters(__version__),
             )
         )
