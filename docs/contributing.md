@@ -43,7 +43,7 @@ This project uses [tox](https://tox.readthedocs.io/en/latest/index.html) for
 development, so make sure it is installed on your system:
 
 ```sh
-pip install tox tox-factor
+pip install tox
 ```
 
 To create a virtual environment `venv/` at the root of the repository (useful
