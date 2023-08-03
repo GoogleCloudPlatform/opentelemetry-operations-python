@@ -19,7 +19,6 @@ from time import time_ns
 from typing import Dict, List, NoReturn, Optional, Set, Union
 
 import google.auth
-import pkg_resources
 from google.api.distribution_pb2 import Distribution
 from google.api.label_pb2 import LabelDescriptor
 from google.api.metric_pb2 import Metric as GMetric
@@ -44,6 +43,7 @@ from opentelemetry.exporter.cloud_monitoring.version import __version__
 from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
     get_monitored_resource,
 )
+from opentelemetry.sdk import version as opentelemetry_sdk_version
 from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
@@ -62,7 +62,7 @@ WRITE_INTERVAL = 10
 UNIQUE_IDENTIFIER_KEY = "opentelemetry_id"
 NANOS_PER_SECOND = 10**9
 
-_OTEL_SDK_VERSION = pkg_resources.get_distribution("opentelemetry-sdk").version
+_OTEL_SDK_VERSION = opentelemetry_sdk_version.__version__
 _USER_AGENT = f"opentelemetry-python {_OTEL_SDK_VERSION}; google-cloud-metric-exporter {__version__}"
 
 # Set user-agent metadata, see https://github.com/grpc/grpc/issues/23644 and default options
