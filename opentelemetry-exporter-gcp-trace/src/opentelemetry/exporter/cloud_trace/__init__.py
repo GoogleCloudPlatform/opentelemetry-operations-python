@@ -87,7 +87,6 @@ from typing import (
 
 import google.auth
 import opentelemetry.trace as trace_api
-import pkg_resources
 from google.cloud.trace_v2 import BatchWriteSpansRequest, TraceServiceClient
 from google.cloud.trace_v2 import types as trace_types
 from google.cloud.trace_v2.services.trace_service.transports import (
@@ -108,6 +107,7 @@ from opentelemetry.resourcedetector.gcp_resource_detector import (
 from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
     get_monitored_resource,
 )
+from opentelemetry.sdk import version as opentelemetry_sdk_version
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event
 from opentelemetry.sdk.trace.export import (
@@ -122,7 +122,7 @@ from opentelemetry.util import types
 
 logger = logging.getLogger(__name__)
 
-_OTEL_SDK_VERSION = pkg_resources.get_distribution("opentelemetry-sdk").version
+_OTEL_SDK_VERSION = opentelemetry_sdk_version.__version__
 _USER_AGENT = f"opentelemetry-python {_OTEL_SDK_VERSION}; google-cloud-trace-exporter {__version__}"
 
 # Set user-agent metadata, see https://github.com/grpc/grpc/issues/23644 and default options
@@ -493,9 +493,7 @@ def _extract_attributes(
     if add_agent_attr:
         attributes_dict["g.co/agent"] = _format_attribute_value(
             "opentelemetry-python {}; google-cloud-trace-exporter {}".format(
-                _strip_characters(
-                    pkg_resources.get_distribution("opentelemetry-sdk").version
-                ),
+                _strip_characters(_OTEL_SDK_VERSION),
                 _strip_characters(__version__),
             )
         )
