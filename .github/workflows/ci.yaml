@@ -35,8 +35,7 @@ jobs:
           restore-keys: |
             ${{ env.cache-version }}-${{ env.run-matrix-combo }}-pip
       - name: Install tox
-        # Pin tox 3 because of https://github.com/rpkilby/tox-factor/issues/18
-        run: pip install -U tox==3.27.1 tox-factor
+        run: pip install -U tox
       - name: Run tox test factors for python ${{ matrix.py.version }}
         run: >
           tox
@@ -68,7 +67,6 @@ jobs:
           restore-keys: |
             ${{ env.cache-version }}-${{ env.run-matrix-combo }}-pip
       - name: Install tox
-        # Pin tox 3 because of https://github.com/rpkilby/tox-factor/issues/18
-        run: pip install -U tox==3.27.1 tox-factor
+        run: pip install -U tox
       - name: Run tox factors ${{ matrix.target }}
         run: tox -f ${{ matrix.target }}
