@@ -122,7 +122,7 @@ def get_cloudrun_resources():
         {
             "cloud.platform": "gcp_cloud_run",
             "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
-            "faas.id": all_metadata["instance"]["id"],
+            "faas.instance": all_metadata["instance"]["id"],
             "gcp.resource_type": "cloud_run",
         }
     )
@@ -152,7 +152,7 @@ def get_cloudfunctions_resources():
         {
             "cloud.platform": "gcp_cloud_functions",
             "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
-            "faas.id": all_metadata["instance"]["id"],
+            "faas.instance": all_metadata["instance"]["id"],
             "gcp.resource_type": "cloud_functions",
         }
     )
