@@ -110,8 +110,14 @@ MAPPINGS = {
             fallback="global",
         ),
         _constants.NAMESPACE: MapConfig(ResourceAttributes.SERVICE_NAMESPACE),
-        _constants.JOB: MapConfig(ResourceAttributes.SERVICE_NAME),
-        _constants.TASK_ID: MapConfig(ResourceAttributes.SERVICE_INSTANCE_ID),
+        _constants.JOB: MapConfig(
+            ResourceAttributes.SERVICE_NAME,
+            ResourceAttributes.FAAS_NAME,
+        ),
+        _constants.TASK_ID: MapConfig(
+            ResourceAttributes.SERVICE_INSTANCE_ID,
+            ResourceAttributes.FAAS_INSTANCE,
+        ),
     },
     _constants.GENERIC_NODE: {
         _constants.LOCATION: MapConfig(
@@ -169,6 +175,9 @@ def get_monitored_resource(
         if (
             ResourceAttributes.SERVICE_NAME in attrs
             and ResourceAttributes.SERVICE_INSTANCE_ID in attrs
+        ) or (
+            ResourceAttributes.FAAS_NAME in attrs
+            and ResourceAttributes.FAAS_INSTANCE in attrs
         ):
             mr = _create_monitored_resource(_constants.GENERIC_TASK, attrs)
         else:
@@ -185,10 +194,24 @@ def _create_monitored_resource(
 
     for mr_key, map_config in mapping.items():
         mr_value = None
+        fallback_value = None
         for otel_key in map_config.otel_keys:
             if otel_key in resource_attrs:
-                mr_value = resource_attrs[otel_key]
-                break
+                if (
+                    otel_key == ResourceAttributes.SERVICE_NAME
+                    and isinstance(resource_attrs[otel_key], str)
+                    and str(resource_attrs[otel_key]).startswith(
+                        _constants.UNKNOWN_SERVICE_PREFIX
+                    )
+                ):
+                    # Only use values with an unknown_service prefix as the last resort
+                    fallback_value = resource_attrs[otel_key]
+                else:
+                    mr_value = resource_attrs[otel_key]
+                    break
+
+        if mr_value is None:
+            mr_value = fallback_value
 
         if mr_value is None:
             mr_value = map_config.fallback
