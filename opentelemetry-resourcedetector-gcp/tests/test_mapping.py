@@ -173,6 +173,14 @@ from syrupy.assertion import SnapshotAssertion
             },
             id="generic task faas",
         ),
+        pytest.param(
+            {
+                "cloud.region": "myregion",
+                "service.namespace": "servicens",
+                "faas.instance": "faasinstance",
+            },
+            id="generic task faas fallback",
+        ),
         # generic node
         pytest.param(
             {

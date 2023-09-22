@@ -109,6 +109,17 @@
     'type': 'generic_task',
   })
 # ---
+# name: test_get_monitored_resource[generic task faas fallback]
+  dict({
+    'labels': dict({
+      'job': 'unknown_service',
+      'location': 'myregion',
+      'namespace': 'servicens',
+      'task_id': 'faasinstance',
+    }),
+    'type': 'generic_task',
+  })
+# ---
 # name: test_get_monitored_resource[generic task fallback region]
   dict({
     'labels': dict({
