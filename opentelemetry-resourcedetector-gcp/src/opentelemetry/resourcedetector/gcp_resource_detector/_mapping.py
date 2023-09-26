@@ -206,7 +206,7 @@ def _create_monitored_resource(
             and ResourceAttributes.SERVICE_NAME in map_config.otel_keys
         ):
             # The service name started with unknown_service, and was ignored above.
-            mr_value = resource_attrs[ResourceAttributes.SERVICE_NAME]
+            mr_value = resource_attrs.get(ResourceAttributes.SERVICE_NAME)
 
         if mr_value is None:
             mr_value = map_config.fallback
