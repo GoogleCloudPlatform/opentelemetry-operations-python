@@ -35,6 +35,8 @@ class ResourceAttributes:
     SERVICE_INSTANCE_ID = "service.instance.id"
     SERVICE_NAME = "service.name"
     SERVICE_NAMESPACE = "service.namespace"
+    FAAS_INSTANCE = "faas.instance"
+    FAAS_NAME = "faas.name"
 
 
 AWS_ACCOUNT = "aws_account"
@@ -59,3 +61,4 @@ POD_NAME = "pod_name"
 REGION = "region"
 TASK_ID = "task_id"
 ZONE = "zone"
+UNKNOWN_SERVICE_PREFIX = "unknown_service"

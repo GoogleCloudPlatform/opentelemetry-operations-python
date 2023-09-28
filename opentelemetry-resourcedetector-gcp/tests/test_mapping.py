@@ -164,6 +164,25 @@ from syrupy.assertion import SnapshotAssertion
             },
             id="generic task fallback global",
         ),
+        pytest.param(
+            {
+                "service.name": "unknown_service",
+                "cloud.region": "myregion",
+                "service.namespace": "servicens",
+                "faas.name": "faasname",
+                "faas.instance": "faasinstance",
+            },
+            id="generic task faas",
+        ),
+        pytest.param(
+            {
+                "service.name": "unknown_service",
+                "cloud.region": "myregion",
+                "service.namespace": "servicens",
+                "faas.instance": "faasinstance",
+            },
+            id="generic task faas fallback",
+        ),
         # generic node
         pytest.param(
             {
@@ -213,7 +232,7 @@ from syrupy.assertion import SnapshotAssertion
 def test_get_monitored_resource(
     otel_attributes: Attributes, snapshot: SnapshotAssertion
 ) -> None:
-    resource = Resource.create(otel_attributes)
+    resource = Resource(otel_attributes)
     monitored_resource_data = get_monitored_resource(resource)
     as_dict = dataclasses.asdict(monitored_resource_data)
     assert as_dict == snapshot

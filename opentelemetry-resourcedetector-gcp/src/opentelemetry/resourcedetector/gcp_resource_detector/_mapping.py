@@ -110,8 +110,14 @@ MAPPINGS = {
             fallback="global",
         ),
         _constants.NAMESPACE: MapConfig(ResourceAttributes.SERVICE_NAMESPACE),
-        _constants.JOB: MapConfig(ResourceAttributes.SERVICE_NAME),
-        _constants.TASK_ID: MapConfig(ResourceAttributes.SERVICE_INSTANCE_ID),
+        _constants.JOB: MapConfig(
+            ResourceAttributes.SERVICE_NAME,
+            ResourceAttributes.FAAS_NAME,
+        ),
+        _constants.TASK_ID: MapConfig(
+            ResourceAttributes.SERVICE_INSTANCE_ID,
+            ResourceAttributes.FAAS_INSTANCE,
+        ),
     },
     _constants.GENERIC_NODE: {
         _constants.LOCATION: MapConfig(
@@ -168,7 +174,10 @@ def get_monitored_resource(
         # fallback to generic_task
         if (
             ResourceAttributes.SERVICE_NAME in attrs
-            and ResourceAttributes.SERVICE_INSTANCE_ID in attrs
+            or ResourceAttributes.FAAS_NAME in attrs
+        ) and (
+            ResourceAttributes.SERVICE_INSTANCE_ID in attrs
+            or ResourceAttributes.FAAS_INSTANCE in attrs
         ):
             mr = _create_monitored_resource(_constants.GENERIC_TASK, attrs)
         else:
@@ -186,9 +195,18 @@ def _create_monitored_resource(
     for mr_key, map_config in mapping.items():
         mr_value = None
         for otel_key in map_config.otel_keys:
-            if otel_key in resource_attrs:
+            if otel_key in resource_attrs and not str(
+                resource_attrs[otel_key]
+            ).startswith(_constants.UNKNOWN_SERVICE_PREFIX):
                 mr_value = resource_attrs[otel_key]
                 break
+
+        if (
+            mr_value is None
+            and ResourceAttributes.SERVICE_NAME in map_config.otel_keys
+        ):
+            # The service name started with unknown_service, and was ignored above.
+            mr_value = resource_attrs.get(ResourceAttributes.SERVICE_NAME)
 
         if mr_value is None:
             mr_value = map_config.fallback
