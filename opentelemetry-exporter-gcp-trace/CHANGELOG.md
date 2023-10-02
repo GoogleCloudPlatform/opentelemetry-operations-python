@@ -8,6 +8,8 @@ Released 2023-05-17
 
 - Add support for Python 3.11
   ([#240](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/240))
+- Upgrade `opentelemetry-api` dependency to version 1.4 or newer
+  ([#238](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/238))
 
 ## Version 1.4.0
 
