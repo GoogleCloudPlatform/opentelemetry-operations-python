@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.6.0a0
+
+Released 2023-10-16
+
 - Use faas.instance instead of faas.id, and bump e2e test image
   ([#271](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/271))
 - Map faas.* attributes to generic_task in resource mapping
