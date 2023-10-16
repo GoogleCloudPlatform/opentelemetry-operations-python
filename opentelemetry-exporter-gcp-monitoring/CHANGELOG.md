@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Don't use `pkg_resources.get_distribution(..).version`
+  ([#256](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/256))
+- Add autoinstrumentation entrypoint for monitoring exporter
+  ([#275](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/275))
+
 ## Version 1.5.0a0
 
 Released 2023-05-17
