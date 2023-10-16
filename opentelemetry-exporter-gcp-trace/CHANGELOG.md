@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.6.0
+
+Released 2023-10-16
+
 - Don't use `pkg_resources.get_distribution(..).version`
   ([#256](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/256))
 
