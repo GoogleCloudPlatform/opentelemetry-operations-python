@@ -6,11 +6,17 @@
 Welcome to Google Cloud OpenTelemetry's documentation!
 ======================================================
 
-.. image:: https://badge.fury.io/py/opentelemetry-exporter-google-cloud.svg
-    :target: https://badge.fury.io/py/opentelemetry-exporter-google-cloud
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-gcp-trace.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-gcp-trace
 
-.. image:: https://badge.fury.io/py/opentelemetry-tools-google-cloud.svg
-    :target: https://badge.fury.io/py/opentelemetry-tools-google-cloud
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-gcp-monitoring.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-gcp-monitoring
+
+.. image:: https://badge.fury.io/py/opentelemetry-resourcedetector-gcp.svg
+    :target: https://badge.fury.io/py/opentelemetry-resourcedetector-gcp
+
+.. image:: https://badge.fury.io/py/opentelemetry-propagator-gcp.svg
+    :target: https://badge.fury.io/py/opentelemetry-propagator-gcp
 
 This documentation describes OpenTelemetry Python exporters, propagators, and
 resource detectors for Google Cloud Platform. Development for these packages
