@@ -198,9 +198,6 @@ class GoogleCloudResourceDetector(ResourceDetector):
                 if found_resources:
                     self.gcp_resources = found_resources
                     break
-        if not self.gcp_resources:
-            if self.raise_on_error:
-                raise NoGoogleResourcesFound()
-            else:
-                return Resource.create()
+        if self.raise_on_error and not self.gcp_resources:
+            raise NoGoogleResourcesFound()
         return Resource(self.gcp_resources)
