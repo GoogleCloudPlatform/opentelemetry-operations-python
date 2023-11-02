@@ -526,5 +526,17 @@ class TestGoogleCloudResourceDetector(unittest.TestCase):
     def test_no_resources_found(self, getter):
         # If no Google resources were found, we throw an exception
         getter.return_value.json.side_effect = Exception
-        resource_finder = GoogleCloudResourceDetector()
+
+        resource_finder = GoogleCloudResourceDetector(raise_on_error=True)
+
         self.assertRaises(NoGoogleResourcesFound, resource_finder.detect)
+
+    def test_detector_dont_raise_on_error(self, getter):
+        # If no Google resources were found, we throw an exception
+        getter.return_value.json.side_effect = Exception
+        detector = GoogleCloudResourceDetector(raise_on_error=False)
+        expected_resources = Resource({})
+
+        resources = detector.detect()
+
+        self.assertEqual(resources, expected_resources)
