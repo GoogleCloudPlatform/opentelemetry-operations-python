@@ -32,6 +32,8 @@ class ResourceAttributes:
     K8S_NAMESPACE_NAME = "k8s.namespace.name"
     K8S_NODE_NAME = "k8s.node.name"
     K8S_POD_NAME = "k8s.pod.name"
+    MONITORED_RESOURCE_TYPE = "monitored_resource.type"
+    MONITORED_RESOURCE_LABEL_PREFIX = "monitored_resource.labels."
     SERVICE_INSTANCE_ID = "service.instance.id"
     SERVICE_NAME = "service.name"
     SERVICE_NAMESPACE = "service.namespace"
