@@ -306,7 +306,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         all_series = []
 
         for resource_metric in metrics_data.resource_metrics:
-            if self.monitored_resource is None:
+            monitored_resource = self.monitored_resource
+            if monitored_resource is None:
                 # auto-detect the monitored resource
                 monitored_resource_data = get_monitored_resource(
                     resource_metric.resource
