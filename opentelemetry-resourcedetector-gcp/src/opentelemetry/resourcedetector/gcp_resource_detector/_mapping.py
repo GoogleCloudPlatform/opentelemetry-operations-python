@@ -156,14 +156,6 @@ def get_monitored_resource(
 
     attrs = resource.attributes
 
-    # check for explicit resource type
-    resource_type = attrs.get(ResourceAttributes.MONITORED_RESOURCE_TYPE)
-    if resource_type is not None:
-        prefix = ResourceAttributes.MONITORED_RESOURCE_LABEL_PREFIX
-        # filter out only monitored resource attributes
-        resource_labels = {k[len(prefix):]:v for k,v in attrs.items() if k.startswith(prefix)}
-        return MonitoredResourceData(type=resource_type, labels=resource_labels)
-
     platform = attrs.get(ResourceAttributes.CLOUD_PLATFORM_KEY)
     if platform == ResourceAttributes.GCP_COMPUTE_ENGINE:
         mr = _create_monitored_resource(_constants.GCE_INSTANCE, attrs)
