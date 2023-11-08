@@ -95,6 +95,9 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             each other.
         prefix: the prefix of the metric. It is "workload.googleapis.com" by
             default if not specified.
+        monitored_resource: the GCP monitored resource to use for all metrics.
+            If not specified, the exporter will attempt to detect the
+            monitored_resource automatically from the OpenTelemetry resource.
     """
 
     def __init__(
@@ -103,6 +106,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         client: Optional[MetricServiceClient] = None,
         add_unique_identifier: bool = False,
         prefix: Optional[str] = "workload.googleapis.com",
+        monitored_resource: Optional[MonitoredResource] = None,
     ):
         # Default preferred_temporality is all CUMULATIVE so need to customize
         super().__init__()
@@ -133,6 +137,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             self._exporter_start_time_nanos,
         ) = divmod(time_ns(), NANOS_PER_SECOND)
         self._prefix = prefix
+        self.monitored_resource = monitored_resource
 
     def _batch_write(self, series: List[TimeSeries]) -> None:
         """Cloud Monitoring allows writing up to 200 time series at once
@@ -301,18 +306,20 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         all_series = []
 
         for resource_metric in metrics_data.resource_metrics:
-            monitored_resource_data = get_monitored_resource(
-                resource_metric.resource
-            )
-            # convert it to proto
-            monitored_resource = (
-                MonitoredResource(
-                    type=monitored_resource_data.type,
-                    labels=monitored_resource_data.labels,
+            if self.monitored_resource is None:
+                # auto-detect the monitored resource
+                monitored_resource_data = get_monitored_resource(
+                    resource_metric.resource
                 )
-                if monitored_resource_data
-                else None
-            )
+                # convert it to proto
+                monitored_resource = (
+                    MonitoredResource(
+                        type=monitored_resource_data.type,
+                        labels=monitored_resource_data.labels,
+                    )
+                    if monitored_resource_data
+                    else None
+                )
 
             for scope_metric in resource_metric.scope_metrics:
                 for metric in scope_metric.metrics:
