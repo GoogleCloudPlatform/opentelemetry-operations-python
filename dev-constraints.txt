@@ -6,7 +6,7 @@ googleapis-common-protos-stubs==2.1.0
 isort==5.8.0
 mypy-extensions==0.4.3
 mypy==0.982
-pylint==2.8.3
+pylint==2.17.5
 Sphinx==4.3.1
 syrupy==3.0.4
 types-protobuf==3.20.4.2
