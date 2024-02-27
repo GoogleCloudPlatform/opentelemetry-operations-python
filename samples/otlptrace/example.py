@@ -27,14 +27,9 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 credentials, project_id = google.auth.default()
 request = google.auth.transport.requests.Request()
 credentials.refresh(request)
-req_headers = {'x-goog-user-project':credentials.quota_project_id,'Authorization':'Bearer: '+credentials.token}
+req_headers = {'x-goog-user-project':credentials.quota_project_id,'Authorization':'Bearer '+credentials.token}
 
-# Service name is required for most backends
-resource = Resource(attributes={
-    SERVICE_NAME: "your-service-name"
-})
-
-traceProvider = TracerProvider(resource=resource)
+traceProvider = TracerProvider()
 processor = BatchSpanProcessor(OTLPSpanExporter(headers=req_headers))
 traceProvider.add_span_processor(processor)
 trace.set_tracer_provider(traceProvider)
