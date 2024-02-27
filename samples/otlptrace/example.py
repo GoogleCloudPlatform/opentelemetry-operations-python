@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import google.auth
+import google.auth.transport.requests
 from google.auth.transport.requests import AuthorizedSession
 
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -24,7 +25,9 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 credentials, project_id = google.auth.default()
-authed_session = AuthorizedSession(credentials)
+request = google.auth.transport.requests.Request()
+credentials.refresh(request)
+req_headers = {'x-goog-user-project':credentials.quota_project_id,'Authorization':'Bearer: '+credentials.token}
 
 # Service name is required for most backends
 resource = Resource(attributes={
@@ -32,9 +35,10 @@ resource = Resource(attributes={
 })
 
 traceProvider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="<traces-endpoint>/v1/traces", headers=authed_session.headers))
+processor = BatchSpanProcessor(OTLPSpanExporter(headers=req_headers))
 traceProvider.add_span_processor(processor)
 trace.set_tracer_provider(traceProvider)
+tracer = trace.get_tracer("my.tracer.name")
 
 def do_work():
     with tracer.start_as_current_span("span-name") as span:
