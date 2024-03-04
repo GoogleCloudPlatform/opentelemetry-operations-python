@@ -16,18 +16,21 @@
 import google.auth
 import google.auth.transport.requests
 from google.auth.transport.requests import AuthorizedSession
-
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter,
+)
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 credentials, project_id = google.auth.default()
 request = google.auth.transport.requests.Request()
 credentials.refresh(request)
-req_headers = {'x-goog-user-project':credentials.quota_project_id,'Authorization':'Bearer '+credentials.token}
+req_headers = {
+    "x-goog-user-project": credentials.quota_project_id,
+    "Authorization": "Bearer " + credentials.token,
+}
 
 traceProvider = TracerProvider()
 processor = BatchSpanProcessor(OTLPSpanExporter(headers=req_headers))
@@ -35,10 +38,12 @@ traceProvider.add_span_processor(processor)
 trace.set_tracer_provider(traceProvider)
 tracer = trace.get_tracer("my.tracer.name")
 
+
 def do_work():
     with tracer.start_as_current_span("span-name") as span:
         # do some work that 'span' will track
         print("doing some work...")
         # When the 'with' block goes out of scope, 'span' is closed for you
+
 
 do_work()
