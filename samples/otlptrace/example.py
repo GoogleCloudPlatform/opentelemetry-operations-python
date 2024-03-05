@@ -32,10 +32,10 @@ req_headers = {
     "Authorization": "Bearer " + credentials.token,
 }
 
-traceProvider = TracerProvider()
+trace_provider = TracerProvider()
 processor = BatchSpanProcessor(OTLPSpanExporter(headers=req_headers))
-traceProvider.add_span_processor(processor)
-trace.set_tracer_provider(traceProvider)
+trace_provider.add_span_processor(processor)
+trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer("my.tracer.name")
 
 
