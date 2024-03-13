@@ -1,0 +1,13 @@
+[project]
+name = "otel-quickstart-python"
+version = "0.0.1"
+dependencies = [
+    "flask",
+    "requests",
+    "opentelemetry-instrumentation-flask",
+    "opentelemetry-instrumentation-requests",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
