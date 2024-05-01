@@ -15,7 +15,6 @@
 
 import google.auth
 import google.auth.transport.requests
-from google.auth.transport.requests import AuthorizedSession
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
@@ -40,7 +39,7 @@ tracer = trace.get_tracer("my.tracer.name")
 
 
 def do_work():
-    with tracer.start_as_current_span("span-name") as span:
+    with tracer.start_as_current_span("span-http") as span:
         # do some work that 'span' will track
         print("doing some work...")
         # When the 'with' block goes out of scope, 'span' is closed for you
