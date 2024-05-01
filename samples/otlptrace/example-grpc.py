@@ -31,12 +31,6 @@ import time
 """
 This is a sample script that exports OTLP traces encoded as protobufs via gRPC. 
 """
-logging.basicConfig(
-    format="%(asctime)s %(levelname)-8s %(message)s",
-    level=logging.DEBUG,
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
 class AutoRefreshAuthMetadataPlugin(AuthMetadataPlugin):
     """
     A `gRPC AuthMetadataPlugin`_ that refreshes credentials and inserts them into
@@ -46,13 +40,10 @@ class AutoRefreshAuthMetadataPlugin(AuthMetadataPlugin):
         super().__init__(credentials, request, default_host)
 
     def __call__(self, context, callback):
-        logging.info("Inserting credentials")
-        if self._credentials.expired:
-            logging.info("credentials expired, refresing")
+        if self._credentials.expired:    
             self._credentials.refresh(self._request)
 
         auth_headers = [("authorization", f"Bearer {self._credentials.token}")]
-        logging.info(f"Adding headers {auth_headers}")
         callback(auth_headers, None)
 
 credentials, project_id = google.auth.default()
@@ -66,8 +57,6 @@ auth_metadata_plugin = AutoRefreshAuthMetadataPlugin(credentials=credentials, re
 channel_creds = grpc.composite_channel_credentials(grpc.ssl_channel_credentials(),
                                                    grpc.metadata_call_credentials(auth_metadata_plugin))
 
-logging.info("Channel creds %s", channel_creds._credentials)
-
 trace_provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(OTLPSpanExporter(credentials=channel_creds, insecure=False, headers={
     "x-goog-user-project": credentials.quota_project_id,
@@ -77,7 +66,7 @@ trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer("my.tracer.name")
 
 def do_work():
-    with tracer.start_as_current_span("span-name") as span:
+    with tracer.start_as_current_span("span-grpc") as span:
         # do some work that 'span' will track
         print("doing some work...")
         # When the 'with' block goes out of scope, 'span' is closed for you
