@@ -16,7 +16,7 @@
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
-from google.auth.transport.requests import AuthorizedSession
+from google.auth.transport.grpc import AuthMetadataPlugin
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
@@ -36,6 +36,25 @@ logging.basicConfig(
     level=logging.DEBUG,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+
+class AutoRefreshAuthMetadataPlugin(AuthMetadataPlugin):
+    """
+    A `gRPC AuthMetadataPlugin`_ that refreshes credentials and inserts them into
+    each request.
+    """
+    def __init__(self, credentials, request, default_host=None):
+        super().__init__(credentials, request, default_host)
+
+    def __call__(self, context, callback):
+        logging.info("Inserting credentials")
+        if self._credentials.expired:
+            logging.info("credentials expired, refresing")
+            self._credentials.refresh(self._request)
+
+        auth_headers = [("authorization", f"Bearer {self._credentials.token}")]
+        logging.info(f"Adding headers {auth_headers}")
+        callback(auth_headers, None)
+
 credentials, project_id = google.auth.default()
 request = google.auth.transport.requests.Request()
 credentials.refresh(request)
@@ -43,17 +62,14 @@ resource = Resource.create(attributes={
     SERVICE_NAME: "otlp-gcp-grpc-sample"
 })
 
-def refresh_token_if_required():
-    if credentials.expired:
-        logging.info("Credentials expired, refreshing")
-        credentials.refresh(request)
-    return credentials.token
-
+auth_metadata_plugin = AutoRefreshAuthMetadataPlugin(credentials=credentials, request=request)
 channel_creds = grpc.composite_channel_credentials(grpc.ssl_channel_credentials(),
-                                                   grpc.access_token_call_credentials(refresh_token_if_required()))
+                                                   grpc.metadata_call_credentials(auth_metadata_plugin))
+
+logging.info("Channel creds %s", channel_creds._credentials)
 
 trace_provider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(credentials=channel_creds, insecure=True, headers={
+processor = BatchSpanProcessor(OTLPSpanExporter(credentials=channel_creds, insecure=False, headers={
     "x-goog-user-project": credentials.quota_project_id,
 }))
 trace_provider.add_span_processor(processor)
