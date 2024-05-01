@@ -26,7 +26,7 @@ gcloud auth application-default login
 export OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=<project-id>"
 export OTEL_EXPORTER_OTLP_ENDPOINT=<endpoint>
 
-cd samples/otlptrace && python3 example-grpc.py
+cd samples/otlptrace && python3 example_grpc.py
 ```
 Other variations of the sample:
- - `python3 example.py` - will run a program that will export traces using http/protobuf.
+ - `python3 example_http.py` - will run a program that will export traces using http/protobuf.
