@@ -13,9 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
+
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
+import grpc
 from google.auth.transport.grpc import AuthMetadataPlugin
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
@@ -24,52 +27,63 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-import grpc
-import logging
-import time
 
 """
 This is a sample script that exports OTLP traces encoded as protobufs via gRPC. 
 """
+
+
 class AutoRefreshAuthMetadataPlugin(AuthMetadataPlugin):
     """
     A `gRPC AuthMetadataPlugin`_ that refreshes credentials and inserts them into
     each request.
     """
+
     def __init__(self, credentials, request, default_host=None):
         super().__init__(credentials, request, default_host)
 
     def __call__(self, context, callback):
-        if self._credentials.expired:    
+        if self._credentials.expired:
             self._credentials.refresh(self._request)
 
         auth_headers = [("authorization", f"Bearer {self._credentials.token}")]
         callback(auth_headers, None)
 
+
 credentials, project_id = google.auth.default()
 request = google.auth.transport.requests.Request()
 credentials.refresh(request)
-resource = Resource.create(attributes={
-    SERVICE_NAME: "otlp-gcp-grpc-sample"
-})
+resource = Resource.create(attributes={SERVICE_NAME: "otlp-gcp-grpc-sample"})
 
-auth_metadata_plugin = AutoRefreshAuthMetadataPlugin(credentials=credentials, request=request)
-channel_creds = grpc.composite_channel_credentials(grpc.ssl_channel_credentials(),
-                                                   grpc.metadata_call_credentials(auth_metadata_plugin))
+auth_metadata_plugin = AutoRefreshAuthMetadataPlugin(
+    credentials=credentials, request=request
+)
+channel_creds = grpc.composite_channel_credentials(
+    grpc.ssl_channel_credentials(),
+    grpc.metadata_call_credentials(auth_metadata_plugin),
+)
 
 trace_provider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(credentials=channel_creds, insecure=False, headers={
-    "x-goog-user-project": credentials.quota_project_id,
-}))
+processor = BatchSpanProcessor(
+    OTLPSpanExporter(
+        credentials=channel_creds,
+        insecure=False,
+        headers={
+            "x-goog-user-project": credentials.quota_project_id,
+        },
+    )
+)
 trace_provider.add_span_processor(processor)
 trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer("my.tracer.name")
+
 
 def do_work():
     with tracer.start_as_current_span("span-grpc") as span:
         # do some work that 'span' will track
         print("doing some work...")
         # When the 'with' block goes out of scope, 'span' is closed for you
+
 
 def do_work_repeatedly():
     try:
@@ -78,5 +92,6 @@ def do_work_repeatedly():
             time.sleep(10)
     except KeyboardInterrupt:
         print("\nKeyboard Interrupt: Stopping work.")
+
 
 do_work_repeatedly()
