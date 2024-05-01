@@ -30,8 +30,11 @@ req_headers = {
     "x-goog-user-project": credentials.quota_project_id,
     "Authorization": "Bearer " + credentials.token,
 }
+resource = Resource.create(attributes={
+    SERVICE_NAME: "otlp-gcp-http-sample"
+})
 
-trace_provider = TracerProvider()
+trace_provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(OTLPSpanExporter(headers=req_headers))
 trace_provider.add_span_processor(processor)
 trace.set_tracer_provider(trace_provider)
