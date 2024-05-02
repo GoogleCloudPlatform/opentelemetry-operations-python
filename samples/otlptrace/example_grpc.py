@@ -46,7 +46,7 @@ channel_creds = grpc.composite_channel_credentials(
 
 trace_provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(
-    OTLPSpanExporter(credentials=channel_creds, insecure=False)
+    OTLPSpanExporter(credentials=channel_creds)
 )
 trace_provider.add_span_processor(processor)
 trace.set_tracer_provider(trace_provider)
