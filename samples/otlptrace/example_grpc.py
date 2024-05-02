@@ -32,10 +32,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 This is a sample script that exports OTLP traces encoded as protobufs via gRPC. 
 """
 
-
 credentials, project_id = google.auth.default()
 request = google.auth.transport.requests.Request()
-credentials.refresh(request)
 resource = Resource.create(attributes={SERVICE_NAME: "otlp-gcp-grpc-sample"})
 
 auth_metadata_plugin = AuthMetadataPlugin(
