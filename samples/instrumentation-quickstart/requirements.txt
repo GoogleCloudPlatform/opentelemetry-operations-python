@@ -1,0 +1,3 @@
+# Dependencies require for the instrumentation sample
+flask==3.0.2
+requests==2.31.0
