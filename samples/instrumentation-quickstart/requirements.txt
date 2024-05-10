@@ -1,3 +1,4 @@
 # Dependencies require for the instrumentation sample
 flask==3.0.2
 requests==2.31.0
+opentelemetry-instrumentation-flask==0.45b0

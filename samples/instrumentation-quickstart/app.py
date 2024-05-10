@@ -14,14 +14,14 @@
 
 from random import randint, uniform
 from flask import Flask, url_for
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 import requests
 import time
 
 app = Flask(__name__)
+FlaskInstrumentor().instrument_app(app)
 
 # TODO: change the logging format to conform to GCP requirements
-# TODO: Add manual metric instrumentation
-# TODO: Add manual trace instrumentation
 
 @app.route('/multi')
 def multi():
