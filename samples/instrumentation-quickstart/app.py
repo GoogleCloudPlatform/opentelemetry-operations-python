@@ -15,6 +15,9 @@
 from random import randint, uniform
 import time
 
+import logging
+from pythonjsonlogger import jsonlogger
+
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
@@ -31,6 +34,21 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from flask import Flask, url_for
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
+# TODO: log span context using GCP keys
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter(
+    "%(asctime)s %(levelname)s %(message)s",
+    rename_fields={"levelname": "severity", "asctime": "timestamp"},
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+)
+logHandler.setFormatter(formatter)
+logger.addHandler(logHandler)
+# disable logging from Flask until we use Gunicorn
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
 traceProvider = TracerProvider()
 processor = BatchSpanProcessor(OTLPSpanExporter())
 traceProvider.add_span_processor(processor)
@@ -46,12 +64,11 @@ app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
-# TODO: change the logging format to conform to GCP requirements
-
 @app.route('/multi')
 def multi():
-    # TODO: add info log line here
-    for _ in range(randint(3, 7)):
+    subRequests = randint(3, 7)
+    logger.info("handle /multi request", extra={'subRequests': subRequests})
+    for _ in range(subRequests):
         requests.get(url_for('single', _external=True))
     return 'ok'
 
