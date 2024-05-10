@@ -6,4 +6,5 @@ opentelemetry-sdk==1.24.0
 opentelemetry-exporter-otlp-proto-http==1.24.0
 opentelemetry-instrumentation-flask==0.45b0
 opentelemetry-instrumentation-requests==0.45b0
+opentelemetry-instrumentation-logging==0.45b0
 python-json-logger==2.0.7

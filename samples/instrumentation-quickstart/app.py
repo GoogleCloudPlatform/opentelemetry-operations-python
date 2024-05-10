@@ -17,6 +17,7 @@ import time
 
 import logging
 from pythonjsonlogger import jsonlogger
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -34,14 +35,20 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from flask import Flask, url_for
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
-# TODO: log span context using GCP keys
+LoggingInstrumentor().instrument()
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logHandler = logging.StreamHandler()
 formatter = jsonlogger.JsonFormatter(
-    "%(asctime)s %(levelname)s %(message)s",
-    rename_fields={"levelname": "severity", "asctime": "timestamp"},
+    "%(asctime)s %(levelname)s %(message)s %(otelTraceID)s %(otelSpanID)s %(otelTraceSampled)s",
+    rename_fields={
+        "levelname": "severity",
+        "asctime": "timestamp",
+        "otelTraceID": "logging.googleapis.com/trace",
+        "otelSpanID": "logging.googleapis.com/spanId",
+        "otelTraceSampled": "logging.googleapis.com/trace_sampled",
+        },
     datefmt="%Y-%m-%dT%H:%M:%SZ",
 )
 logHandler.setFormatter(formatter)
