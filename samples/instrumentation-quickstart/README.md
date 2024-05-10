@@ -29,7 +29,7 @@ following roles to run the example:
 
 ```sh
 git clone https://github.com/GoogleCloudPlatform/opentelemetry-operations-python.git
-cd opentelemetry-operations-python/examples/instrumentation-quickstart
+cd opentelemetry-operations-python/samples/instrumentation-quickstart
 docker compose up --abort-on-container-exit
 ```
 
@@ -69,7 +69,7 @@ Then run the example:
 
 ```sh
 git clone https://github.com/GoogleCloudPlatform/opentelemetry-operations-python.git
-cd opentelemetry-operations-python/examples/instrumentation-quickstart
+cd opentelemetry-operations-python/samples/instrumentation-quickstart
 
 # Lets collector read mounted config
 export USERID="$(id -u)"

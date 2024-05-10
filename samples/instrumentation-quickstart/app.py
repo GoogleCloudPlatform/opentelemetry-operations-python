@@ -34,4 +34,4 @@ def multi():
 def single():
     duration = uniform(0.1, 0.2)
     time.sleep(duration)
-    return 'slept ' + str(duration) + ' seconds'
+    return f'slept {duration} seconds'
