@@ -1,3 +1,8 @@
 # Dependencies require for the instrumentation sample
 flask==3.0.2
 requests==2.31.0
+opentelemetry-api==1.24.0
+opentelemetry-sdk==1.24.0
+opentelemetry-exporter-otlp-proto-http==1.24.0
+opentelemetry-instrumentation-flask==0.45b0
+opentelemetry-instrumentation-requests==0.45b0
