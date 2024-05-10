@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from random import randint, uniform
-import requests
 import time
 
 from opentelemetry import trace
@@ -25,6 +24,9 @@ from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+import requests
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from flask import Flask, url_for
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
@@ -42,10 +44,9 @@ metrics.set_meter_provider(meterProvider)
 
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
+RequestsInstrumentor().instrument()
 
 # TODO: change the logging format to conform to GCP requirements
-# TODO: figure out how to get exemplars on metrics
-# TODO: Connect multi and single spans using context propagation
 
 @app.route('/multi')
 def multi():
