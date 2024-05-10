@@ -17,7 +17,7 @@ from flask import Flask, url_for
 import requests
 import time
 
-app = Flask(__name__, static_folder=None)
+app = Flask(__name__)
 
 # TODO: change the logging format to conform to GCP requirements
 # TODO: Add manual metric instrumentation
