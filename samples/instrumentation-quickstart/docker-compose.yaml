@@ -19,7 +19,6 @@ services:
     build: .
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4318
-      - OTEL_SERVICE_NAME=otel-quickstart-python
     volumes:
       - logs:/var/log:rw
     depends_on:

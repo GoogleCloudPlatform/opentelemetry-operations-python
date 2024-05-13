@@ -98,14 +98,14 @@ processors:
     send_batch_max_size: 500
     send_batch_size: 500
     timeout: 1s
-  # Make sure Google Managed service for Prometheus required labels are set
+  # Provide defaults for Google Managed Service for Prometheus labels
   resource:
     attributes:
-      - { key: "location", value: "us-central1", action: "upsert" }
-      - { key: "cluster", value: "no-cluster", action: "upsert" }
-      - { key: "namespace", value: "no-namespace", action: "upsert" }
-      - { key: "job", value: "us-job", action: "upsert" }
-      - { key: "instance", value: "us-instance", action: "upsert" }
+      - { key: "cloud.region", value: "us-central1", action: "insert" }
+      - { key: "k8s.cluster.name", value: "no-cluster", action: "insert" }
+      - { key: "k8s.namespace.name", value: "no-namespace", action: "insert" }
+      - { key: "service.name", value: "us-job", action: "insert" }
+      - { key: "service.instance.id", value: "us-instance", action: "insert" }
   # If running on GCP (e.g. on GKE), detect resource attributes from the environment.
   resourcedetection:
     detectors: ["env", "gcp"]
