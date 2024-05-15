@@ -34,6 +34,7 @@ RequestsInstrumentor().instrument()
 # [START opentelemetry_instrumentation_handle_multi]
 @app.route('/multi')
 def multi():
+    """Handle an http request by making 3-7 http requests to the /single endpoint."""
     subRequests = randint(3, 7)
     logger.info("handle /multi request", extra={'subRequests': subRequests})
     for _ in range(subRequests):
@@ -44,6 +45,7 @@ def multi():
 # [START opentelemetry_instrumentation_handle_single]
 @app.route('/single')
 def single():
+    """Handle an http request by sleeping for 100-200 ms, and write the number of seconds slept as the response."""
     duration = uniform(0.1, 0.2)
     time.sleep(duration)
     return f'slept {duration} seconds'
