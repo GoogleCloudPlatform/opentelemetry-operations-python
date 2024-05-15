@@ -13,83 +13,40 @@
 # limitations under the License.
 
 from random import randint, uniform
-import os
 import time
-
 import logging
-from pythonjsonlogger import jsonlogger
-from opentelemetry.instrumentation.logging import LoggingInstrumentor
-
-from opentelemetry.sdk.resources import SERVICE_INSTANCE_ID, SERVICE_NAME, Resource
-
-from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-from opentelemetry import metrics
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-
 import requests
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
-
 from flask import Flask, url_for
+import setup_opentelemetry
+import gcp_logging
+
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
-LoggingInstrumentor().instrument()
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logHandler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter(
-    "%(asctime)s %(levelname)s %(message)s %(otelTraceID)s %(otelSpanID)s %(otelTraceSampled)s",
-    rename_fields={
-        "levelname": "severity",
-        "asctime": "timestamp",
-        "otelTraceID": "logging.googleapis.com/trace",
-        "otelSpanID": "logging.googleapis.com/spanId",
-        "otelTraceSampled": "logging.googleapis.com/trace_sampled",
-        },
-    datefmt="%Y-%m-%dT%H:%M:%SZ",
-)
-logHandler.setFormatter(formatter)
-logger.addHandler(logHandler)
-# disable logging from Flask until we use Gunicorn
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
-
-resource = Resource.create(attributes={
-    # Use the PID as the service.instance.id to avoid duplicate timeseries
-    # from different Gunicorn worker processes.
-    SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
-})
-
-traceProvider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter())
-traceProvider.add_span_processor(processor)
-trace.set_tracer_provider(traceProvider)
-
-reader = PeriodicExportingMetricReader(
-    OTLPMetricExporter()
-)
-meterProvider = MeterProvider(metric_readers=[reader], resource=resource)
-metrics.set_meter_provider(meterProvider)
+# [START opentelemetry_instrumentation_main]
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
+# [END opentelemetry_instrumentation_main]
 
+# [START opentelemetry_instrumentation_handle_multi]
 @app.route('/multi')
 def multi():
+    """Handle an http request by making 3-7 http requests to the /single endpoint."""
     subRequests = randint(3, 7)
     logger.info("handle /multi request", extra={'subRequests': subRequests})
     for _ in range(subRequests):
         requests.get(url_for('single', _external=True))
     return 'ok'
+# [END opentelemetry_instrumentation_handle_multi]
 
+# [START opentelemetry_instrumentation_handle_single]
 @app.route('/single')
 def single():
+    """Handle an http request by sleeping for 100-200 ms, and write the number of seconds slept as the response."""
     duration = uniform(0.1, 0.2)
     time.sleep(duration)
     return f'slept {duration} seconds'
+# [END opentelemetry_instrumentation_handle_single]
