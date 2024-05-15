@@ -13,11 +13,14 @@
 # limitations under the License.
 
 from random import randint, uniform
+import os
 import time
 
 import logging
 from pythonjsonlogger import jsonlogger
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
+from opentelemetry.sdk.resources import SERVICE_INSTANCE_ID, SERVICE_NAME, Resource
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -56,7 +59,13 @@ logger.addHandler(logHandler)
 # disable logging from Flask until we use Gunicorn
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-traceProvider = TracerProvider()
+resource = Resource.create(attributes={
+    # Use the PID as the service.instance.id to avoid duplicate timeseries
+    # from different Gunicorn worker processes.
+    SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
+})
+
+traceProvider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(OTLPSpanExporter())
 traceProvider.add_span_processor(processor)
 trace.set_tracer_provider(traceProvider)
@@ -64,7 +73,7 @@ trace.set_tracer_provider(traceProvider)
 reader = PeriodicExportingMetricReader(
     OTLPMetricExporter()
 )
-meterProvider = MeterProvider(metric_readers=[reader])
+meterProvider = MeterProvider(metric_readers=[reader], resource=resource)
 metrics.set_meter_provider(meterProvider)
 
 app = Flask(__name__)
