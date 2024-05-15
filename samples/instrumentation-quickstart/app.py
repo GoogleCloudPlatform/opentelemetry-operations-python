@@ -62,8 +62,7 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 resource = Resource.create(attributes={
     # Use the PID as the service.instance.id to avoid duplicate timeseries
     # from different Gunicorn worker processes.
-    SERVICE_INSTANCE_ID: f"worker-{os.getpid()}"
-    SERVICE_NAME: "otel-quickstart-python",
+    SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
 })
 
 traceProvider = TracerProvider(resource=resource)
