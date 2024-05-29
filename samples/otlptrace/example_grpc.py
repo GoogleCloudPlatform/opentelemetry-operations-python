@@ -13,37 +13,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
+
 import google.auth
+import google.auth.transport.grpc
 import google.auth.transport.requests
-from google.auth.transport.requests import AuthorizedSession
+import grpc
+from google.auth.transport.grpc import AuthMetadataPlugin
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
+"""
+This is a sample script that exports OTLP traces encoded as protobufs via gRPC. 
+"""
+
 credentials, project_id = google.auth.default()
 request = google.auth.transport.requests.Request()
-credentials.refresh(request)
-req_headers = {
-    "x-goog-user-project": credentials.quota_project_id,
-    "Authorization": "Bearer " + credentials.token,
-}
+resource = Resource.create(attributes={SERVICE_NAME: "otlp-gcp-grpc-sample"})
 
-trace_provider = TracerProvider()
-processor = BatchSpanProcessor(OTLPSpanExporter(headers=req_headers))
+auth_metadata_plugin = AuthMetadataPlugin(
+    credentials=credentials, request=request
+)
+channel_creds = grpc.composite_channel_credentials(
+    grpc.ssl_channel_credentials(),
+    grpc.metadata_call_credentials(auth_metadata_plugin),
+)
+
+trace_provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(credentials=channel_creds))
 trace_provider.add_span_processor(processor)
 trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer("my.tracer.name")
 
 
 def do_work():
-    with tracer.start_as_current_span("span-name") as span:
+    with tracer.start_as_current_span("span-grpc") as span:
         # do some work that 'span' will track
         print("doing some work...")
         # When the 'with' block goes out of scope, 'span' is closed for you
 
 
-do_work()
+def do_work_repeatedly():
+    try:
+        while True:
+            do_work()
+            time.sleep(10)
+    except KeyboardInterrupt:
+        print("\nKeyboard Interrupt: Stopping work.")
+
+
+do_work_repeatedly()
