@@ -56,9 +56,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def setUp(self):
         self.patchers = [
             mock.patch(
-                "opentelemetry.exporter.cloud_trace.TraceServiceClient"
+                "opentelemetry.exporter.cloud_trace._create_default_client"
             ),
-            mock.patch.object(TraceServiceGrpcTransport, "create_channel"),
         ]
         for patcher in self.patchers:
             patcher.start()
