@@ -1,0 +1,5 @@
+-e ../../../opentelemetry-exporter-gcp-monitoring
+-e ../../../opentelemetry-exporter-gcp-trace
+-e ../../../opentelemetry-resourcedetector-gcp
+opentelemetry-api
+opentelemetry-sdk
