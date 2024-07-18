@@ -21,7 +21,9 @@ from unittest.mock import patch
 
 import grpc
 import pytest
-from google.api.metric_pb2 import MetricDescriptor
+from google.api.metric_pb2 import (  # pylint: disable=no-name-in-module
+    MetricDescriptor,
+)
 from google.cloud.monitoring_v3 import (
     CreateMetricDescriptorRequest,
     CreateTimeSeriesRequest,
