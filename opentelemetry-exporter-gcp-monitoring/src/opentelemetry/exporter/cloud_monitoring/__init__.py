@@ -19,11 +19,21 @@ from time import time_ns
 from typing import Dict, List, NoReturn, Optional, Set, Union
 
 import google.auth
-from google.api.distribution_pb2 import Distribution
-from google.api.label_pb2 import LabelDescriptor
+from google.api.distribution_pb2 import (  # pylint: disable=no-name-in-module
+    Distribution,
+)
+from google.api.label_pb2 import (  # pylint: disable=no-name-in-module
+    LabelDescriptor,
+)
+
+# pylint: disable=no-name-in-module
 from google.api.metric_pb2 import Metric as GMetric
-from google.api.metric_pb2 import MetricDescriptor
-from google.api.monitored_resource_pb2 import MonitoredResource
+from google.api.metric_pb2 import (  # pylint: disable=no-name-in-module
+    MetricDescriptor,
+)
+from google.api.monitored_resource_pb2 import (  # pylint: disable=no-name-in-module
+    MonitoredResource,
+)
 from google.cloud.monitoring_v3 import (
     CreateMetricDescriptorRequest,
     CreateTimeSeriesRequest,

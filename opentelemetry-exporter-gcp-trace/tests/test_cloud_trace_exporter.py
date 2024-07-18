@@ -16,14 +16,11 @@ import re
 import unittest
 from unittest import mock
 
-from google.cloud.trace_v2.services.trace_service.transports import (
-    TraceServiceGrpcTransport,
-)
 from google.cloud.trace_v2.types import AttributeValue, BatchWriteSpansRequest
 from google.cloud.trace_v2.types import Span as ProtoSpan
 from google.cloud.trace_v2.types import TruncatableString
 from google.rpc import code_pb2
-from google.rpc.status_pb2 import Status
+from google.rpc.status_pb2 import Status  # pylint: disable=no-name-in-module
 from opentelemetry.exporter.cloud_trace import (
     MAX_EVENT_ATTRS,
     MAX_LINK_ATTRS,
@@ -56,9 +53,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def setUp(self):
         self.patchers = [
             mock.patch(
-                "opentelemetry.exporter.cloud_trace.TraceServiceClient"
+                "opentelemetry.exporter.cloud_trace._create_default_client"
             ),
-            mock.patch.object(TraceServiceGrpcTransport, "create_channel"),
         ]
         for patcher in self.patchers:
             patcher.start()
