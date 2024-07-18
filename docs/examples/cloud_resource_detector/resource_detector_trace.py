@@ -17,23 +17,26 @@ from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.resources import get_aggregated_resources
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.resourcedetector.gcp_resource_detector import (
+    GoogleCloudResourceDetector,
+)
 
-# MUST be run on a Google tool!
-# Detect resources from the environment
-resources = get_aggregated_resources(
+resource = get_aggregated_resources(
     [GoogleCloudResourceDetector(raise_on_error=True)]
 )
 
 # Pass the detected resources to the provider, which will in turn pass it to all
 # created spans
-trace.set_tracer_provider(TracerProvider(resource=resources))
+trace.set_tracer_provider(TracerProvider(resource=resource))
 
 # Cloud Trace exporter will automatically format these resources and export
-cloud_trace_exporter = CloudTraceSpanExporter()
+cloud_trace_exporter = CloudTraceSpanExporter(
+    # send all resource attributes
+    resource_regex=r".*"
+)
 trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(cloud_trace_exporter)
+    BatchSpanProcessor(cloud_trace_exporter)
 )
 tracer = trace.get_tracer(__name__)
 with tracer.start_as_current_span("foo"):

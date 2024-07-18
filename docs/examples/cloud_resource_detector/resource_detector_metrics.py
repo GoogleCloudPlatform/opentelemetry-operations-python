@@ -19,27 +19,32 @@ from opentelemetry import metrics
 from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import get_aggregated_resources
-from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
+from opentelemetry.resourcedetector.gcp_resource_detector import (
+    GoogleCloudResourceDetector,
+)
 
-# MUST be run on a Google tool!
-# Detect resources from the environment
-resources = get_aggregated_resources(
+resource = get_aggregated_resources(
     [GoogleCloudResourceDetector(raise_on_error=True)]
 )
 
-metrics.set_meter_provider(MeterProvider(resource=resources))
-meter = metrics.get_meter(__name__)
-metrics.get_meter_provider().start_pipeline(
-    meter, CloudMonitoringMetricsExporter(), 5
+meter_provider = MeterProvider(
+    resource=resource,
+    metric_readers=[
+        PeriodicExportingMetricReader(
+            CloudMonitoringMetricsExporter(), export_interval_millis=5000
+        )
+    ],
 )
+metrics.set_meter_provider(meter_provider)
+meter = metrics.get_meter(__name__)
 
 requests_counter = meter.create_counter(
     name="request_counter_with_resource",
     description="number of requests",
     unit="1",
-    value_type=int,
 )
 
 staging_labels = {"environment": "staging"}
