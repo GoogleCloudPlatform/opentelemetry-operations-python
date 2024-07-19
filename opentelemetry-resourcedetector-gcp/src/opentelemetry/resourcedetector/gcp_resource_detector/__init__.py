@@ -31,7 +31,9 @@ logger = logging.getLogger(__name__)
 def _get_google_metadata_and_common_attributes():
     token = attach(set_value("suppress_instrumentation", True))
     all_metadata = requests.get(
-        _GCP_METADATA_URL, headers=_GCP_METADATA_URL_HEADER, timeout=_TIMEOUT_SEC
+        _GCP_METADATA_URL,
+        headers=_GCP_METADATA_URL_HEADER,
+        timeout=_TIMEOUT_SEC,
     ).json()
     detach(token)
     common_attributes = {
