@@ -34,13 +34,13 @@ class Project(TypedDict):
 
 
 Attributes = TypedDict(
-    "Attributes", {"cluster-location": str, "cluster-name": str}
+    "Attributes", {"cluster-location": str, "cluster-name": str}, total=False
 )
 
 
 class Instance(TypedDict):
     attributes: Attributes
-    id: str
+    id: int
     machineType: str
     name: str
     zone: str

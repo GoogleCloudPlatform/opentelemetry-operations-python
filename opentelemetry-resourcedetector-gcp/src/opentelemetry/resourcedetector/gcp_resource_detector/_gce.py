@@ -45,7 +45,7 @@ def host_type() -> str:
 
 
 def host_id() -> str:
-    return _metadata.get_metadata()["instance"]["id"]
+    return str(_metadata.get_metadata()["instance"]["id"])
 
 
 def host_name() -> str:
