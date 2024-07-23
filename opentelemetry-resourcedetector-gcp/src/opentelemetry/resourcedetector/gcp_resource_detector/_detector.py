@@ -15,6 +15,7 @@
 from typing import Mapping
 
 from opentelemetry.resourcedetector.gcp_resource_detector import (
+    _faas,
     _gce,
     _gke,
     _metadata,
@@ -33,6 +34,10 @@ class GoogleCloudResourceDetector(ResourceDetector):
 
         if _gke.on_gke():
             return _gke_resource()
+        if _faas.on_cloud_functions():
+            return _cloud_functions_resource()
+        if _faas.on_cloud_run():
+            return _cloud_run_resource()
         if _gce.on_gce():
             return _gce_resource()
 
@@ -66,6 +71,30 @@ def _gce_resource() -> Resource:
             ResourceAttributes.HOST_TYPE: _gce.host_type(),
             ResourceAttributes.HOST_ID: _gce.host_id(),
             ResourceAttributes.HOST_NAME: _gce.host_name(),
+        }
+    )
+
+
+def _cloud_run_resource() -> Resource:
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_CLOUD_RUN,
+            ResourceAttributes.FAAS_NAME: _faas.faas_name(),
+            ResourceAttributes.FAAS_VERSION: _faas.faas_version(),
+            ResourceAttributes.FAAS_INSTANCE: _faas.faas_instance(),
+            ResourceAttributes.CLOUD_REGION: _faas.faas_cloud_region(),
+        }
+    )
+
+
+def _cloud_functions_resource() -> Resource:
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_CLOUD_FUNCTIONS,
+            ResourceAttributes.FAAS_NAME: _faas.faas_name(),
+            ResourceAttributes.FAAS_VERSION: _faas.faas_version(),
+            ResourceAttributes.FAAS_INSTANCE: _faas.faas_instance(),
+            ResourceAttributes.CLOUD_REGION: _faas.faas_cloud_region(),
         }
     )
 

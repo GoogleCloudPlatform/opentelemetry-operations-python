@@ -45,6 +45,7 @@ class Instance(TypedDict):
     id: Union[int, str]
     machineType: str
     name: str
+    region: str
     zone: str
 
 
