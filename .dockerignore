@@ -3,3 +3,5 @@ docs/
 .tox
 **/venv/
 .mypy_cache/
+**/__pycache__/
+e2e-test-server/wheels/

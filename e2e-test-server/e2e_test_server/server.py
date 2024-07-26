@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import logging
 from typing import Literal
 
+from cloudevents.http.event import CloudEvent
+import functions_framework
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
 from google.rpc import code_pb2
@@ -168,3 +169,17 @@ def pubsub_push() -> None:
             return Response(status=400)
 
     serve(app, port=PUSH_PORT)
+
+
+@functions_framework.cloud_event
+def cloud_functions_handler(cloud_event: CloudEvent) -> None:
+    """Handles pub/sub push message on Cloud Functions"""
+    # cloud_event.data is of type MessagePublishedData, i.e. it contains the pub/sub message
+    # https://github.com/googleapis/google-cloudevents/blob/v2.1.6/proto/google/events/cloud/pubsub/v1/data.proto#L26
+    payload = types.PubsubPushPayload(**cloud_event.data)
+
+    ack_or_nack = handle_message(
+        payload.message.to_pubsub_message(), _Responder()
+    )
+    if ack_or_nack == "nack":
+        raise Exception("Nacking message")

@@ -1,0 +1,5 @@
+# Used for installing from the monorepo in the Dockerfile
+-r requirements-shared.txt
+../opentelemetry-exporter-gcp-trace
+../opentelemetry-propagator-gcp
+../opentelemetry-resourcedetector-gcp
