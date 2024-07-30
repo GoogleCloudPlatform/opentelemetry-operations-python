@@ -14,6 +14,7 @@
 
 import logging
 from functools import lru_cache
+from typing import Union
 
 import requests
 
@@ -40,7 +41,7 @@ Attributes = TypedDict(
 
 class Instance(TypedDict):
     attributes: Attributes
-    id: int
+    id: Union[int, str]
     machineType: str
     name: str
     zone: str
