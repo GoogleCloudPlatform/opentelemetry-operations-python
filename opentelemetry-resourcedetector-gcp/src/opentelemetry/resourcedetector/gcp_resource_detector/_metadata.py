@@ -14,6 +14,7 @@
 
 import logging
 from functools import lru_cache
+from typing import Union
 
 import requests
 
@@ -34,13 +35,14 @@ class Project(TypedDict):
 
 
 Attributes = TypedDict(
-    "Attributes", {"cluster-location": str, "cluster-name": str}
+    "Attributes", {"cluster-location": str, "cluster-name": str}, total=False
 )
 
 
 class Instance(TypedDict):
     attributes: Attributes
-    id: str
+    # id can be an integer on GCE VMs or a string on other environments
+    id: Union[int, str]
     machineType: str
     name: str
     zone: str

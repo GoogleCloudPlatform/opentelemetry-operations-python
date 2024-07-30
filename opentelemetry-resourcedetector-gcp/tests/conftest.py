@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from opentelemetry.resourcedetector.gcp_resource_detector import _metadata
@@ -24,9 +23,3 @@ def fixture_fake_get_metadata(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     mock = MagicMock()
     monkeypatch.setattr(_metadata, "get_metadata", mock)
     return mock
-
-
-@pytest.fixture(name="fake_environ")
-def fixture_fake_environ():
-    with patch.dict(os.environ, {}, clear=True):
-        yield

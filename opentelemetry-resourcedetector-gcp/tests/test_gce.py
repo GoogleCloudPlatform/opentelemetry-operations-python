@@ -24,7 +24,7 @@ from opentelemetry.resourcedetector.gcp_resource_detector import (
 # Reset stuff before every test
 # pylint: disable=unused-argument
 @pytest.fixture(autouse=True)
-def autouse(fake_get_metadata, fake_environ):
+def autouse(fake_get_metadata):
     pass
 
 
@@ -48,8 +48,8 @@ def test_detects_host_type(fake_get_metadata: MagicMock) -> None:
 
 
 def test_detects_host_id(fake_get_metadata: MagicMock) -> None:
-    fake_get_metadata.return_value = {"instance": {"id": "fake"}}
-    assert _gce.host_id() == "fake"
+    fake_get_metadata.return_value = {"instance": {"id": 12345}}
+    assert _gce.host_id() == "12345"
 
 
 def test_detects_host_name(fake_get_metadata: MagicMock) -> None:

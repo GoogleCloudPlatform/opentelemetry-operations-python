@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from unittest.mock import Mock
 
 import pytest
@@ -47,7 +46,7 @@ def fixture_fake_metadata(fake_get: Mock):
 # Reset stuff before every test
 # pylint: disable=unused-argument
 @pytest.fixture(autouse=True)
-def autouse(reset_cache, fake_get, fake_metadata, fake_environ):
+def autouse(reset_cache, fake_get, fake_metadata):
     pass
 
 
@@ -66,9 +65,10 @@ def test_detects_gce(snapshot, fake_metadata: _metadata.Metadata):
             "project": {"projectId": "fakeProject"},
             "instance": {
                 "name": "fakeName",
-                "id": "fakeId",
+                "id": 12345,
                 "machineType": "fakeMachineType",
                 "zone": "projects/233510669999/zones/us-east4-b",
+                "attributes": {},
             },
         }
     )
@@ -84,16 +84,18 @@ def test_detects_gce(snapshot, fake_metadata: _metadata.Metadata):
     ),
 )
 def test_detects_gke(
-    cluster_location: str, snapshot, fake_metadata: _metadata.Metadata
+    cluster_location: str,
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
 ):
-    os.environ["KUBERNETES_SERVICE_HOST"] = "fakehost"
+    monkeypatch.setenv("KUBERNETES_SERVICE_HOST", "fakehost")
     fake_metadata.update(
-        # All the same attributes as GCE
         {
             "project": {"projectId": "fakeProject"},
             "instance": {
                 "name": "fakeName",
-                "id": "fakeId",
+                "id": 12345,
                 "machineType": "fakeMachineType",
                 "zone": "projects/233510669999/zones/us-east4-b",
                 # Plus some attributes
