@@ -41,6 +41,7 @@ Attributes = TypedDict(
 
 class Instance(TypedDict):
     attributes: Attributes
+    # id can be an integer on GCE VMs or a string on other environments
     id: Union[int, str]
     machineType: str
     name: str
