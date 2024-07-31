@@ -137,14 +137,6 @@ def basic_propagator(request: Request) -> Response:
 
 def detect_resource(request: Request) -> Response:
     """Create a trace with GCP resource detector"""
-
-    # Temporarily skip if on Cloud Run until it is implemented
-    if "K_CONFIGURATION" in os.environ:
-        return Response(
-            status_code=code_pb2.UNIMPLEMENTED,
-            data=b"Resource detection not yet implemented on Cloud Run",
-        )
-
     with _tracer_setup(
         tracer_provider_config={
             "resource": GoogleCloudResourceDetector(
