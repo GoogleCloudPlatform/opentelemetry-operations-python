@@ -1,0 +1,10 @@
+# Shared by all requirements files
+-c constraints.txt
+opentelemetry-sdk
+opentelemetry-api
+Flask
+google-cloud-pubsub
+googleapis-common-protos
+pydantic
+waitress
+functions-framework

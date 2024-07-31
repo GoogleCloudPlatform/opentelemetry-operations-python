@@ -15,12 +15,11 @@
 import enum
 import os
 
-from pydantic import BaseModel
-
 
 class SubscriptionMode(enum.Enum):
     PULL = "pull"
     PUSH = "push"
+    UNDEFINED = None
 
 
 INSTRUMENTING_MODULE_NAME = "opentelemetry-ops-e2e-test-server"
@@ -29,10 +28,10 @@ STATUS_CODE = "status_code"
 TEST_ID = "test_id"
 TRACE_ID = "trace_id"
 SUBSCRIPTION_MODE: SubscriptionMode = SubscriptionMode(
-    os.environ["SUBSCRIPTION_MODE"]
+    os.environ.get("SUBSCRIPTION_MODE")
 )
 PROJECT_ID = os.environ["PROJECT_ID"]
-REQUEST_SUBSCRIPTION_NAME = os.environ["REQUEST_SUBSCRIPTION_NAME"]
+REQUEST_SUBSCRIPTION_NAME = os.environ.get("REQUEST_SUBSCRIPTION_NAME")
 RESPONSE_TOPIC_NAME = os.environ["RESPONSE_TOPIC_NAME"]
 PUSH_PORT = (
     os.environ["PUSH_PORT"]
