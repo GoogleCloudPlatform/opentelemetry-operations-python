@@ -65,7 +65,7 @@ def test_detects_gce(snapshot, fake_metadata: _metadata.Metadata):
             "project": {"projectId": "fakeProject"},
             "instance": {
                 "name": "fakeName",
-                "id": 12345,
+                "id": "0087244a",
                 "machineType": "fakeMachineType",
                 "zone": "projects/233510669999/zones/us-east4-b",
                 "attributes": {},
@@ -103,6 +103,53 @@ def test_detects_gke(
                     "cluster-name": "fakeClusterName",
                     "cluster-location": cluster_location,
                 },
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_cloud_run(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("K_CONFIGURATION", "fake-configuration")
+    monkeypatch.setenv("K_SERVICE", "fake-service")
+    monkeypatch.setenv("K_REVISION", "fake-revision")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                # this will not be numeric on FaaS
+                "id": "0087244a",
+                "region": "projects/233510669999/regions/us-east4",
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_cloud_functions(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("FUNCTION_TARGET", "fake-function-target")
+    # Note all K_* environment variables are set since Cloud Functions executes within Cloud
+    # Run. This tests that the detector can differentiate between them
+    monkeypatch.setenv("K_CONFIGURATION", "fake-configuration")
+    monkeypatch.setenv("K_SERVICE", "fake-service")
+    monkeypatch.setenv("K_REVISION", "fake-revision")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                # this will not be numeric on FaaS
+                "id": "0087244a",
+                "region": "projects/233510669999/regions/us-east4",
             },
         }
     )
