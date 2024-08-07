@@ -154,6 +154,18 @@ def pubsub_push() -> None:
     app = Flask(__name__)
     responder = _Responder()
 
+    # Health checks for GAE. See:
+    # https://cloud.google.com/appengine/docs/flexible/reference/app-yaml#updated_health_checks
+    # https://github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/blob/v0.16.0/tf/gae/gae.tf#L32-L38
+    @app.route("/alive")
+    def alive() -> Response:
+        return Response(status=200)
+
+    @app.route("/ready")
+    def ready() -> Response:
+        return Response(status=200)
+
+    # Actual pub/sub handler
     @app.route("/", methods=["POST"])
     def index() -> Response:
         if not request.is_json:
