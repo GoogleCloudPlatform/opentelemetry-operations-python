@@ -16,6 +16,7 @@ from typing import Mapping
 
 from opentelemetry.resourcedetector.gcp_resource_detector import (
     _faas,
+    _gae,
     _gce,
     _gke,
     _metadata,
@@ -29,6 +30,7 @@ from opentelemetry.util.types import AttributeValue
 
 class GoogleCloudResourceDetector(ResourceDetector):
     def detect(self) -> Resource:
+        # pylint: disable=too-many-return-statements
         if not _metadata.is_available():
             return Resource.get_empty()
 
@@ -38,6 +40,8 @@ class GoogleCloudResourceDetector(ResourceDetector):
             return _cloud_functions_resource()
         if _faas.on_cloud_run():
             return _cloud_run_resource()
+        if _gae.on_app_engine():
+            return _gae_resource()
         if _gce.on_gce():
             return _gce_resource()
 
@@ -95,6 +99,31 @@ def _cloud_functions_resource() -> Resource:
             ResourceAttributes.FAAS_VERSION: _faas.faas_version(),
             ResourceAttributes.FAAS_INSTANCE: _faas.faas_instance(),
             ResourceAttributes.CLOUD_REGION: _faas.faas_cloud_region(),
+        }
+    )
+
+
+def _gae_resource() -> Resource:
+    if _gae.on_app_engine_standard():
+        zone = _gae.standard_availability_zone()
+        region = _gae.standard_cloud_region()
+    else:
+        zone_and_region = _gae.flex_availability_zone_and_region()
+        zone = zone_and_region.zone
+        region = zone_and_region.region
+
+    faas_name = _gae.service_name()
+    faas_version = _gae.service_version()
+    faas_instance = _gae.service_instance()
+
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_APP_ENGINE,
+            ResourceAttributes.FAAS_NAME: faas_name,
+            ResourceAttributes.FAAS_VERSION: faas_version,
+            ResourceAttributes.FAAS_INSTANCE: faas_instance,
+            ResourceAttributes.CLOUD_AVAILABILITY_ZONE: zone,
+            ResourceAttributes.CLOUD_REGION: region,
         }
     )
 
