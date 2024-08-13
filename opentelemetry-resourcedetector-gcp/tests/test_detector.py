@@ -155,3 +155,45 @@ def test_detects_cloud_functions(
     )
 
     assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_gae_standard(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("GAE_ENV", "standard")
+    monkeypatch.setenv("GAE_SERVICE", "fake-service")
+    monkeypatch.setenv("GAE_VERSION", "fake-version")
+    monkeypatch.setenv("GAE_INSTANCE", "fake-instance")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                "region": "projects/233510669999/regions/us-east4",
+                "zone": "us-east4-b",
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_gae_flex(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("GAE_SERVICE", "fake-service")
+    monkeypatch.setenv("GAE_VERSION", "fake-version")
+    monkeypatch.setenv("GAE_INSTANCE", "fake-instance")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                "zone": "projects/233510669999/zones/us-east4-b",
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
