@@ -49,4 +49,4 @@ steps:
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:
   _TEST_SERVER_IMAGE: ${_TEST_SERVER_IMAGE_NAME}:${SHORT_SHA}
-  _TEST_SERVER_IMAGE_NAME: gcr.io/${PROJECT_ID}/opentelemetry-operations-python-e2e-test-server
+  _TEST_SERVER_IMAGE_NAME: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-python-e2e-test-server
