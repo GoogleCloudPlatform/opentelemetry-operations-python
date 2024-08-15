@@ -22,6 +22,12 @@ steps:
     args:
       - e2e-test-server/wait-for-image.sh
 
+  - name: "docker"
+    id: pull-image
+    args:
+      - pull
+      - $_TEST_SERVER_IMAGE
+
   # Run the test
   - name: $_TEST_RUNNER_IMAGE
     id: run-tests-local
