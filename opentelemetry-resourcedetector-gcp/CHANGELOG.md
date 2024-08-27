@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.7.0a0
+
+Released 2024-08-27
+
 - Implement GAE resource detection
   ([#351](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/351))
 - Implement Cloud Run and Cloud Functions faas resource detection
