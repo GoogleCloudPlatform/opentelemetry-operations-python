@@ -11,6 +11,13 @@ OpenTelemetry Google Cloud Propagator
 This library provides support for propagating trace context in the Google
 Cloud ``X-Cloud-Trace-Context`` format.
 
+To get started with instrumentation in Google Cloud, see `Generate traces and metrics with
+Python <https://cloud.google.com/stackdriver/docs/instrumentation/setup/python>`_.
+
+To learn more about instrumentation and observability, including opinionated recommendations
+for Google Cloud Observability, visit `Instrumentation and observability
+<https://cloud.google.com/stackdriver/docs/instrumentation/overview>`_.
+
 Installation
 ------------
 
