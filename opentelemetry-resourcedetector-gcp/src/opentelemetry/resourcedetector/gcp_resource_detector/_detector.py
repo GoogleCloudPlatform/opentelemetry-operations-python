@@ -129,7 +129,7 @@ def _gae_resource() -> Resource:
 
 
 def _make_resource(attrs: Mapping[str, AttributeValue]) -> Resource:
-    return Resource.create(
+    return Resource(
         {
             ResourceAttributes.CLOUD_PROVIDER: "gcp",
             ResourceAttributes.CLOUD_ACCOUNT_ID: _metadata.get_metadata()[
