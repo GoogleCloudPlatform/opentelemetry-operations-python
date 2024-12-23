@@ -9,7 +9,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         py:
@@ -19,6 +19,7 @@ jobs:
           - { version: "3.10", tox: "310" }
           - { version: "3.11", tox: "311" }
           - { version: "3.12", tox: "312" }
+          - { version: "3.13", tox: "313" }
     env:
       run-matrix-combo: ${{ matrix.py.version }}
 
@@ -44,7 +45,7 @@ jobs:
           -f py${{ matrix.py.tox }}-ci
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         target: [lint-ci, docs-ci, mypy-ci]
