@@ -29,6 +29,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 from opentelemetry.trace import SpanKind, Tracer, format_trace_id
+from opentelemetry.sdk.resources import get_aggregated_resources
 from pydantic import BaseModel
 
 from .constants import INSTRUMENTING_MODULE_NAME, PROJECT_ID, TEST_ID, TRACE_ID
@@ -59,9 +60,7 @@ def _tracer_setup(
     spans created during the test after.
     """
 
-    tracer_provider = TracerProvider(
-        sampler=ALWAYS_ON, **tracer_provider_config
-    )
+    tracer_provider = TracerProvider(sampler=ALWAYS_ON, **tracer_provider_config)
     tracer_provider.add_span_processor(
         BatchSpanProcessor(
             CloudTraceSpanExporter(project_id=PROJECT_ID, **exporter_config)
@@ -139,9 +138,9 @@ def detect_resource(request: Request) -> Response:
     """Create a trace with GCP resource detector"""
     with _tracer_setup(
         tracer_provider_config={
-            "resource": GoogleCloudResourceDetector(
-                raise_on_error=True
-            ).detect()
+            "resource": get_aggregated_resources(
+                [GoogleCloudResourceDetector(raise_on_error=True)]
+            )
         },
         exporter_config={"resource_regex": r".*"},
     ) as tracer:
