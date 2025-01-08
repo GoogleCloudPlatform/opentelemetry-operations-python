@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-
 - Use a shorter connection timeout for reading metadata
   ([#362](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/362))
+- Fix creation of resources in _detector
+  ([#366](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/366))
 
 ## Version 1.7.0a0
 
