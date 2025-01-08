@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.8.0a0
+
+Released 2025-01-08
+
 ## Version 1.7.0a0
 
 Released 2024-08-27
