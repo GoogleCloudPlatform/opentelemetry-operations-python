@@ -4,3 +4,4 @@ opentelemetry-sdk==1.24.0
 google-auth==2.18.1
 opentelemetry-exporter-otlp-proto-grpc==1.24.0
 grpcio==1.63.0
+opentelemetry-resourcedetector-gcp==1.8.0

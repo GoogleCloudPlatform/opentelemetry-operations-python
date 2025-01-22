@@ -21,8 +21,9 @@ gcloud auth application-default login
 #### Run the Sample
 ```sh
 # export necessary OTEL environment variables
-export OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=<project-id>"
+export PROJECT_ID=<project-id>
 export OTEL_EXPORTER_OTLP_ENDPOINT=<endpoint>
+export OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=$PROJECT_ID,service.name=otlp-sample,service.instance.id=1"
 
 # from the samples/otlpmetric repository
 python3 example.py
