@@ -1,0 +1,189 @@
+from opentelemetry.sdk._logs.export import LogExporter
+from opentelemetry.sdk._logs import LogData
+import google.auth
+import datetime
+from typing import Optional, Sequence
+import logging
+from google.logging.type.log_severity_pb2 import LogSeverity  # type: ignore
+from google.cloud.logging_v2.services.logging_service_v2 import LoggingServiceV2Client
+from google.cloud.logging_v2.services.logging_service_v2.transports.grpc import (
+    LoggingServiceV2GrpcTransport,
+)
+from google.cloud.logging_v2.types.log_entry import LogEntry
+from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
+    get_monitored_resource,
+)
+from google.api.monitored_resource_pb2 import (
+    MonitoredResource,  # type: ignore
+)
+from google.protobuf.timestamp_pb2 import Timestamp
+import urllib.parse
+from google.protobuf.struct_pb2 import Struct
+from opentelemetry.exporter.cloud_logging.version import __version__
+from opentelemetry.sdk import version as opentelemetry_sdk_version
+
+
+DEFAULT_MAX_ENTRY_SIZE = 256000  # 256 KB
+DEFAULT_MAX_REQUEST_SIZE = 10000000  # 10 MB
+
+HTTP_REQUEST_ATTRIBUTE_KEY = "gcp.http_request"
+LOG_NAME_ATTRIBUTE_KEY = "gcp.log_name"
+SOURCE_LOCATION_ATTRIBUTE_KEY = "gcp.source_location"
+TRACE_SAMPLED_ATTRIBUTE_KEY = "gcp.trace_sampled"
+PROJECT_ID_ATTRIBUTE_KEY = "gcp.project_id"
+_OTEL_SDK_VERSION = opentelemetry_sdk_version.__version__
+_USER_AGENT = f"opentelemetry-python {_OTEL_SDK_VERSION}; google-cloud-logging-exporter {__version__}"
+
+# Set user-agent metadata, see https://github.com/grpc/grpc/issues/23644 and default options
+# from
+# https://github.com/googleapis/python-logging/blob/5309478c054d0f2b9301817fd835f2098f51dc3a/google/cloud/logging_v2/services/logging_service_v2/transports/grpc.py#L179-L182
+_OPTIONS = [
+    ("grpc.max_send_message_length", -1),
+    ("grpc.max_receive_message_length", -1),
+    ("grpc.primary_user_agent", _USER_AGENT),
+]
+
+# severityMapping maps the integer severity level values from OTel [0-24]
+# to matching Cloud Logging severity levels.
+SEVERITY_MAPPING = {
+    0: LogSeverity.DEFAULT,  # Default, 0
+    1: LogSeverity.DEBUG,  #
+    2: LogSeverity.DEBUG,  #
+    3: LogSeverity.DEBUG,  #
+    4: LogSeverity.DEBUG,  #
+    5: LogSeverity.DEBUG,  #
+    6: LogSeverity.DEBUG,  #
+    7: LogSeverity.DEBUG,  #
+    8: LogSeverity.DEBUG,  # 1-8 -> Debug
+    9: LogSeverity.INFO,  #
+    10: LogSeverity.INFO,  # 9-10 -> Info
+    11: LogSeverity.NOTICE,  #
+    12: LogSeverity.NOTICE,  # 11-12 -> Notice
+    13: LogSeverity.WARNING,  #
+    14: LogSeverity.WARNING,  #
+    15: LogSeverity.WARNING,  #
+    16: LogSeverity.WARNING,  # 13-16 -> Warning
+    17: LogSeverity.ERROR,  #
+    18: LogSeverity.ERROR,  #
+    19: LogSeverity.ERROR,  #
+    20: LogSeverity.ERROR,  # 17-20 -> Error
+    21: LogSeverity.CRITICAL,  #
+    22: LogSeverity.CRITICAL,  # 21-22 -> Critical
+    23: LogSeverity.ALERT,  # 23 -> Alert
+    24: LogSeverity.EMERGENCY,  # 24 -> Emergency
+}
+
+
+class CloudLoggingExporter(LogExporter):
+    def __init__(
+        self,
+        project_id: Optional[str] = None,
+        default_log_name: Optional[str] = None,
+        client: Optional[LoggingServiceV2Client] = None,
+    ):
+        self.project_id: str
+        if not project_id:
+            _, default_project_id = google.auth.default()
+            self.project_id = str(default_project_id)
+        else:
+            self.project_id = project_id
+        self.default_log_name = default_log_name
+        self.client = client or LoggingServiceV2Client(
+            transport=LoggingServiceV2GrpcTransport(
+                channel=LoggingServiceV2GrpcTransport.create_channel(
+                    options=_OPTIONS,
+                )
+            )
+        )
+        self.service_resource_labels = True
+
+    def export(self, batch: Sequence[LogData]):
+        log_entries = []
+        for log_data in batch:
+            log_record = log_data.log_record
+            attributes = log_record.attributes or {}
+            project_id = self.project_id
+            if attributes.get(PROJECT_ID_ATTRIBUTE_KEY):
+                project_id = str(attributes.get(PROJECT_ID_ATTRIBUTE_KEY))
+            log_name = self.default_log_name
+            if attributes.get(LOG_NAME_ATTRIBUTE_KEY):
+                log_name = str(attributes.get(LOG_NAME_ATTRIBUTE_KEY))
+            if not log_name:
+                logging.warning(
+                    "No log name provided, cannot write log to Cloud Logging.  Set the 'default_log_name' option, or add the 'gcp.log_name' attribute to set a log name."
+                )
+                continue
+            monitored_resource_data = get_monitored_resource(log_record.resource)
+            # convert it to proto
+            monitored_resource = (
+                MonitoredResource(
+                    type=monitored_resource_data.type,
+                    labels=monitored_resource_data.labels,
+                )
+                if monitored_resource_data
+                else None
+            )
+            # if timestamp is unset, fall back to observed_time_unix_nano as recommended
+            #   (see https://github.com/open-telemetry/opentelemetry-proto/blob/4abbb78/opentelemetry/proto/logs/v1/logs.proto#L176-L179)
+            ts = Timestamp()
+            if log_record.timestamp or log_record.observed_timestamp:
+                ts.FromNanoseconds(
+                    log_record.timestamp or log_record.observed_timestamp
+                )
+            else:
+                ts.FromDatetime(datetime.datetime.now())
+            log_name = "projects/{}/logs/{}".format(
+                project_id, urllib.parse.quote_plus(log_name)
+            )
+            log_entry = LogEntry()
+            log_entry.timestamp = ts
+            log_entry.log_name = log_name
+            log_entry.resource = monitored_resource
+            attrs_map = {k: v for k, v in attributes.items()}
+            log_entry.trace_sampled = (
+                log_record.trace_flags is not None and log_record.trace_flags.sampled
+            )
+            if TRACE_SAMPLED_ATTRIBUTE_KEY in attrs_map:
+                log_entry.trace_sampled |= bool(attrs_map[TRACE_SAMPLED_ATTRIBUTE_KEY])
+                del attrs_map[TRACE_SAMPLED_ATTRIBUTE_KEY]
+            if log_record.trace_id:
+                log_entry.trace = "projects/{}/traces/{}".format(
+                    project_id, log_record.trace_id
+                )
+            if log_record.span_id:
+                log_entry.span_id = str(hex(log_record.span_id))[2:]
+            if log_record.severity_number in SEVERITY_MAPPING:
+                log_entry.severity = SEVERITY_MAPPING[log_record.severity_number]
+            log_entry.labels = {k: str(v) for k, v in attrs_map.items()}
+            if type(log_record.body) is dict:
+                s = Struct()
+                s.update(log_record.body)
+                log_entry.json_payload = s
+            log_entries.append(log_entry)
+
+        self._write_log_entries(log_entries)
+
+    def _write_log_entries(self, log_entries: list[LogEntry]):
+        batch = []
+        batch_byte_size = 0
+        for entry in log_entries:
+            msg_size = LogEntry.pb(entry).ByteSize()
+            if msg_size > DEFAULT_MAX_ENTRY_SIZE:
+                logging.warning(
+                    "Cannot write log that is {} bytes which exceeds Cloud Logging's maximum limit of {}.".format(
+                        msg_size, DEFAULT_MAX_ENTRY_SIZE
+                    )
+                )
+                continue
+            if msg_size + batch_byte_size > DEFAULT_MAX_REQUEST_SIZE:
+                self.client.write_log_entries(entries=batch)
+                batch = [entry]
+                batch_byte_size = msg_size
+            else:
+                batch.append(entry)
+                batch_byte_size += msg_size
+        if batch:
+            self.client.write_log_entries(entries=batch)
+
+    def shutdown(self):
+        pass
