@@ -7,10 +7,6 @@
     'faas.instance': '0087244a',
     'faas.name': 'fake-service',
     'faas.version': 'fake-revision',
-    'service.name': 'unknown_service',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.20.0',
   })
 # ---
 # name: test_detects_cloud_run
@@ -22,10 +18,6 @@
     'faas.instance': '0087244a',
     'faas.name': 'fake-service',
     'faas.version': 'fake-revision',
-    'service.name': 'unknown_service',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.20.0',
   })
 # ---
 # name: test_detects_empty_as_fallback
@@ -46,10 +38,6 @@
     'faas.instance': 'fake-instance',
     'faas.name': 'fake-service',
     'faas.version': 'fake-version',
-    'service.name': 'unknown_service',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.20.0',
   })
 # ---
 # name: test_detects_gae_standard
@@ -62,10 +50,6 @@
     'faas.instance': 'fake-instance',
     'faas.name': 'fake-service',
     'faas.version': 'fake-version',
-    'service.name': 'unknown_service',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.20.0',
   })
 # ---
 # name: test_detects_gce
@@ -78,10 +62,6 @@
     'host.id': '0087244a',
     'host.name': 'fakeName',
     'host.type': 'fakeMachineType',
-    'service.name': 'unknown_service',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.20.0',
   })
 # ---
 # name: test_detects_gke[regional]
@@ -92,10 +72,6 @@
     'cloud.region': 'us-east4',
     'host.id': '12345',
     'k8s.cluster.name': 'fakeClusterName',
-    'service.name': 'unknown_service',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.20.0',
   })
 # ---
 # name: test_detects_gke[zonal]
@@ -106,9 +82,5 @@
     'cloud.provider': 'gcp',
     'host.id': '12345',
     'k8s.cluster.name': 'fakeClusterName',
-    'service.name': 'unknown_service',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '1.20.0',
   })
 # ---
