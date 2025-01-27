@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# Remove after this program no longer support Python 3.8.*
+from __future__ import annotations
 import datetime
 import logging
 import urllib.parse
@@ -59,7 +61,7 @@ _OPTIONS = [
 
 # severityMapping maps the integer severity level values from OTel [0-24]
 # to matching Cloud Logging severity levels.
-SEVERITY_MAPPING: dict[int, int] = {
+SEVERITY_MAPPING = {
     0: LogSeverity.DEFAULT,  # Default, 0
     1: LogSeverity.DEBUG,  #
     2: LogSeverity.DEBUG,  #
@@ -172,10 +174,10 @@ class CloudLoggingExporter(LogExporter):
                 log_entry.span_id = str(hex(log_record.span_id))[2:]
             if (
                 log_record.severity_number
-                and log_record.severity_number in SEVERITY_MAPPING
+                and log_record.severity_number.value in SEVERITY_MAPPING
             ):
-                log_entry.severity = SEVERITY_MAPPING[
-                    log_record.severity_number
+                log_entry.severity = SEVERITY_MAPPING[ #type: ignore[assignment]
+                    log_record.severity_number.value #type: ignore[index]
                 ]
             log_entry.labels = {k: str(v) for k, v in attrs_map.items()}
             if type(log_record.body) is dict:

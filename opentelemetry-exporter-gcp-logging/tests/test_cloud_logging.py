@@ -25,7 +25,6 @@ tox -e py310-ci-test-cloudlogging -- --snapshot-update
 
 Be sure to review the changes.
 """
-
 import re
 from typing import List
 
@@ -39,18 +38,19 @@ from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs._internal import LogRecord
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from google.auth.credentials import AnonymousCredentials
 
 PROJECT_ID = "fakeproject"
 
 
-def test_create_cloud_logging_exporter(caplog) -> None:
+def test_create_cloud_logging_exporter() -> None:
     CloudLoggingExporter(default_log_name="test")
-    client = LoggingServiceV2Client()
+    client = LoggingServiceV2Client(credentials=AnonymousCredentials())
     CloudLoggingExporter(project_id=PROJECT_ID, client=client)
 
 
 def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
-    client = LoggingServiceV2Client()
+    client = LoggingServiceV2Client(credentials=AnonymousCredentials())
     no_default_logname = CloudLoggingExporter(
         project_id=PROJECT_ID, client=client
     )
