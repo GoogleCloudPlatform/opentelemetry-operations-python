@@ -54,20 +54,16 @@ def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
     no_default_logname = CloudLoggingExporter(
         project_id=PROJECT_ID, client=client
     )
-    attrs = {str(i):"i" * 10000 for i in range(1000)}
-    log_record = LogRecord(resource=Resource({}),
-                            attributes=attrs)
     no_default_logname.export(
         [
             LogData(
-                log_record=log_record,
-                log_record=log_record,
+                    log_record = LogRecord(resource=Resource({}),
+                            attributes={str(i):"i" * 10000 for i in range(1000)}),
                 instrumentation_scope=InstrumentationScope("test"),
             )
         ]
     )
     assert len(caplog.records) == 1
-    assert "exceeds Cloud Logging's maximum limit of 256000.\n" in caplog.text
     assert "exceeds Cloud Logging's maximum limit of 256000.\n" in caplog.text
 
 
@@ -81,10 +77,6 @@ def test_convert_otlp(
         severity_number=SeverityNumber(20),
         trace_id=25,
         span_id=22,
-        attributes={
-            "gen_ai.system": "openai",
-            "event.name": "gen_ai.system.message",
-        },
         attributes={
             "gen_ai.system": "openai",
             "event.name": "gen_ai.system.message",
@@ -110,8 +102,6 @@ def test_convert_otlp(
 
     log_data = [
         LogData(
-            log_record=log_record,
-            instrumentation_scope=InstrumentationScope("test"),
             log_record=log_record,
             instrumentation_scope=InstrumentationScope("test"),
         )
