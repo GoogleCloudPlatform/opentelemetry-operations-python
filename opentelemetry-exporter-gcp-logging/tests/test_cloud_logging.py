@@ -61,11 +61,13 @@ def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
         [
             LogData(
                 log_record=log_record,
+                log_record=log_record,
                 instrumentation_scope=InstrumentationScope("test"),
             )
         ]
     )
     assert len(caplog.records) == 1
+    assert "exceeds Cloud Logging's maximum limit of 256000.\n" in caplog.text
     assert "exceeds Cloud Logging's maximum limit of 256000.\n" in caplog.text
 
 
@@ -83,11 +85,18 @@ def test_convert_otlp(
             "gen_ai.system": "openai",
             "event.name": "gen_ai.system.message",
         },
+        attributes={
+            "gen_ai.system": "openai",
+            "event.name": "gen_ai.system.message",
+        },
         body={
             "kvlistValue": {
                 "values": [
                     {
                         "key": "content",
+                        "value": {
+                            "stringValue": "You're a helpful assistant."
+                        },
                         "value": {
                             "stringValue": "You're a helpful assistant."
                         },
@@ -101,6 +110,8 @@ def test_convert_otlp(
 
     log_data = [
         LogData(
+            log_record=log_record,
+            instrumentation_scope=InstrumentationScope("test"),
             log_record=log_record,
             instrumentation_scope=InstrumentationScope("test"),
         )

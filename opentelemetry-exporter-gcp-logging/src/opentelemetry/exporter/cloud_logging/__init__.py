@@ -13,10 +13,31 @@
 # limitations under the License.
 # Remove after this program no longer support Python 3.8.*
 from __future__ import annotations
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import datetime
 import logging
 import urllib.parse
+import logging
+import urllib.parse
 from typing import Optional, Sequence
+
+import google.auth
+from google.api.monitored_resource_pb2 import MonitoredResource  # type: ignore
+from google.cloud.logging_v2.services.logging_service_v2 import (
+    LoggingServiceV2Client,
+)
 
 import google.auth
 from google.api.monitored_resource_pb2 import MonitoredResource  # type: ignore
@@ -31,10 +52,17 @@ from google.logging.type.log_severity_pb2 import LogSeverity  # type: ignore
 from google.protobuf.struct_pb2 import Struct
 from google.protobuf.timestamp_pb2 import Timestamp
 from opentelemetry.exporter.cloud_logging.version import __version__
+from google.logging.type.log_severity_pb2 import LogSeverity  # type: ignore
+from google.protobuf.struct_pb2 import Struct
+from google.protobuf.timestamp_pb2 import Timestamp
+from opentelemetry.exporter.cloud_logging.version import __version__
 from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
     get_monitored_resource,
 )
 from opentelemetry.sdk import version as opentelemetry_sdk_version
+from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs.export import LogExporter
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import LogExporter
 from opentelemetry.sdk.resources import Resource
@@ -61,7 +89,7 @@ _OPTIONS = [
 
 # severityMapping maps the integer severity level values from OTel [0-24]
 # to matching Cloud Logging severity levels.
-SEVERITY_MAPPING = {
+SEVERITY_MAPPING: dict[int, int] = {
     0: LogSeverity.DEFAULT,  # Default, 0
     1: LogSeverity.DEBUG,  #
     2: LogSeverity.DEBUG,  #
@@ -107,6 +135,10 @@ class CloudLoggingExporter(LogExporter):
             self.default_log_name = default_log_name
         else:
             self.default_log_name = "otel_python_inprocess_log_name_temp"
+        if default_log_name:
+            self.default_log_name = default_log_name
+        else:
+            self.default_log_name = "otel_python_inprocess_log_name_temp"
         self.client = client or LoggingServiceV2Client(
             transport=LoggingServiceV2GrpcTransport(
                 channel=LoggingServiceV2GrpcTransport.create_channel(
@@ -130,7 +162,11 @@ class CloudLoggingExporter(LogExporter):
             monitored_resource_data = get_monitored_resource(
                 log_record.resource or Resource({})
             )
+            monitored_resource_data = get_monitored_resource(
+                log_record.resource or Resource({})
+            )
             # convert it to proto
+            monitored_resource: Optional[MonitoredResource] = (
             monitored_resource: Optional[MonitoredResource] = (
                 MonitoredResource(
                     type=monitored_resource_data.type,
@@ -156,12 +192,19 @@ class CloudLoggingExporter(LogExporter):
             log_entry.log_name = log_name
             if monitored_resource:
                 log_entry.resource = monitored_resource
+            if monitored_resource:
+                log_entry.resource = monitored_resource
             attrs_map = {k: v for k, v in attributes.items()}
             log_entry.trace_sampled = (
                 log_record.trace_flags is not None
                 and log_record.trace_flags.sampled
+                log_record.trace_flags is not None
+                and log_record.trace_flags.sampled
             )
             if TRACE_SAMPLED_ATTRIBUTE_KEY in attrs_map:
+                log_entry.trace_sampled |= bool(
+                    attrs_map[TRACE_SAMPLED_ATTRIBUTE_KEY]
+                )
                 log_entry.trace_sampled |= bool(
                     attrs_map[TRACE_SAMPLED_ATTRIBUTE_KEY]
                 )
@@ -189,6 +232,7 @@ class CloudLoggingExporter(LogExporter):
         self._write_log_entries(log_entries)
 
     def _write_log_entries(self, log_entries: list[LogEntry]):
+        batch: list[LogEntry] = []
         batch: list[LogEntry] = []
         batch_byte_size = 0
         for entry in log_entries:
