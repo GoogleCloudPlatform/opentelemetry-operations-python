@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, cast, List
+from typing import List, Optional, cast
 
 import pytest
 from fixtures.cloud_logging_fake import WriteLogEntriesCall
@@ -39,7 +39,9 @@ class WriteLogEntryCallSnapshotExtension(JSONSnapshotExtension):
     ) -> SerializedData:
         json = [
             json_format.MessageToDict(
-                type(call.write_log_entries_request).pb(call.write_log_entries_request)
+                type(call.write_log_entries_request).pb(
+                    call.write_log_entries_request
+                )
             )
             for call in cast(List[WriteLogEntriesCall], data)
         ]
