@@ -1,15 +1,15 @@
-OpenTelemetry Google Cloud Monitoring Exporter
+OpenTelemetry Google Cloud Logging Exporter
 ==============================================
 
-.. image:: https://badge.fury.io/py/opentelemetry-exporter-gcp-monitoring.svg
-    :target: https://badge.fury.io/py/opentelemetry-exporter-gcp-monitoring
+.. image:: https://badge.fury.io/py/opentelemetry-exporter-gcp-logging.svg
+    :target: https://badge.fury.io/py/opentelemetry-exporter-gcp-logging
 
 .. image:: https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-This library provides support for exporting metrics to Google Cloud
-Monitoring.
+This library provides support for exporting logs to Google Cloud
+Logging.
 
 To get started with instrumentation in Google Cloud, see `Generate traces and metrics with
 Python <https://cloud.google.com/stackdriver/docs/instrumentation/setup/python>`_.
@@ -29,57 +29,54 @@ Installation
 
 .. code:: bash
 
-    pip install opentelemetry-exporter-gcp-monitoring
+    pip install opentelemetry-exporter-gcp-logging
 
 Usage
 -----
 
 .. code:: python
 
-    import time
-
-    from opentelemetry import metrics
-    from opentelemetry.exporter.cloud_monitoring import (
-        CloudMonitoringMetricsExporter,
+    from opentelemetry.exporter.cloud_logging import (
+        CloudLoggingExporter,
     )
-    from opentelemetry.sdk.metrics import MeterProvider
-    from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+    from opentelemetry.sdk._logs._internal import LogRecord
+    from opentelemetry._logs.severity import SeverityNumber
     from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk._logs import LogData
+    from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
-    metrics.set_meter_provider(
-        MeterProvider(
-            metric_readers=[
-                PeriodicExportingMetricReader(
-                    CloudMonitoringMetricsExporter(), export_interval_millis=5000
-                )
-            ],
-            resource=Resource.create(
-                {
-                    "service.name": "basic_metrics",
-                    "service.namespace": "examples",
-                    "service.instance.id": "instance123",
-                }
-            ),
-        )
+
+    exporter = CloudLoggingExporter(default_log_name='my_log')
+    exporter.export(
+        [
+            LogData(
+                log_record=LogRecord(
+                    resource=Resource({}),
+                    timestamp=1736976310997977393,
+                    severity_number=SeverityNumber(20),
+                    attributes={
+                        "gen_ai.system": "openai",
+                        "event.name": "gen_ai.system.message",
+                    },
+                    body={
+                        "kvlistValue": {
+                            "values": [
+                                {
+                                    "key": "content",
+                                    "value": {"stringValue": "You're a helpful assistant."},
+                                }
+                            ]
+                        }
+                    },
+                ),
+                instrumentation_scope=InstrumentationScope("test"),
+            )
+        ]
     )
-    meter = metrics.get_meter(__name__)
-
-    # Creates metric workload.googleapis.com/request_counter with monitored resource generic_task
-    requests_counter = meter.create_counter(
-        name="request_counter",
-        description="number of requests",
-        unit="1",
-    )
-
-    staging_labels = {"environment": "staging"}
-
-    for i in range(20):
-        requests_counter.add(25, staging_labels)
-        time.sleep(5)
 
 
 References
 ----------
 
-* `Cloud Monitoring <https://cloud.google.com/monitoring>`_
+* `Cloud Logging <https://cloud.google.com/logging>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
