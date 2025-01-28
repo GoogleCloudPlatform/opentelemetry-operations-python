@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -187,8 +188,8 @@ class CloudLoggingExporter(LogExporter):
                 log_record.severity_number
                 and log_record.severity_number.value in SEVERITY_MAPPING
             ):
-                log_entry.severity = SEVERITY_MAPPING[ #type: ignore[assignment]
-                    log_record.severity_number.value #type: ignore[index]
+                log_entry.severity = SEVERITY_MAPPING[  # type: ignore[assignment]
+                    log_record.severity_number.value  # type: ignore[index]
                 ]
             log_entry.labels = {k: str(v) for k, v in attrs_map.items()}
             if type(log_record.body) is dict:
@@ -200,7 +201,6 @@ class CloudLoggingExporter(LogExporter):
         self._write_log_entries(log_entries)
 
     def _write_log_entries(self, log_entries: list[LogEntry]):
-        batch: list[LogEntry] = []
         batch: list[LogEntry] = []
         batch_byte_size = 0
         for entry in log_entries:

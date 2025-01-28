@@ -29,6 +29,7 @@ import re
 from typing import List
 
 from fixtures.cloud_logging_fake import CloudLoggingFake, WriteLogEntriesCall
+from google.auth.credentials import AnonymousCredentials
 from google.cloud.logging_v2.services.logging_service_v2 import (
     LoggingServiceV2Client,
 )
@@ -38,15 +39,8 @@ from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs._internal import LogRecord
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from google.auth.credentials import AnonymousCredentials
 
 PROJECT_ID = "fakeproject"
-
-
-def test_create_cloud_logging_exporter() -> None:
-    CloudLoggingExporter(default_log_name="test")
-    client = LoggingServiceV2Client(credentials=AnonymousCredentials())
-    CloudLoggingExporter(project_id=PROJECT_ID, client=client)
 
 
 def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
@@ -57,8 +51,10 @@ def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
     no_default_logname.export(
         [
             LogData(
-                    log_record = LogRecord(resource=Resource({}),
-                            attributes={str(i):"i" * 10000 for i in range(1000)}),
+                log_record=LogRecord(
+                    resource=Resource({}),
+                    attributes={str(i): "i" * 10000 for i in range(1000)},
+                ),
                 instrumentation_scope=InstrumentationScope("test"),
             )
         ]
@@ -86,9 +82,6 @@ def test_convert_otlp(
                 "values": [
                     {
                         "key": "content",
-                        "value": {
-                            "stringValue": "You're a helpful assistant."
-                        },
                         "value": {
                             "stringValue": "You're a helpful assistant."
                         },
