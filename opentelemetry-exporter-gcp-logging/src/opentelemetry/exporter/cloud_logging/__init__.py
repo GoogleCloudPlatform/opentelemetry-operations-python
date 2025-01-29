@@ -188,9 +188,7 @@ class CloudLoggingExporter(LogExporter):
             msg_size = LogEntry.pb(entry).ByteSize()
             if msg_size > DEFAULT_MAX_ENTRY_SIZE:
                 logging.warning(
-                    "Cannot write log that is {} bytes which exceeds Cloud Logging's maximum limit of {}.".format(
-                        msg_size, DEFAULT_MAX_ENTRY_SIZE
-                    )
+                    f"Cannot write log that is {msg_size} bytes which exceeds Cloud Logging's maximum limit of {DEFAULT_MAX_ENTRY_SIZE}."
                 )
                 continue
             if msg_size + batch_byte_size > DEFAULT_MAX_REQUEST_SIZE:
