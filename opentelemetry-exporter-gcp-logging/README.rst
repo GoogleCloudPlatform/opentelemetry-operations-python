@@ -35,22 +35,39 @@ Usage
 -----
 
 .. code:: python
-
+    import logging
     from opentelemetry.exporter.cloud_logging import (
         CloudLoggingExporter,
     )
     from opentelemetry.sdk._logs._internal import LogRecord
     from opentelemetry._logs.severity import SeverityNumber
     from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk._logs import LogData
-    from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+    from opentelemetry._logs import set_logger_provider
+    from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+    from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 
-
+    logger_provider = LoggerProvider(
+        resource=Resource.create(
+            {
+                "service.name": "shoppingcart",
+                "service.instance.id": "instance-12",
+            }
+        ),
+    )
+    set_logger_provider(logger_provider)
     exporter = CloudLoggingExporter(default_log_name='my_log')
-    exporter.export(
-        [
-            LogData(
-                log_record=LogRecord(
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
+    handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+
+    # Attach OTLP handler to root logger
+    logging.getLogger().addHandler(handler)
+
+    # Create namespaced logger
+    # It is recommended to not use the root logger with OTLP handler
+    # so telemetry is collected only for the application
+    logger1 = logging.getLogger("myapp.area1")
+
+    logger1.debug(LogRecord(
                     resource=Resource({}),
                     timestamp=1736976310997977393,
                     severity_number=SeverityNumber(20),
@@ -68,12 +85,7 @@ Usage
                             ]
                         }
                     },
-                ),
-                instrumentation_scope=InstrumentationScope("test"),
-            )
-        ]
-    )
-
+                ))
 
 References
 ----------

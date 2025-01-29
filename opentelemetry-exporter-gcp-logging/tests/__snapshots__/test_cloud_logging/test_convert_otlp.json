@@ -28,9 +28,9 @@
           "type": "generic_node"
         },
         "severity": "ERROR",
-        "spanId": "16",
+        "spanId": "0000000000000016",
         "timestamp": "2025-01-15T21:25:10.997977393Z",
-        "trace": "projects/fakeproject/traces/25"
+        "trace": "projects/fakeproject/traces/00000000000000000000000000000019"
       }
     ]
   }

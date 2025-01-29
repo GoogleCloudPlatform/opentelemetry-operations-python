@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,8 @@ from __future__ import annotations
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 import datetime
 import logging
 import urllib.parse
@@ -38,6 +38,7 @@ from opentelemetry.sdk import version as opentelemetry_sdk_version
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import LogExporter
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.trace import format_span_id, format_trace_id
 
 DEFAULT_MAX_ENTRY_SIZE = 256000  # 256 KB
 DEFAULT_MAX_REQUEST_SIZE = 10000000  # 10 MB
@@ -62,31 +63,31 @@ _OPTIONS = [
 # severityMapping maps the integer severity level values from OTel [0-24]
 # to matching Cloud Logging severity levels.
 SEVERITY_MAPPING: dict[int, int] = {
-    0: LogSeverity.DEFAULT,  # Default, 0
-    1: LogSeverity.DEBUG,  #
-    2: LogSeverity.DEBUG,  #
-    3: LogSeverity.DEBUG,  #
-    4: LogSeverity.DEBUG,  #
-    5: LogSeverity.DEBUG,  #
-    6: LogSeverity.DEBUG,  #
-    7: LogSeverity.DEBUG,  #
-    8: LogSeverity.DEBUG,  # 1-8 -> Debug
-    9: LogSeverity.INFO,  #
-    10: LogSeverity.INFO,  # 9-10 -> Info
-    11: LogSeverity.NOTICE,  #
-    12: LogSeverity.NOTICE,  # 11-12 -> Notice
-    13: LogSeverity.WARNING,  #
-    14: LogSeverity.WARNING,  #
-    15: LogSeverity.WARNING,  #
-    16: LogSeverity.WARNING,  # 13-16 -> Warning
-    17: LogSeverity.ERROR,  #
-    18: LogSeverity.ERROR,  #
-    19: LogSeverity.ERROR,  #
-    20: LogSeverity.ERROR,  # 17-20 -> Error
-    21: LogSeverity.CRITICAL,  #
-    22: LogSeverity.CRITICAL,  # 21-22 -> Critical
-    23: LogSeverity.ALERT,  # 23 -> Alert
-    24: LogSeverity.EMERGENCY,  # 24 -> Emergency
+    0: LogSeverity.DEFAULT,
+    1: LogSeverity.DEBUG,
+    2: LogSeverity.DEBUG,
+    3: LogSeverity.DEBUG,
+    4: LogSeverity.DEBUG,
+    5: LogSeverity.DEBUG,
+    6: LogSeverity.DEBUG,
+    7: LogSeverity.DEBUG,
+    8: LogSeverity.DEBUG,
+    9: LogSeverity.INFO,
+    10: LogSeverity.INFO,
+    11: LogSeverity.NOTICE,
+    12: LogSeverity.NOTICE,
+    13: LogSeverity.WARNING,
+    14: LogSeverity.WARNING,
+    15: LogSeverity.WARNING,
+    16: LogSeverity.WARNING,
+    17: LogSeverity.ERROR,
+    18: LogSeverity.ERROR,
+    19: LogSeverity.ERROR,
+    20: LogSeverity.ERROR,
+    21: LogSeverity.CRITICAL,
+    22: LogSeverity.CRITICAL,
+    23: LogSeverity.ALERT,
+    24: LogSeverity.EMERGENCY,
 }
 
 
@@ -107,10 +108,6 @@ class CloudLoggingExporter(LogExporter):
             self.default_log_name = default_log_name
         else:
             self.default_log_name = "otel_python_inprocess_log_name_temp"
-        if default_log_name:
-            self.default_log_name = default_log_name
-        else:
-            self.default_log_name = "otel_python_inprocess_log_name_temp"
         self.client = client or LoggingServiceV2Client(
             transport=LoggingServiceV2GrpcTransport(
                 channel=LoggingServiceV2GrpcTransport.create_channel(
@@ -118,21 +115,22 @@ class CloudLoggingExporter(LogExporter):
                 )
             )
         )
-        self.service_resource_labels = True
 
     def export(self, batch: Sequence[LogData]):
+        now = datetime.datetime.now()
         log_entries = []
         for log_data in batch:
             log_record = log_data.log_record
             attributes = log_record.attributes or {}
-            project_id = self.project_id
-            if attributes.get(PROJECT_ID_ATTRIBUTE_KEY):
-                project_id = str(attributes.get(PROJECT_ID_ATTRIBUTE_KEY))
-            log_name = self.default_log_name
-            if attributes.get(LOG_NAME_ATTRIBUTE_KEY):
-                log_name = str(attributes.get(LOG_NAME_ATTRIBUTE_KEY))
-            monitored_resource_data = get_monitored_resource(
-                log_record.resource or Resource({})
+            project_id = str(
+                attributes.get(PROJECT_ID_ATTRIBUTE_KEY, self.project_id)
+            )
+            log_suffix = urllib.parse.quote_plus(
+                str(
+                    attributes.get(
+                        LOG_NAME_ATTRIBUTE_KEY, self.default_log_name
+                    )
+                )
             )
             monitored_resource_data = get_monitored_resource(
                 log_record.resource or Resource({})
@@ -146,44 +144,27 @@ class CloudLoggingExporter(LogExporter):
                 if monitored_resource_data
                 else None
             )
-            # if timestamp is unset, fall back to observed_time_unix_nano as recommended
-            #   (see https://github.com/open-telemetry/opentelemetry-proto/blob/4abbb78/opentelemetry/proto/logs/v1/logs.proto#L176-L179)
+            # If timestamp is unset fall back to observed_time_unix_nano as recommended,
+            # see https://github.com/open-telemetry/opentelemetry-proto/blob/4abbb78/opentelemetry/proto/logs/v1/logs.proto#L176-L179
             ts = Timestamp()
             if log_record.timestamp or log_record.observed_timestamp:
                 ts.FromNanoseconds(
                     log_record.timestamp or log_record.observed_timestamp
                 )
             else:
-                ts.FromDatetime(datetime.datetime.now())
-            log_name = "projects/{}/logs/{}".format(
-                project_id, urllib.parse.quote_plus(log_name)
-            )
+                ts.FromDatetime(now)
+            log_name = f"projects/{project_id}/logs/{log_suffix}"
             log_entry = LogEntry()
             log_entry.timestamp = ts
             log_entry.log_name = log_name
             if monitored_resource:
                 log_entry.resource = monitored_resource
-            if monitored_resource:
-                log_entry.resource = monitored_resource
             attrs_map = {k: v for k, v in attributes.items()}
-            log_entry.trace_sampled = (
-                log_record.trace_flags is not None
-                and log_record.trace_flags.sampled
-            )
-            if TRACE_SAMPLED_ATTRIBUTE_KEY in attrs_map:
-                log_entry.trace_sampled |= bool(
-                    attrs_map[TRACE_SAMPLED_ATTRIBUTE_KEY]
-                )
-                log_entry.trace_sampled |= bool(
-                    attrs_map[TRACE_SAMPLED_ATTRIBUTE_KEY]
-                )
-                del attrs_map[TRACE_SAMPLED_ATTRIBUTE_KEY]
+            log_entry.trace_sampled = bool(log_record.trace_flags)
             if log_record.trace_id:
-                log_entry.trace = "projects/{}/traces/{}".format(
-                    project_id, log_record.trace_id
-                )
+                log_entry.trace = f"projects/{project_id}/traces/{format_trace_id(log_record.trace_id)}"
             if log_record.span_id:
-                log_entry.span_id = str(hex(log_record.span_id))[2:]
+                log_entry.span_id = format_span_id(log_record.span_id)
             if (
                 log_record.severity_number
                 and log_record.severity_number.value in SEVERITY_MAPPING
