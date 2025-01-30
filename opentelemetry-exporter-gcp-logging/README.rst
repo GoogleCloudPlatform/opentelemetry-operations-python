@@ -39,8 +39,6 @@ Usage
     from opentelemetry.exporter.cloud_logging import (
         CloudLoggingExporter,
     )
-    from opentelemetry.sdk._logs._internal import LogRecord
-    from opentelemetry._logs.severity import SeverityNumber
     from opentelemetry.sdk.resources import Resource
     from opentelemetry._logs import set_logger_provider
     from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
@@ -57,7 +55,7 @@ Usage
     set_logger_provider(logger_provider)
     exporter = CloudLoggingExporter(default_log_name='my_log')
     logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
-    handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+    handler = LoggingHandler(level=logging.ERROR, logger_provider=logger_provider)
 
     # Attach OTLP handler to root logger
     logging.getLogger().addHandler(handler)
@@ -67,25 +65,7 @@ Usage
     # so telemetry is collected only for the application
     logger1 = logging.getLogger("myapp.area1")
 
-    logger1.debug(LogRecord(
-                    resource=Resource({}),
-                    timestamp=1736976310997977393,
-                    severity_number=SeverityNumber(20),
-                    attributes={
-                        "gen_ai.system": "openai",
-                        "event.name": "gen_ai.system.message",
-                    },
-                    body={
-                        "kvlistValue": {
-                            "values": [
-                                {
-                                    "key": "content",
-                                    "value": {"stringValue": "You're a helpful assistant."},
-                                }
-                            ]
-                        }
-                    },
-                ))
+    logger1.error({'structured_log_will_go_to_json_payload': 'value'}, extra={'this_will_go_to_LogEntry_labels_field': 'value'})
 
 References
 ----------

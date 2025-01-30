@@ -159,7 +159,6 @@ class CloudLoggingExporter(LogExporter):
             log_entry.log_name = log_name
             if monitored_resource:
                 log_entry.resource = monitored_resource
-            attrs_map = {k: v for k, v in attributes.items()}
             log_entry.trace_sampled = bool(log_record.trace_flags)
             if log_record.trace_id:
                 log_entry.trace = f"projects/{project_id}/traces/{format_trace_id(log_record.trace_id)}"
@@ -172,7 +171,7 @@ class CloudLoggingExporter(LogExporter):
                 log_entry.severity = SEVERITY_MAPPING[  # type: ignore[assignment]
                     log_record.severity_number.value  # type: ignore[index]
                 ]
-            log_entry.labels = {k: str(v) for k, v in attrs_map.items()}
+            log_entry.labels = {k: str(v) for k, v in attributes.items()}
             if type(log_record.body) is dict:
                 s = Struct()
                 s.update(log_record.body)
