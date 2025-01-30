@@ -1,0 +1,35 @@
+[
+  {
+    "entries": [
+      {
+        "jsonPayload": {
+          "Classe": [
+            "Email addresses",
+            "Passwords"
+          ],
+          "CreationDate": "2012-05-05",
+          "Date": "2016-05-21T21:35:40Z",
+          "Link": "http://some_link.com",
+          "LogoType": "png",
+          "Ref": 164611595.0
+        },
+        "labels": {
+          "boolArray": "[true, false, true, true]",
+          "float": "25.43231",
+          "int": "25",
+          "intArray": "[21, 18, 23, 17]"
+        },
+        "logName": "projects/fakeproject/logs/test",
+        "resource": {
+          "labels": {
+            "location": "global",
+            "namespace": "",
+            "node_id": ""
+          },
+          "type": "generic_node"
+        },
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      }
+    ]
+  }
+]

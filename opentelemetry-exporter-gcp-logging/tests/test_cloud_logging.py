@@ -26,8 +26,9 @@ tox -e py310-ci-test-cloudlogging -- --snapshot-update
 Be sure to review the changes.
 """
 import re
-from typing import List
+from typing import List, Union
 
+import pytest
 from fixtures.cloud_logging_fake import CloudLoggingFake, WriteLogEntriesCall
 from google.auth.credentials import AnonymousCredentials
 from google.cloud.logging_v2.services.logging_service_v2 import (
@@ -43,7 +44,7 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 PROJECT_ID = "fakeproject"
 
 
-def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
+def test_too_large_log_raises_warning(caplog) -> None:
     client = LoggingServiceV2Client(credentials=AnonymousCredentials())
     no_default_logname = CloudLoggingExporter(
         project_id=PROJECT_ID, client=client
@@ -52,6 +53,7 @@ def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
         [
             LogData(
                 log_record=LogRecord(
+                    body="abc",
                     resource=Resource({}),
                     attributes={str(i): "i" * 10000 for i in range(1000)},
                 ),
@@ -63,39 +65,34 @@ def test_invalid_otlp_entries_raise_warnings(caplog) -> None:
     assert "exceeds Cloud Logging's maximum limit of 256000.\n" in caplog.text
 
 
-def test_convert_otlp(
+def test_convert_otlp_dict_body(
     cloudloggingfake: CloudLoggingFake,
     snapshot_writelogentrycalls: List[WriteLogEntriesCall],
 ) -> None:
-    # Create a new LogRecord object
-    log_record = LogRecord(
-        timestamp=1736976310997977393,
-        severity_number=SeverityNumber(20),
-        trace_id=25,
-        span_id=22,
-        attributes={
-            "gen_ai.system": "openai",
-            "event.name": "gen_ai.system.message",
-        },
-        body={
-            "kvlistValue": {
-                "values": [
-                    {
-                        "key": "content",
-                        "value": {
-                            "stringValue": "You're a helpful assistant."
-                        },
-                    }
-                ]
-            }
-        },
-        # Not sure why I'm getting  AttributeError: 'NoneType' object has no attribute 'attributes' when unset.
-        resource=Resource({}),
-    )
-
     log_data = [
         LogData(
-            log_record=log_record,
+            log_record=LogRecord(
+                timestamp=1736976310997977393,
+                severity_number=SeverityNumber(20),
+                trace_id=25,
+                span_id=22,
+                attributes={
+                    "gen_ai.system": "openai",
+                    "event.name": "gen_ai.system.message",
+                },
+                body={
+                    "kvlistValue": {
+                        "values": [
+                            {
+                                "key": "content",
+                                "value": {
+                                    "stringValue": "You're a helpful assistant."
+                                },
+                            }
+                        ]
+                    }
+                },
+            ),
             instrumentation_scope=InstrumentationScope("test"),
         )
     ]
@@ -109,3 +106,70 @@ def test_convert_otlp(
             )
             is not None
         )
+
+
+def test_convert_otlp_various_different_types_in_attrs_and_bytes_body(
+    cloudloggingfake: CloudLoggingFake,
+    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+) -> None:
+    log_data = [
+        LogData(
+            log_record=LogRecord(
+                timestamp=1736976310997977393,
+                attributes={
+                    "int": 25,
+                    "float": 25.43231,
+                    "intArray": [21, 18, 23, 17],
+                    "boolArray": [True, False, True, True],
+                },
+                body=b'{"Date": "2016-05-21T21:35:40Z", "CreationDate": "2012-05-05", "LogoType": "png", "Ref": 164611595, "Classe": ["Email addresses", "Passwords"],"Link":"http://some_link.com"}',
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        )
+    ]
+    cloudloggingfake.exporter.export(log_data)
+    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+
+
+def test_convert_non_json_dict_bytes(
+    cloudloggingfake: CloudLoggingFake,
+    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    caplog,
+) -> None:
+    log_data = [
+        LogData(
+            log_record=LogRecord(
+                timestamp=1736976310997977393,
+                body=b"123",
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        )
+    ]
+    cloudloggingfake.exporter.export(log_data)
+    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+    assert (
+        "LogRecord.body was bytes type and json.loads turned body into type <class 'int'>, expected a dictionary"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "body",
+    [pytest.param("A text body", id="str"), pytest.param(True, id="bool")],
+)
+def test_convert_various_types_of_bodies(
+    cloudloggingfake: CloudLoggingFake,
+    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    body: Union[str, bool],
+) -> None:
+    log_data = [
+        LogData(
+            log_record=LogRecord(
+                timestamp=1736976310997977393,
+                body=body,
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        )
+    ]
+    cloudloggingfake.exporter.export(log_data)
+    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls

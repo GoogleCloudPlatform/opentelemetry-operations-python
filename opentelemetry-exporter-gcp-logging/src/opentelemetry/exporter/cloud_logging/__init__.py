@@ -14,9 +14,10 @@
 from __future__ import annotations
 
 import datetime
+import json
 import logging
 import urllib.parse
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence
 
 import google.auth
 from google.api.monitored_resource_pb2 import MonitoredResource  # type: ignore
@@ -89,6 +90,16 @@ SEVERITY_MAPPING: dict[int, int] = {
     23: LogSeverity.ALERT,
     24: LogSeverity.EMERGENCY,
 }
+
+
+def convert_any_value_to_string(value: Any) -> str:
+    t = type(value)
+    if t is bool or t is int or t is float or t is str:
+        return str(value)
+    if t is list or t is tuple:
+        return json.dumps(value)
+    logging.warning(f"Unknown type {t} found, cannot convert to string.")
+    return ""
 
 
 class CloudLoggingExporter(LogExporter):
@@ -171,11 +182,29 @@ class CloudLoggingExporter(LogExporter):
                 log_entry.severity = SEVERITY_MAPPING[  # type: ignore[assignment]
                     log_record.severity_number.value  # type: ignore[index]
                 ]
-            log_entry.labels = {k: str(v) for k, v in attributes.items()}
+            log_entry.labels = {
+                k: convert_any_value_to_string(v)
+                for k, v in attributes.items()
+            }
             if type(log_record.body) is dict:
                 s = Struct()
                 s.update(log_record.body)
                 log_entry.json_payload = s
+            elif type(log_record.body) is bytes:
+                json_str = log_record.body.decode("utf8")
+                json_dict = json.loads(json_str)
+                if type(json_dict) is dict:
+                    s = Struct()
+                    s.update(json_dict)
+                    log_entry.json_payload = s
+                else:
+                    logging.warning(
+                        f"LogRecord.body was bytes type and json.loads turned body into type {type(json_dict)}, expected a dictionary."
+                    )
+            else:
+                log_entry.text_payload = convert_any_value_to_string(
+                    log_record.body
+                )
             log_entries.append(log_entry)
 
         self._write_log_entries(log_entries)
