@@ -17,7 +17,7 @@ import datetime
 import json
 import logging
 import urllib.parse
-from typing import Any, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence
 
 import google.auth
 from google.api.monitored_resource_pb2 import MonitoredResource  # type: ignore
@@ -28,6 +28,7 @@ from google.cloud.logging_v2.services.logging_service_v2.transports.grpc import 
     LoggingServiceV2GrpcTransport,
 )
 from google.cloud.logging_v2.types.log_entry import LogEntry
+from google.cloud.logging_v2.types.logging import WriteLogEntriesRequest
 from google.logging.type.log_severity_pb2 import LogSeverity  # type: ignore
 from google.protobuf.struct_pb2 import Struct
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -98,7 +99,7 @@ def convert_any_value_to_string(value: Any) -> str:
         return str(value)
     if t is list or t is tuple:
         return json.dumps(value)
-    logging.warning(f"Unknown type {t} found, cannot convert to string.")
+    logging.warning("Unknown type %s found, cannot convert to string.", t)
     return ""
 
 
@@ -170,7 +171,10 @@ class CloudLoggingExporter(LogExporter):
             log_entry.log_name = log_name
             if monitored_resource:
                 log_entry.resource = monitored_resource
-            log_entry.trace_sampled = bool(log_record.trace_flags)
+            log_entry.trace_sampled = (
+                log_record.trace_flags is not None
+                and log_record.trace_flags.sampled
+            )
             if log_record.trace_id:
                 log_entry.trace = f"projects/{project_id}/traces/{format_trace_id(log_record.trace_id)}"
             if log_record.span_id:
@@ -186,20 +190,21 @@ class CloudLoggingExporter(LogExporter):
                 k: convert_any_value_to_string(v)
                 for k, v in attributes.items()
             }
-            if type(log_record.body) is dict:
+            if isinstance(log_record.body, Mapping):
                 s = Struct()
                 s.update(log_record.body)
                 log_entry.json_payload = s
             elif type(log_record.body) is bytes:
                 json_str = log_record.body.decode("utf8")
                 json_dict = json.loads(json_str)
-                if type(json_dict) is dict:
+                if isinstance(json_dict, Mapping):
                     s = Struct()
                     s.update(json_dict)
                     log_entry.json_payload = s
                 else:
                     logging.warning(
-                        f"LogRecord.body was bytes type and json.loads turned body into type {type(json_dict)}, expected a dictionary."
+                        "LogRecord.body was bytes type and json.loads turned body into type %s, expected a dictionary.",
+                        type(json_dict),
                     )
             else:
                 log_entry.text_payload = convert_any_value_to_string(
@@ -216,18 +221,38 @@ class CloudLoggingExporter(LogExporter):
             msg_size = LogEntry.pb(entry).ByteSize()
             if msg_size > DEFAULT_MAX_ENTRY_SIZE:
                 logging.warning(
-                    f"Cannot write log that is {msg_size} bytes which exceeds Cloud Logging's maximum limit of {DEFAULT_MAX_ENTRY_SIZE}."
+                    "Cannot write log that is %s bytes which exceeds Cloud Logging's maximum limit of %s bytes.",
+                    msg_size,
+                    DEFAULT_MAX_ENTRY_SIZE,
                 )
                 continue
             if msg_size + batch_byte_size > DEFAULT_MAX_REQUEST_SIZE:
-                self.client.write_log_entries(entries=batch)
+                try:
+                    self.client.write_log_entries(
+                        WriteLogEntriesRequest(
+                            entries=batch, partial_success=True
+                        )
+                    )
+                # pylint: disable=broad-except
+                except Exception as ex:
+                    logging.error(
+                        "Error while writing to Cloud Logging", exc_info=ex
+                    )
                 batch = [entry]
                 batch_byte_size = msg_size
             else:
                 batch.append(entry)
                 batch_byte_size += msg_size
         if batch:
-            self.client.write_log_entries(entries=batch)
+            try:
+                self.client.write_log_entries(
+                    WriteLogEntriesRequest(entries=batch, partial_success=True)
+                )
+            # pylint: disable=broad-except
+            except Exception as ex:
+                logging.error(
+                    "Error while writing to Cloud Logging", exc_info=ex
+                )
 
     def shutdown(self):
         pass

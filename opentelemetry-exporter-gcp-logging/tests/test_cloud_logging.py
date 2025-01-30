@@ -62,7 +62,9 @@ def test_too_large_log_raises_warning(caplog) -> None:
         ]
     )
     assert len(caplog.records) == 1
-    assert "exceeds Cloud Logging's maximum limit of 256000.\n" in caplog.text
+    assert (
+        "exceeds Cloud Logging's maximum limit of 256000 bytes" in caplog.text
+    )
 
 
 def test_convert_otlp_dict_body(
