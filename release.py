@@ -54,6 +54,7 @@ be overwritten by (b).
 ALTERNATE_SUFFIXES = {
     # Mark monitoring and resource detector alpha
     "opentelemetry-exporter-gcp-monitoring": "a0",
+    "opentelemetry-exporter-gcp-logging": "a0",
     "opentelemetry-resourcedetector-gcp": "a0",
 }
 
