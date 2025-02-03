@@ -65,7 +65,7 @@ Usage
     # so telemetry is collected only for the application
     logger1 = logging.getLogger("myapp.area1")
 
-    logger1.error({'structured_log_will_go_to_json_payload': 'value'}, extra={'this_will_go_to_LogEntry_labels_field': 'value'})
+    logger1.warning("string log %s", "here")
 
 References
 ----------

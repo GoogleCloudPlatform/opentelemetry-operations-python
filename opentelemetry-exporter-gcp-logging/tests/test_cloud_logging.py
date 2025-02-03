@@ -79,7 +79,8 @@ def test_convert_otlp_dict_body(
                 trace_id=25,
                 span_id=22,
                 attributes={
-                    "gen_ai.system": "openai",
+                    "gen_ai.system": True,
+                    "test": 23,
                     "event.name": "gen_ai.system.message",
                 },
                 body={
@@ -136,7 +137,6 @@ def test_convert_otlp_various_different_types_in_attrs_and_bytes_body(
 def test_convert_non_json_dict_bytes(
     cloudloggingfake: CloudLoggingFake,
     snapshot_writelogentrycalls: List[WriteLogEntriesCall],
-    caplog,
 ) -> None:
     log_data = [
         LogData(
@@ -149,10 +149,6 @@ def test_convert_non_json_dict_bytes(
     ]
     cloudloggingfake.exporter.export(log_data)
     assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
-    assert (
-        "LogRecord.body was bytes type and json.loads turned body into type <class 'int'>, expected a dictionary"
-        in caplog.text
-    )
 
 
 @pytest.mark.parametrize(

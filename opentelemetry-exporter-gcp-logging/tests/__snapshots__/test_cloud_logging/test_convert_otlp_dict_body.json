@@ -16,7 +16,8 @@
         },
         "labels": {
           "event.name": "gen_ai.system.message",
-          "gen_ai.system": "openai"
+          "gen_ai.system": "true",
+          "test": "23"
         },
         "logName": "projects/fakeproject/logs/test",
         "resource": {

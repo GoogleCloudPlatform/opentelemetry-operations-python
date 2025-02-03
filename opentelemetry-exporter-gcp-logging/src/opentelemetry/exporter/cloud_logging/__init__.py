@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+import base64
 import datetime
 import json
 import logging
@@ -20,7 +21,9 @@ import urllib.parse
 from typing import Any, Mapping, Optional, Sequence
 
 import google.auth
-from google.api.monitored_resource_pb2 import MonitoredResource  # type: ignore
+from google.api.monitored_resource_pb2 import (  # pylint: disable = no-name-in-module
+    MonitoredResource,
+)
 from google.cloud.logging_v2.services.logging_service_v2 import (
     LoggingServiceV2Client,
 )
@@ -29,9 +32,15 @@ from google.cloud.logging_v2.services.logging_service_v2.transports.grpc import 
 )
 from google.cloud.logging_v2.types.log_entry import LogEntry
 from google.cloud.logging_v2.types.logging import WriteLogEntriesRequest
-from google.logging.type.log_severity_pb2 import LogSeverity  # type: ignore
-from google.protobuf.struct_pb2 import Struct
-from google.protobuf.timestamp_pb2 import Timestamp
+from google.logging.type.log_severity_pb2 import (  # pylint: disable = no-name-in-module
+    LogSeverity,
+)
+from google.protobuf.struct_pb2 import (  # pylint: disable = no-name-in-module
+    Struct,
+)
+from google.protobuf.timestamp_pb2 import (  # pylint: disable = no-name-in-module
+    Timestamp,
+)
 from opentelemetry.exporter.cloud_logging.version import __version__
 from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
     get_monitored_resource,
@@ -94,12 +103,21 @@ SEVERITY_MAPPING: dict[int, int] = {
 
 
 def convert_any_value_to_string(value: Any) -> str:
-    t = type(value)
-    if t is bool or t is int or t is float or t is str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, bytes):
+        return base64.b64encode(value).decode()
+    if (
+        isinstance(value, int)
+        or isinstance(value, float)
+        or isinstance(value, str)
+    ):
         return str(value)
-    if t is list or t is tuple:
+    if isinstance(value, list) or isinstance(value, tuple):
         return json.dumps(value)
-    logging.warning("Unknown type %s found, cannot convert to string.", t)
+    logging.warning(
+        "Unknown value %s found, cannot convert to string.", type(value)
+    )
     return ""
 
 
@@ -132,6 +150,7 @@ class CloudLoggingExporter(LogExporter):
         now = datetime.datetime.now()
         log_entries = []
         for log_data in batch:
+            log_entry = LogEntry()
             log_record = log_data.log_record
             attributes = log_record.attributes or {}
             project_id = str(
@@ -144,18 +163,7 @@ class CloudLoggingExporter(LogExporter):
                     )
                 )
             )
-            monitored_resource_data = get_monitored_resource(
-                log_record.resource or Resource({})
-            )
-            # convert it to proto
-            monitored_resource: Optional[MonitoredResource] = (
-                MonitoredResource(
-                    type=monitored_resource_data.type,
-                    labels=monitored_resource_data.labels,
-                )
-                if monitored_resource_data
-                else None
-            )
+            log_entry.log_name = f"projects/{project_id}/logs/{log_suffix}"
             # If timestamp is unset fall back to observed_time_unix_nano as recommended,
             # see https://github.com/open-telemetry/opentelemetry-proto/blob/4abbb78/opentelemetry/proto/logs/v1/logs.proto#L176-L179
             ts = Timestamp()
@@ -165,12 +173,15 @@ class CloudLoggingExporter(LogExporter):
                 )
             else:
                 ts.FromDatetime(now)
-            log_name = f"projects/{project_id}/logs/{log_suffix}"
-            log_entry = LogEntry()
             log_entry.timestamp = ts
-            log_entry.log_name = log_name
-            if monitored_resource:
-                log_entry.resource = monitored_resource
+            monitored_resource_data = get_monitored_resource(
+                log_record.resource or Resource({})
+            )
+            if monitored_resource_data:
+                log_entry.resource = MonitoredResource(
+                    type=monitored_resource_data.type,
+                    labels=monitored_resource_data.labels,
+                )
             log_entry.trace_sampled = (
                 log_record.trace_flags is not None
                 and log_record.trace_flags.sampled
@@ -190,29 +201,26 @@ class CloudLoggingExporter(LogExporter):
                 k: convert_any_value_to_string(v)
                 for k, v in attributes.items()
             }
-            if isinstance(log_record.body, Mapping):
-                s = Struct()
-                s.update(log_record.body)
-                log_entry.json_payload = s
-            elif type(log_record.body) is bytes:
-                json_str = log_record.body.decode("utf8")
-                json_dict = json.loads(json_str)
-                if isinstance(json_dict, Mapping):
-                    s = Struct()
-                    s.update(json_dict)
-                    log_entry.json_payload = s
-                else:
-                    logging.warning(
-                        "LogRecord.body was bytes type and json.loads turned body into type %s, expected a dictionary.",
-                        type(json_dict),
-                    )
-            else:
-                log_entry.text_payload = convert_any_value_to_string(
-                    log_record.body
-                )
+            self._set_payload_in_log_entry(log_entry, log_record.body)
             log_entries.append(log_entry)
 
         self._write_log_entries(log_entries)
+
+    def _set_payload_in_log_entry(self, log_entry: LogEntry, body: Any | None):
+        struct = Struct()
+        if isinstance(body, Mapping):
+            struct.update(body)
+            log_entry.json_payload = struct
+        elif isinstance(body, bytes):
+            json_str = body.decode("utf-8", errors="replace")
+            json_dict = json.loads(json_str)
+            if isinstance(json_dict, Mapping):
+                struct.update(json_dict)
+                log_entry.json_payload = struct
+            else:
+                log_entry.text_payload = base64.b64encode(body).decode()
+        else:
+            log_entry.text_payload = convert_any_value_to_string(body)
 
     def _write_log_entries(self, log_entries: list[LogEntry]):
         batch: list[LogEntry] = []
