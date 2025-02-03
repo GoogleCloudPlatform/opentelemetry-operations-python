@@ -102,23 +102,36 @@ SEVERITY_MAPPING: dict[int, int] = {
 }
 
 
-def convert_any_value_to_string(value: Any) -> str:
+def _convert_any_value_to_string(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, bytes):
         return base64.b64encode(value).decode()
-    if (
-        isinstance(value, int)
-        or isinstance(value, float)
-        or isinstance(value, str)
-    ):
+    if isinstance(value, (int, float, str)):
         return str(value)
-    if isinstance(value, list) or isinstance(value, tuple):
+    if isinstance(value, (list, tuple)):
         return json.dumps(value)
     logging.warning(
         "Unknown value %s found, cannot convert to string.", type(value)
     )
     return ""
+
+
+def _set_payload_in_log_entry(log_entry: LogEntry, body: Any | None):
+    struct = Struct()
+    if isinstance(body, Mapping):
+        struct.update(body)
+        log_entry.json_payload = struct
+    elif isinstance(body, bytes):
+        json_str = body.decode("utf-8", errors="replace")
+        json_dict = json.loads(json_str)
+        if isinstance(json_dict, Mapping):
+            struct.update(json_dict)
+            log_entry.json_payload = struct
+        else:
+            log_entry.text_payload = base64.b64encode(body).decode()
+    else:
+        log_entry.text_payload = _convert_any_value_to_string(body)
 
 
 class CloudLoggingExporter(LogExporter):
@@ -198,29 +211,13 @@ class CloudLoggingExporter(LogExporter):
                     log_record.severity_number.value  # type: ignore[index]
                 ]
             log_entry.labels = {
-                k: convert_any_value_to_string(v)
+                k: _convert_any_value_to_string(v)
                 for k, v in attributes.items()
             }
-            self._set_payload_in_log_entry(log_entry, log_record.body)
+            _set_payload_in_log_entry(log_entry, log_record.body)
             log_entries.append(log_entry)
 
         self._write_log_entries(log_entries)
-
-    def _set_payload_in_log_entry(self, log_entry: LogEntry, body: Any | None):
-        struct = Struct()
-        if isinstance(body, Mapping):
-            struct.update(body)
-            log_entry.json_payload = struct
-        elif isinstance(body, bytes):
-            json_str = body.decode("utf-8", errors="replace")
-            json_dict = json.loads(json_str)
-            if isinstance(json_dict, Mapping):
-                struct.update(json_dict)
-                log_entry.json_payload = struct
-            else:
-                log_entry.text_payload = base64.b64encode(body).decode()
-        else:
-            log_entry.text_payload = convert_any_value_to_string(body)
 
     def _write_log_entries(self, log_entries: list[LogEntry]):
         batch: list[LogEntry] = []
