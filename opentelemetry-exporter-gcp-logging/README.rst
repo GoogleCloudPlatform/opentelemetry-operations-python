@@ -35,6 +35,7 @@ Usage
 -----
 
 .. code:: python
+
     import logging
     from opentelemetry.exporter.cloud_logging import (
         CloudLoggingExporter,
