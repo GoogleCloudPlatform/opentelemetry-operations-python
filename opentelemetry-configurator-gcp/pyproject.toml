@@ -1,0 +1,9 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-configurator-gcp"
+
+[project.entry-points.opentelemetry_configurator]
+gcp = "opentelemetry.configurator.gcp:GcpConfigurator"
