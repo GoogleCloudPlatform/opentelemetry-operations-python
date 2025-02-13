@@ -1,0 +1,3 @@
+def configure_traces_exporter(resource=None):
+    # TODO: ...
+    pass
