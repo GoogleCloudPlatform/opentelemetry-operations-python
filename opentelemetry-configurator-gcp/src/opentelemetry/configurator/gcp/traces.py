@@ -5,6 +5,6 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 
 def configure_traces_exporter(resource=None):
-   provider = TracerProvider()
+   provider = TracerProvider(resource=resource)
    provider.add_span_processor(BatchSpanProcessor(CloudTraceSpanExporter()))
    trace.set_tracer_provider(provider)
