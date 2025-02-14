@@ -1,4 +1,6 @@
-import gcloud_env
+import os
+
+from . import gcloud_env
 
 
 def _str_to_optional_bool(s):

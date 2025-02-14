@@ -4,6 +4,24 @@ build-backend = "hatchling.build"
 
 [project]
 name = "opentelemetry-configurator-gcp"
+dynamic = ["version"]
+dependencies = [
+    "opentelemetry-api >= 1.30.0, <2",
+    "opentelemetry-sdk >= 1.30.0, <2",
+    "opentelemetry-exporter-gcp-logging >= 1.9.0a0, <2",
+    "opentelemetry-exporter-gcp-trace >= 1.9.0, <2",
+    "opentelemetry-exporter-gcp-monitoring >= 1.9.0a0, <2",
+    "opentelemetry-resourcedetector-gcp >= 1.9.0a0, <2",
+]
 
 [project.entry-points.opentelemetry_configurator]
 gcp = "opentelemetry.configurator.gcp:GcpConfigurator"
+
+[tool.hatch.build.targets.sdist]
+include = ["*.py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]
+
+[tool.hatch.version]
+path = "src/opentelemetry/configurator/gcp/version.py"

@@ -1,3 +1,5 @@
+from typing import Optional, Callable
+
 from .flags import (
     is_metrics_exporter_enabled,
     is_logs_exporter_enabled,
@@ -24,14 +26,14 @@ class OpenTelemetryGcpConfigurator:
         logs_exporter_enabled:Optional[bool]=None,
         traces_exporter_enabled:Optional[bool]=None,
         resource_detector_enabled:Optional[bool]=None):
-    self._metrics_exporter_enabled = _bool_with_flag_default(
-        metrics_exporter_enabled, is_metrics_exporter_enabled)
-    self._logs_exporter_enabled = _bool_with_flag_default(
-        logs_exporter_enabled, is_logs_exporter_enabled)
-    self._traces_exporter_enabled = _bool_with_flag_default(
-        traces_exporter_enabled, is_traces_exporter_enabled)
-    self._resource_detector_enabled = _bool_with_flag_default(
-        resource_detector_enabled, is_resource_detector_enabled)
+        self._metrics_exporter_enabled = _bool_with_flag_default(
+            metrics_exporter_enabled, is_metrics_exporter_enabled)
+        self._logs_exporter_enabled = _bool_with_flag_default(
+            logs_exporter_enabled, is_logs_exporter_enabled)
+        self._traces_exporter_enabled = _bool_with_flag_default(
+            traces_exporter_enabled, is_traces_exporter_enabled)
+        self._resource_detector_enabled = _bool_with_flag_default(
+            resource_detector_enabled, is_resource_detector_enabled)
 
     def configure(self):
         resource = get_resource(include_gcp_detector=self._resource_detector_enabled)

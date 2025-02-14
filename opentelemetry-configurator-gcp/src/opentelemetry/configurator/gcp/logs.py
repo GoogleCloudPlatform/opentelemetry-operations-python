@@ -23,7 +23,7 @@ def _get_entrypoint_script_name():
     main_script_path = sys.argv[0]
     if not main_script_path:
         main_script_path = sys.executable
-    simple_script_name = os.path.basename(main_scripot_path).rstrip('.py')
+    simple_script_name = os.path.basename(main_script_path).rstrip('.py')
     return simple_script_name
 
 
