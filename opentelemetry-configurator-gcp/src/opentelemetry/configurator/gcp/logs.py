@@ -1,4 +1,4 @@
-import sys
+"""Provides a mechanism to configure the Logs Exporter for GCP."""
 import os
 import os.path
 import logging
@@ -19,21 +19,6 @@ _LEVEL_NAME_TO_LEVEL = {
 }
 
 
-def _get_entrypoint_script_name():
-    main_script_path = sys.argv[0]
-    if not main_script_path:
-        main_script_path = sys.executable
-    simple_script_name = os.path.basename(main_script_path).rstrip('.py')
-    return simple_script_name
-
-
-def _get_log_name():
-    log_name = os.getenv('OTEL_GCP_LOG_NAME')
-    if log_name:
-        return log_name
-    return _get_entrypoint_script_name()
-
-
 def _get_log_level():
     level = os.getenv(otel_env_vars.OTEL_LOG_LEVEL)
     if level is None:
@@ -45,9 +30,19 @@ def _get_log_level():
 
 
 def configure_logs_exporter(resource=None):
+    """Configures the Cloud Logging exporter.
+    
+    Args:
+        resource: the resource to include in the emitted logs
+
+    Effects:
+        - Invokes the 'set_logger_provider' function with an
+          exporter that will cause OTel logs to get routed to GCP.
+        - Modifies the built-in 'logging' component in Python to
+          route built-in Python logs to Open Telemetry.
+    """
     provider = LoggerProvider(resource=resource)
-    provider.add_log_record_processor(BatchLogRecordProcessor(
-        CloudLoggingExporter(default_log_name=_get_log_name())))
+    provider.add_log_record_processor(BatchLogRecordProcessor(CloudLoggingExporter()))
     set_logger_provider(provider)
     handler = LoggingHandler(level=_get_log_level(), logger_provider=provider)
     logging.getLogger().addHandler(handler)
