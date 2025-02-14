@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.entry-points.opentelemetry_configurator]
-gcp = "opentelemetry.configurator.gcp:GcpConfigurator"
+gcp = "opentelemetry.configurator.gcp:OpenTelemetryGcpConfigurator"
 
 [tool.hatch.build.targets.sdist]
 include = ["*.py"]

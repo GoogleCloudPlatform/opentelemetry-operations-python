@@ -35,7 +35,7 @@ class OpenTelemetryGcpConfigurator:
         self._resource_detector_enabled = _bool_with_flag_default(
             resource_detector_enabled, is_resource_detector_enabled)
 
-    def configure(self):
+    def configure(self, **kwargs):
         resource = get_resource(include_gcp_detector=self._resource_detector_enabled)
         if self._metrics_exporter_enabled:
             configure_metrics_exporter(resource=resource)
