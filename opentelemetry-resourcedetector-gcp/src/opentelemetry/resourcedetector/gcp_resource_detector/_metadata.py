@@ -14,6 +14,7 @@
 
 import logging
 from functools import lru_cache
+from typing import Union
 
 import requests
 
@@ -24,7 +25,8 @@ _GCP_METADATA_URL = "http://metadata.google.internal/computeMetadata/v1/"
 _INSTANCE = "instance"
 _RECURSIVE_PARAMS = {"recursive": "true"}
 _GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
-_TIMEOUT_SEC = 5
+# Use a shorter timeout for connection so we won't block much if it's unreachable
+_TIMEOUT = (2, 5)
 
 _logger = logging.getLogger(__name__)
 
@@ -34,15 +36,17 @@ class Project(TypedDict):
 
 
 Attributes = TypedDict(
-    "Attributes", {"cluster-location": str, "cluster-name": str}
+    "Attributes", {"cluster-location": str, "cluster-name": str}, total=False
 )
 
 
 class Instance(TypedDict):
     attributes: Attributes
-    id: str
+    # id can be an integer on GCE VMs or a string on other environments
+    id: Union[int, str]
     machineType: str
     name: str
+    region: str
     zone: str
 
 
@@ -66,7 +70,7 @@ def get_metadata() -> Metadata:
             f"{_GCP_METADATA_URL}",
             params=_RECURSIVE_PARAMS,
             headers=_GCP_METADATA_URL_HEADER,
-            timeout=_TIMEOUT_SEC,
+            timeout=_TIMEOUT,
         )
         res.raise_for_status()
         all_metadata = res.json()
@@ -81,7 +85,7 @@ def is_available() -> bool:
         requests.get(
             f"{_GCP_METADATA_URL}{_INSTANCE}/",
             headers=_GCP_METADATA_URL_HEADER,
-            timeout=_TIMEOUT_SEC,
+            timeout=_TIMEOUT,
         ).raise_for_status()
     except requests.RequestException:
         _logger.debug(

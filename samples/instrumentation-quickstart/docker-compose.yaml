@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: '3'
+version: "3"
 
 services:
   app:
@@ -20,21 +20,36 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4318
       - OTEL_SERVICE_NAME=otel-quickstart-python
+      - OTEL_METRIC_EXPORT_INTERVAL=5000
+      - OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION=base2_exponential_bucket_histogram
     volumes:
       - logs:/var/log:rw
     depends_on:
       - "otelcol"
+    ports:
+      - 8080
   otelcol:
-    image: otel/opentelemetry-collector-contrib:0.92.0
+    image: otel/opentelemetry-collector-contrib:0.115.1
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
       - logs:/var/log:ro
     environment:
+      - GOOGLE_CLOUD_PROJECT
       - GOOGLE_CLOUD_QUOTA_PROJECT
-      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT?}
+    ports:
+      # Collector prometheus port. The metrics are checked in tests
+      - 8888
   loadgen:
     image: golang:1.21
-    command: ["go", "run", "github.com/rakyll/hey@latest", "-c=2", "-q=1", "http://app:8080/multi"]
+    command:
+      [
+        "go",
+        "run",
+        "github.com/rakyll/hey@latest",
+        "-c=2",
+        "-q=1",
+        "http://app:8080/multi",
+      ]
     depends_on:
       - "app"
 volumes:

@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
 import logging
 from typing import Literal
 
+from cloudevents.http.event import CloudEvent
+import functions_framework
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
 from google.rpc import code_pb2
@@ -153,6 +154,18 @@ def pubsub_push() -> None:
     app = Flask(__name__)
     responder = _Responder()
 
+    # Health checks for GAE. See:
+    # https://cloud.google.com/appengine/docs/flexible/reference/app-yaml#updated_health_checks
+    # https://github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/blob/v0.16.0/tf/gae/gae.tf#L32-L38
+    @app.route("/alive")
+    def alive() -> Response:
+        return Response(status=200)
+
+    @app.route("/ready")
+    def ready() -> Response:
+        return Response(status=200)
+
+    # Actual pub/sub handler
     @app.route("/", methods=["POST"])
     def index() -> Response:
         if not request.is_json:
@@ -168,3 +181,17 @@ def pubsub_push() -> None:
             return Response(status=400)
 
     serve(app, port=PUSH_PORT)
+
+
+@functions_framework.cloud_event
+def cloud_functions_handler(cloud_event: CloudEvent) -> None:
+    """Handles pub/sub push message on Cloud Functions"""
+    # cloud_event.data is of type MessagePublishedData, i.e. it contains the pub/sub message
+    # https://github.com/googleapis/google-cloudevents/blob/v2.1.6/proto/google/events/cloud/pubsub/v1/data.proto#L26
+    payload = types.PubsubPushPayload(**cloud_event.data)
+
+    ack_or_nack = handle_message(
+        payload.message.to_pubsub_message(), _Responder()
+    )
+    if ack_or_nack == "nack":
+        raise Exception("Nacking message")

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 # TODO: use opentelemetry-semantic-conventions package for these constants once it has
 # stabilized. Right now, pinning an unstable version would cause dependency conflicts for
 # users so these are copied in.
@@ -22,6 +23,12 @@ class ResourceAttributes:
     CLOUD_PLATFORM_KEY = "cloud.platform"
     CLOUD_PROVIDER = "cloud.provider"
     CLOUD_REGION = "cloud.region"
+    FAAS_INSTANCE = "faas.instance"
+    FAAS_NAME = "faas.name"
+    FAAS_VERSION = "faas.version"
+    GCP_APP_ENGINE = "gcp_app_engine"
+    GCP_CLOUD_FUNCTIONS = "gcp_cloud_functions"
+    GCP_CLOUD_RUN = "gcp_cloud_run"
     GCP_COMPUTE_ENGINE = "gcp_compute_engine"
     GCP_KUBERNETES_ENGINE = "gcp_kubernetes_engine"
     HOST_ID = "host.id"
@@ -35,8 +42,6 @@ class ResourceAttributes:
     SERVICE_INSTANCE_ID = "service.instance.id"
     SERVICE_NAME = "service.name"
     SERVICE_NAMESPACE = "service.namespace"
-    FAAS_INSTANCE = "faas.instance"
-    FAAS_NAME = "faas.name"
 
 
 AWS_ACCOUNT = "aws_account"

@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+## Version 1.9.0a0
+
+Released 2025-02-03
+
+## Version 1.8.0a0
+
+Released 2025-01-08
+
+- Use a shorter connection timeout for reading metadata
+  ([#362](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/362))
+- Fix creation of resources in _detector
+  ([#366](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/366))
+
+## Version 1.7.0a0
+
+Released 2024-08-27
+
+- Implement GAE resource detection
+  ([#351](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/351))
+- Implement Cloud Run and Cloud Functions faas resource detection
+  ([#346](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/346))
+- Small fixups for resource detector code and tests
+  ([#345](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/345))
+- gcp_resource_detector: add missing timeout to requests call
+  ([#344](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/344))
+- Add support for Python 3.12 (#343)
+  ([#343](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/343))
+- Don't throw and exception when raise on error is set to false
+  ([#293](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/293))
+
 ## Version 1.6.0a0
 
 Released 2023-10-16

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from unittest.mock import Mock
 
 import pytest
@@ -47,7 +46,7 @@ def fixture_fake_metadata(fake_get: Mock):
 # Reset stuff before every test
 # pylint: disable=unused-argument
 @pytest.fixture(autouse=True)
-def autouse(reset_cache, fake_get, fake_metadata, fake_environ):
+def autouse(reset_cache, fake_get, fake_metadata):
     pass
 
 
@@ -66,9 +65,10 @@ def test_detects_gce(snapshot, fake_metadata: _metadata.Metadata):
             "project": {"projectId": "fakeProject"},
             "instance": {
                 "name": "fakeName",
-                "id": "fakeId",
+                "id": "0087244a",
                 "machineType": "fakeMachineType",
                 "zone": "projects/233510669999/zones/us-east4-b",
+                "attributes": {},
             },
         }
     )
@@ -84,16 +84,18 @@ def test_detects_gce(snapshot, fake_metadata: _metadata.Metadata):
     ),
 )
 def test_detects_gke(
-    cluster_location: str, snapshot, fake_metadata: _metadata.Metadata
+    cluster_location: str,
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
 ):
-    os.environ["KUBERNETES_SERVICE_HOST"] = "fakehost"
+    monkeypatch.setenv("KUBERNETES_SERVICE_HOST", "fakehost")
     fake_metadata.update(
-        # All the same attributes as GCE
         {
             "project": {"projectId": "fakeProject"},
             "instance": {
                 "name": "fakeName",
-                "id": "fakeId",
+                "id": 12345,
                 "machineType": "fakeMachineType",
                 "zone": "projects/233510669999/zones/us-east4-b",
                 # Plus some attributes
@@ -101,6 +103,95 @@ def test_detects_gke(
                     "cluster-name": "fakeClusterName",
                     "cluster-location": cluster_location,
                 },
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_cloud_run(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("K_CONFIGURATION", "fake-configuration")
+    monkeypatch.setenv("K_SERVICE", "fake-service")
+    monkeypatch.setenv("K_REVISION", "fake-revision")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                # this will not be numeric on FaaS
+                "id": "0087244a",
+                "region": "projects/233510669999/regions/us-east4",
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_cloud_functions(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("FUNCTION_TARGET", "fake-function-target")
+    # Note all K_* environment variables are set since Cloud Functions executes within Cloud
+    # Run. This tests that the detector can differentiate between them
+    monkeypatch.setenv("K_CONFIGURATION", "fake-configuration")
+    monkeypatch.setenv("K_SERVICE", "fake-service")
+    monkeypatch.setenv("K_REVISION", "fake-revision")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                # this will not be numeric on FaaS
+                "id": "0087244a",
+                "region": "projects/233510669999/regions/us-east4",
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_gae_standard(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("GAE_ENV", "standard")
+    monkeypatch.setenv("GAE_SERVICE", "fake-service")
+    monkeypatch.setenv("GAE_VERSION", "fake-version")
+    monkeypatch.setenv("GAE_INSTANCE", "fake-instance")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                "region": "projects/233510669999/regions/us-east4",
+                "zone": "us-east4-b",
+            },
+        }
+    )
+
+    assert dict(GoogleCloudResourceDetector().detect().attributes) == snapshot
+
+
+def test_detects_gae_flex(
+    snapshot,
+    fake_metadata: _metadata.Metadata,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("GAE_SERVICE", "fake-service")
+    monkeypatch.setenv("GAE_VERSION", "fake-version")
+    monkeypatch.setenv("GAE_INSTANCE", "fake-instance")
+    fake_metadata.update(
+        {
+            "project": {"projectId": "fakeProject"},
+            "instance": {
+                "zone": "projects/233510669999/zones/us-east4-b",
             },
         }
     )

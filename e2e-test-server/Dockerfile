@@ -31,8 +31,8 @@ COPY opentelemetry-propagator-gcp opentelemetry-propagator-gcp
 COPY opentelemetry-resourcedetector-gcp opentelemetry-resourcedetector-gcp
 WORKDIR $SRC/e2e-test-server
 # copy requirements/constraints
-COPY e2e-test-server/requirements.txt e2e-test-server/constraints.txt ./
-RUN python -m venv venv && ./venv/bin/pip install -r requirements.txt
+COPY e2e-test-server/*.txt ./
+RUN python -m venv venv && ./venv/bin/pip install -r requirements-dockerfile.txt
 
 FROM python-base
 WORKDIR $SRC/e2e-test-server

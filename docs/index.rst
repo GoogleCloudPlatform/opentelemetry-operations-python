@@ -23,6 +23,13 @@ resource detectors for Google Cloud Platform. Development for these packages
 takes place on `Github
 <https://github.com/GoogleCloudPlatform/opentelemetry-operations-python>`_.
 
+To get started with instrumentation in Google Cloud, see `Generate traces and metrics with
+Python <https://cloud.google.com/stackdriver/docs/instrumentation/setup/python>`_.
+
+To learn more about instrumentation and observability, including opinionated recommendations
+for Google Cloud Observability, visit `Instrumentation and observability
+<https://cloud.google.com/stackdriver/docs/instrumentation/overview>`_.
+
 Installation
 ------------
 

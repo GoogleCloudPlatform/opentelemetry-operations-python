@@ -144,6 +144,14 @@ MAX_ATTR_KEY_BYTES = 128
 MAX_ATTR_VAL_BYTES = 16 * 1024  # 16 kilobytes
 
 
+def _create_default_client() -> TraceServiceClient:
+    return TraceServiceClient(
+        transport=TraceServiceGrpcTransport(
+            channel=TraceServiceGrpcTransport.create_channel(options=_OPTIONS)
+        )
+    )
+
+
 class CloudTraceSpanExporter(SpanExporter):
     """Cloud Trace span exporter for OpenTelemetry.
 
@@ -163,13 +171,7 @@ class CloudTraceSpanExporter(SpanExporter):
         client=None,
         resource_regex=None,
     ):
-        self.client: TraceServiceClient = client or TraceServiceClient(
-            transport=TraceServiceGrpcTransport(
-                channel=TraceServiceGrpcTransport.create_channel(
-                    options=_OPTIONS
-                )
-            )
-        )
+        self.client: TraceServiceClient = client or _create_default_client()
 
         if not project_id:
             project_id = environ.get(OTEL_EXPORTER_GCP_TRACE_PROJECT_ID)

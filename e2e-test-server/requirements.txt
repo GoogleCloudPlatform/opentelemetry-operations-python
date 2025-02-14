@@ -1,11 +1,10 @@
--c constraints.txt
-../opentelemetry-exporter-gcp-trace
-../opentelemetry-propagator-gcp
-../opentelemetry-resourcedetector-gcp
-opentelemetry-sdk
-opentelemetry-api
-Flask
-google-cloud-pubsub
-googleapis-common-protos
-pydantic
-waitress
+# Used for Cloud Functions and GAE, has to be named requirements.txt
+-r requirements-shared.txt
+
+ # allow installing dev versions so pip doesn't pull from pypi
+--pre
+# install monorepo packages from local vendored wheels directory
+--find-links wheels/
+opentelemetry-exporter-gcp-trace
+opentelemetry-propagator-gcp
+opentelemetry-resourcedetector-gcp

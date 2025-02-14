@@ -11,6 +11,13 @@ OpenTelemetry Google Cloud Monitoring Exporter
 This library provides support for exporting metrics to Google Cloud
 Monitoring.
 
+To get started with instrumentation in Google Cloud, see `Generate traces and metrics with
+Python <https://cloud.google.com/stackdriver/docs/instrumentation/setup/python>`_.
+
+To learn more about instrumentation and observability, including opinionated recommendations
+for Google Cloud Observability, visit `Instrumentation and observability
+<https://cloud.google.com/stackdriver/docs/instrumentation/overview>`_.
+
 For resource detection and GCP trace context propagation, see
 `opentelemetry-tools-google-cloud
 <https://pypi.org/project/opentelemetry-tools-google-cloud/>`_. For the

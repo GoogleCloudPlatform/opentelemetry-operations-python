@@ -12,22 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from unittest.mock import MagicMock
 
 import pytest
 from opentelemetry.resourcedetector.gcp_resource_detector import _gke
 
 
-# Reset stuff before every test
-# pylint: disable=unused-argument
-@pytest.fixture(autouse=True)
-def autouse(fake_get_metadata, fake_environ):
-    pass
-
-
-def test_detects_on_gke() -> None:
-    os.environ["KUBERNETES_SERVICE_HOST"] = "fakehost"
+def test_detects_on_gke(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("KUBERNETES_SERVICE_HOST", "fakehost")
     assert _gke.on_gke()
 
 
@@ -36,8 +28,8 @@ def test_detects_not_on_gke() -> None:
 
 
 def test_detects_host_id(fake_get_metadata: MagicMock) -> None:
-    fake_get_metadata.return_value = {"instance": {"id": "fake"}}
-    assert _gke.host_id() == "fake"
+    fake_get_metadata.return_value = {"instance": {"id": 12345}}
+    assert _gke.host_id() == "12345"
 
 
 def test_detects_cluster_name(fake_get_metadata: MagicMock) -> None:

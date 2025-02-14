@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## Version 1.9.0
+
+Released 2025-02-03
+
+## Version 1.8.0
+
+Released 2025-01-08
+
+## Version 1.7.0
+
+Released 2024-08-27
+
+- Add support for Python 3.12 (#343)
+  ([#343](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/343))
+
 ## Version 1.6.0
 
 Released 2023-10-16
