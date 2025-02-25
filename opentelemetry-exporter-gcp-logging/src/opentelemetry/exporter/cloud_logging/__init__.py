@@ -154,7 +154,9 @@ class CloudLoggingExporter(LogExporter):
         else:
             self.default_log_name = "otel_python_inprocess_log_name_temp"
         if route_logs_to_stdout_as_json and client:
-            raise Exception("Cannot route logs to stdout and set a logging client to send logs to.")
+            raise Exception(
+                "Cannot route logs to stdout and set a logging client to send logs to."
+            )
         if not route_logs_to_stdout_as_json:
             self.client = client or LoggingServiceV2Client(
                 transport=LoggingServiceV2GrpcTransport(
@@ -227,7 +229,6 @@ class CloudLoggingExporter(LogExporter):
 
         if not self.route_logs_to_stdout_as_json:
             self._write_log_entries_to_cloud_logging(log_entries)
-        
 
     def _write_log_entries_to_cloud_logging(self, log_entries: list[LogEntry]):
         batch: list[LogEntry] = []
