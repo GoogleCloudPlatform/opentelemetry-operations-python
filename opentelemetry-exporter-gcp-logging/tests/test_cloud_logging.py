@@ -66,6 +66,31 @@ def test_too_large_log_raises_warning(caplog) -> None:
         "exceeds Cloud Logging's maximum limit of 256000 bytes" in caplog.text
     )
 
+def test_logs_printed_to_stdout_as_json(capsys) -> None:
+    exporter = CloudLoggingExporter(
+        project_id=PROJECT_ID, route_logs_to_stdout_as_json=True
+    )
+    exporter.export(
+        [
+            LogData(
+                log_record=LogRecord(
+                    body="abc",
+                    resource=Resource({}),
+                    attributes={str(i): "i" * 5 for i in range(5)},
+                ),
+                instrumentation_scope=InstrumentationScope("test"),
+            )
+        ]
+    )
+    stdout = capsys.readouterr().out
+    assert (
+        '"logName": "projects/fakeproject/logs/otel_python_inprocess_log_name_temp"' in stdout
+    )
+    assert (
+        '"textPayload": "abc"' in stdout
+    )
+
+
 
 def test_convert_otlp_dict_body(
     cloudloggingfake: CloudLoggingFake,

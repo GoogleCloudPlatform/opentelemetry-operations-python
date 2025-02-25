@@ -140,7 +140,9 @@ class CloudLoggingExporter(LogExporter):
         project_id: Optional[str] = None,
         default_log_name: Optional[str] = None,
         client: Optional[LoggingServiceV2Client] = None,
+        route_logs_to_stdout_as_json: bool = False,
     ):
+        self.route_logs_to_stdout_as_json = route_logs_to_stdout_as_json
         self.project_id: str
         if not project_id:
             _, default_project_id = google.auth.default()
@@ -151,13 +153,16 @@ class CloudLoggingExporter(LogExporter):
             self.default_log_name = default_log_name
         else:
             self.default_log_name = "otel_python_inprocess_log_name_temp"
-        self.client = client or LoggingServiceV2Client(
-            transport=LoggingServiceV2GrpcTransport(
-                channel=LoggingServiceV2GrpcTransport.create_channel(
-                    options=_OPTIONS,
+        if route_logs_to_stdout_as_json and client:
+            raise Exception("Cannot route logs to stdout and set a logging client to send logs to.")
+        if not route_logs_to_stdout_as_json:
+            self.client = client or LoggingServiceV2Client(
+                transport=LoggingServiceV2GrpcTransport(
+                    channel=LoggingServiceV2GrpcTransport.create_channel(
+                        options=_OPTIONS,
+                    )
                 )
             )
-        )
 
     def export(self, batch: Sequence[LogData]):
         now = datetime.datetime.now()
@@ -215,11 +220,16 @@ class CloudLoggingExporter(LogExporter):
                 for k, v in attributes.items()
             }
             _set_payload_in_log_entry(log_entry, log_record.body)
-            log_entries.append(log_entry)
+            if self.route_logs_to_stdout_as_json:
+                print(LogEntry.to_json(log_entry))
+            else:
+                log_entries.append(log_entry)
 
-        self._write_log_entries(log_entries)
+        if not self.route_logs_to_stdout_as_json:
+            self._write_log_entries_to_cloud_logging(log_entries)
+        
 
-    def _write_log_entries(self, log_entries: list[LogEntry]):
+    def _write_log_entries_to_cloud_logging(self, log_entries: list[LogEntry]):
         batch: list[LogEntry] = []
         batch_byte_size = 0
         for entry in log_entries:
