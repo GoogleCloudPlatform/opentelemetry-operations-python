@@ -46,7 +46,6 @@ trace_provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(
     OTLPSpanExporter(
         credentials=channel_creds,
-        endpoint="https://telemetry.googleapis.com:443/v1/traces",
     )
 )
 trace_provider.add_span_processor(processor)
