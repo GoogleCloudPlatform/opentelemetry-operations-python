@@ -69,13 +69,13 @@ class GoogleCloudConfiguratorCustomizer(_BaseConfiguratorCustomizer):
         ):
             return exporter_class(
                 credentials=self.channel_credentials,
-                endpoint="telemetry.googleapis.com",
+                endpoint="google.googleapis.com",
             )
         if "session" in params and str(
             "requests.Session" in params["session"].annotation
         ):
             return exporter_class(
-                session=self.session, endpoint="telemetry.googleapis.com"
+                session=self.session, endpoint="google.googleapis.com"
             )
         return exporter_class()
 
