@@ -33,7 +33,11 @@ req_headers = {
 resource = Resource.create(attributes={SERVICE_NAME: "otlp-gcp-http-sample"})
 
 trace_provider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(headers=req_headers))
+processor = BatchSpanProcessor(
+    OTLPSpanExporter(
+        headers=req_headers, endpoint="https://telemetry.googleapis.com:443/v1/traces"
+    )
+)
 trace_provider.add_span_processor(processor)
 trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer("my.tracer.name")
