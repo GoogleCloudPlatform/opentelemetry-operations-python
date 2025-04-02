@@ -19,25 +19,20 @@ from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
+from google.auth.transport.requests import AuthorizedSession
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-credentials, project_id = google.auth.default()
-request = google.auth.transport.requests.Request()
-credentials.refresh(request)
-req_headers = {
-    "x-goog-user-project": credentials.quota_project_id,
-    "Authorization": "Bearer " + credentials.token,
-}
+credentials, _ = google.auth.default()
 resource = Resource.create(attributes={SERVICE_NAME: "otlp-gcp-http-sample"})
 
 trace_provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(
     OTLPSpanExporter(
-        headers=req_headers, endpoint="https://telemetry.googleapis.com:443/v1/traces"
-    )
-)
+       session=AuthorizedSession(credentials),
+       endpoint="https://telemetry.googleapis.com:443/v1/traces"
+    ))
 trace_provider.add_span_processor(processor)
 trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer("my.tracer.name")
