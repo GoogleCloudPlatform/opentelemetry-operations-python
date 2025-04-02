@@ -24,7 +24,6 @@ gcloud auth application-default login
 ```sh
 # export necessary OTEL environment variables
 export OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=<project-id>"
-export OTEL_EXPORTER_OTLP_ENDPOINT=<endpoint>
 
 # from the samples/otlptrace repository
 python3 example_grpc.py
