@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,195 +12,129 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import os
+from typing import Mapping
 
-import requests
-from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk.resources import Resource, ResourceDetector
-
-_GCP_METADATA_URL = (
-    "http://metadata.google.internal/computeMetadata/v1/?recursive=true"
+from opentelemetry.resourcedetector.gcp_resource_detector import (
+    _faas,
+    _gae,
+    _gce,
+    _gke,
+    _metadata,
 )
-_GCP_METADATA_URL_HEADER = {"Metadata-Flavor": "Google"}
-_TIMEOUT_SEC = 5
-
-logger = logging.getLogger(__name__)
-
-
-def _get_google_metadata_and_common_attributes():
-    token = attach(set_value("suppress_instrumentation", True))
-    all_metadata = requests.get(
-        _GCP_METADATA_URL,
-        headers=_GCP_METADATA_URL_HEADER,
-        timeout=_TIMEOUT_SEC,
-    ).json()
-    detach(token)
-    common_attributes = {
-        "cloud.account.id": all_metadata["project"]["projectId"],
-        "cloud.provider": "gcp",
-        "cloud.zone": all_metadata["instance"]["zone"].split("/")[-1],
-    }
-    return common_attributes, all_metadata
-
-
-def get_gce_resources():
-    """Resource finder for common GCE attributes
-
-    See: https://cloud.google.com/compute/docs/storing-retrieving-metadata
-    """
-    (
-        common_attributes,
-        all_metadata,
-    ) = _get_google_metadata_and_common_attributes()
-    common_attributes.update(
-        {
-            "host.id": all_metadata["instance"]["id"],
-            "gcp.resource_type": "gce_instance",
-        }
-    )
-    return common_attributes
-
-
-def get_gke_resources():
-    """Resource finder for GKE attributes"""
-
-    if os.getenv("KUBERNETES_SERVICE_HOST") is None:
-        return {}
-
-    (
-        common_attributes,
-        all_metadata,
-    ) = _get_google_metadata_and_common_attributes()
-
-    container_name = os.getenv("CONTAINER_NAME")
-    if container_name is not None:
-        common_attributes["container.name"] = container_name
-
-    # Fallback to reading namespace from a file is the env var is not set
-    pod_namespace = os.getenv("NAMESPACE")
-    if pod_namespace is None:
-        try:
-            with open(
-                "/var/run/secrets/kubernetes.io/serviceaccount/namespace", "r"
-            ) as namespace_file:
-                pod_namespace = namespace_file.read().strip()
-        except FileNotFoundError:
-            pod_namespace = ""
-
-    common_attributes.update(
-        {
-            "k8s.cluster.name": all_metadata["instance"]["attributes"][
-                "cluster-name"
-            ],
-            "k8s.namespace.name": pod_namespace,
-            "k8s.pod.name": os.getenv("POD_NAME", os.getenv("HOSTNAME", "")),
-            "host.id": all_metadata["instance"]["id"],
-            "gcp.resource_type": "gke_container",
-        }
-    )
-    return common_attributes
-
-
-def get_cloudrun_resources():
-    """Resource finder for Cloud Run attributes"""
-
-    if os.getenv("K_CONFIGURATION") is None:
-        return {}
-
-    (
-        common_attributes,
-        all_metadata,
-    ) = _get_google_metadata_and_common_attributes()
-
-    faas_name = os.getenv("K_SERVICE")
-    if faas_name is not None:
-        common_attributes["faas.name"] = str(faas_name)
-
-    faas_version = os.getenv("K_REVISION")
-    if faas_version is not None:
-        common_attributes["faas.version"] = str(faas_version)
-
-    common_attributes.update(
-        {
-            "cloud.platform": "gcp_cloud_run",
-            "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
-            "faas.instance": all_metadata["instance"]["id"],
-            "gcp.resource_type": "cloud_run",
-        }
-    )
-    return common_attributes
-
-
-def get_cloudfunctions_resources():
-    """Resource finder for Cloud Functions attributes"""
-
-    if os.getenv("FUNCTION_TARGET") is None:
-        return {}
-
-    (
-        common_attributes,
-        all_metadata,
-    ) = _get_google_metadata_and_common_attributes()
-
-    faas_name = os.getenv("K_SERVICE")
-    if faas_name is not None:
-        common_attributes["faas.name"] = str(faas_name)
-
-    faas_version = os.getenv("K_REVISION")
-    if faas_version is not None:
-        common_attributes["faas.version"] = str(faas_version)
-
-    common_attributes.update(
-        {
-            "cloud.platform": "gcp_cloud_functions",
-            "cloud.region": all_metadata["instance"]["region"].split("/")[-1],
-            "faas.instance": all_metadata["instance"]["id"],
-            "gcp.resource_type": "cloud_functions",
-        }
-    )
-    return common_attributes
-
-
-# Order here matters. Since a GKE_CONTAINER is a specialized type of GCE_INSTANCE
-# We need to first check if it matches the criteria for being a GKE_CONTAINER
-# before falling back and checking if its a GCE_INSTANCE.
-# This list should be sorted from most specialized to least specialized.
-_RESOURCE_FINDERS = [
-    ("gke_container", get_gke_resources),
-    ("cloud_run", get_cloudrun_resources),
-    ("cloud_functions", get_cloudfunctions_resources),
-    ("gce_instance", get_gce_resources),
-]
-
-
-class NoGoogleResourcesFound(Exception):
-    pass
+from opentelemetry.resourcedetector.gcp_resource_detector._constants import (
+    ResourceAttributes,
+)
+from opentelemetry.sdk.resources import Resource, ResourceDetector
+from opentelemetry.util.types import AttributeValue
 
 
 class GoogleCloudResourceDetector(ResourceDetector):
-    def __init__(self, raise_on_error=False):
-        super().__init__(raise_on_error)
-        self.cached = False
-        self.gcp_resources = {}
+    def detect(self) -> Resource:
+        # pylint: disable=too-many-return-statements
+        if not _metadata.is_available():
+            return Resource.get_empty()
 
-    def detect(self) -> "Resource":
-        if not self.cached:
-            self.cached = True
-            for resource_type, resource_finder in _RESOURCE_FINDERS:
-                try:
-                    found_resources = resource_finder()
-                # pylint: disable=broad-except
-                except Exception as ex:
-                    logger.warning(
-                        "Exception %s occured attempting %s resource detection",
-                        ex,
-                        resource_type,
-                    )
-                    found_resources = None
-                if found_resources:
-                    self.gcp_resources = found_resources
-                    break
-        if self.raise_on_error and not self.gcp_resources:
-            raise NoGoogleResourcesFound()
-        return Resource(self.gcp_resources)
+        if _gke.on_gke():
+            return _gke_resource()
+        if _faas.on_cloud_functions():
+            return _cloud_functions_resource()
+        if _faas.on_cloud_run():
+            return _cloud_run_resource()
+        if _gae.on_app_engine():
+            return _gae_resource()
+        if _gce.on_gce():
+            return _gce_resource()
+
+        return Resource.get_empty()
+
+
+def _gke_resource() -> Resource:
+    zone_or_region = _gke.availability_zone_or_region()
+    zone_or_region_key = (
+        ResourceAttributes.CLOUD_AVAILABILITY_ZONE
+        if zone_or_region.type == "zone"
+        else ResourceAttributes.CLOUD_REGION
+    )
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_KUBERNETES_ENGINE,
+            zone_or_region_key: zone_or_region.value,
+            ResourceAttributes.K8S_CLUSTER_NAME: _gke.cluster_name(),
+            ResourceAttributes.HOST_ID: _gke.host_id(),
+        }
+    )
+
+
+def _gce_resource() -> Resource:
+    zone_and_region = _gce.availability_zone_and_region()
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_COMPUTE_ENGINE,
+            ResourceAttributes.CLOUD_AVAILABILITY_ZONE: zone_and_region.zone,
+            ResourceAttributes.CLOUD_REGION: zone_and_region.region,
+            ResourceAttributes.HOST_TYPE: _gce.host_type(),
+            ResourceAttributes.HOST_ID: _gce.host_id(),
+            ResourceAttributes.HOST_NAME: _gce.host_name(),
+        }
+    )
+
+
+def _cloud_run_resource() -> Resource:
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_CLOUD_RUN,
+            ResourceAttributes.FAAS_NAME: _faas.faas_name(),
+            ResourceAttributes.FAAS_VERSION: _faas.faas_version(),
+            ResourceAttributes.FAAS_INSTANCE: _faas.faas_instance(),
+            ResourceAttributes.CLOUD_REGION: _faas.faas_cloud_region(),
+        }
+    )
+
+
+def _cloud_functions_resource() -> Resource:
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_CLOUD_FUNCTIONS,
+            ResourceAttributes.FAAS_NAME: _faas.faas_name(),
+            ResourceAttributes.FAAS_VERSION: _faas.faas_version(),
+            ResourceAttributes.FAAS_INSTANCE: _faas.faas_instance(),
+            ResourceAttributes.CLOUD_REGION: _faas.faas_cloud_region(),
+        }
+    )
+
+
+def _gae_resource() -> Resource:
+    if _gae.on_app_engine_standard():
+        zone = _gae.standard_availability_zone()
+        region = _gae.standard_cloud_region()
+    else:
+        zone_and_region = _gae.flex_availability_zone_and_region()
+        zone = zone_and_region.zone
+        region = zone_and_region.region
+
+    faas_name = _gae.service_name()
+    faas_version = _gae.service_version()
+    faas_instance = _gae.service_instance()
+
+    return _make_resource(
+        {
+            ResourceAttributes.CLOUD_PLATFORM_KEY: ResourceAttributes.GCP_APP_ENGINE,
+            ResourceAttributes.FAAS_NAME: faas_name,
+            ResourceAttributes.FAAS_VERSION: faas_version,
+            ResourceAttributes.FAAS_INSTANCE: faas_instance,
+            ResourceAttributes.CLOUD_AVAILABILITY_ZONE: zone,
+            ResourceAttributes.CLOUD_REGION: region,
+        }
+    )
+
+
+def _make_resource(attrs: Mapping[str, AttributeValue]) -> Resource:
+    return Resource(
+        {
+            ResourceAttributes.CLOUD_PROVIDER: "gcp",
+            ResourceAttributes.CLOUD_ACCOUNT_ID: _metadata.get_metadata()[
+                "project"
+            ]["projectId"],
+            **attrs,
+        }
+    )

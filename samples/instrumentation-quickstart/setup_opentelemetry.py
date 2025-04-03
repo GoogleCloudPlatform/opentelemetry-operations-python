@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-from opentelemetry.sdk.resources import SERVICE_INSTANCE_ID, SERVICE_NAME, Resource
-
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
@@ -25,13 +21,10 @@ from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector
 
 # [START opentelemetry_instrumentation_setup_opentelemetry]
-resource = Resource.create(attributes={
-    # Use the PID as the service.instance.id to avoid duplicate timeseries
-    # from different Gunicorn worker processes.
-    SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
-})
+resource = GoogleCloudResourceDetector().detect()
 
 traceProvider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(OTLPSpanExporter())
