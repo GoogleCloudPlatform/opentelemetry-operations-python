@@ -58,6 +58,7 @@ def multi():
 def single():
     """Handle an http request by sleeping for 100-200 ms, and write the number of seconds slept as the response."""
     duration = uniform(0.1, 0.2)
+    logger.info("handle /single request", extra={"duration": duration})
     time.sleep(duration)
     return f"slept {duration} seconds"
 
