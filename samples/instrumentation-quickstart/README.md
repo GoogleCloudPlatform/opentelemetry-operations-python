@@ -1,8 +1,6 @@
 # OpenTelemetry Python instrumentation example
 
-**This example is under development, and does not currently work**
-
-This sample is a Python application instrumented with TODO. This is a python version
+This sample is a Python application instrumented with OpenTelemetry. This is a python version
 of [this golang
 sample](https://github.com/GoogleCloudPlatform/golang-samples/tree/main/opentelemetry/instrumentation).
 It uses docker compose to run the application and send it some requests.
