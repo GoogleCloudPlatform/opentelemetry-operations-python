@@ -117,10 +117,18 @@ def _convert_any_value_to_string(value: Any) -> str:
     return ""
 
 
+def _convert_bytes_to_b64(body: Mapping) -> Mapping:
+    for key, value in list(body.items()):
+        if isinstance(value, bytes):
+            body[key] = base64.b64encode(value).decode()
+        elif isinstance(value, Mapping):
+            body[key] = _convert_bytes_to_b64(value)
+    return body
+
 def _set_payload_in_log_entry(log_entry: LogEntry, body: Any | None):
     struct = Struct()
     if isinstance(body, Mapping):
-        struct.update(body)
+        struct.update(_convert_bytes_to_b64(body))
         log_entry.json_payload = struct
     elif isinstance(body, bytes):
         json_str = body.decode("utf-8", errors="replace")
