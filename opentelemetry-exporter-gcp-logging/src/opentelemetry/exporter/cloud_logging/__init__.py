@@ -18,7 +18,7 @@ import datetime
 import json
 import logging
 import urllib.parse
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, MutableMapping, Optional, Sequence
 
 import google.auth
 from google.api.monitored_resource_pb2 import (  # pylint: disable = no-name-in-module
@@ -117,18 +117,18 @@ def _convert_any_value_to_string(value: Any) -> str:
     return ""
 
 
-def _convert_bytes_to_b64(body: Mapping) -> Mapping:
+def _convert_bytes_to_b64(body: MutableMapping) -> MutableMapping:
     for key, value in list(body.items()):
         if isinstance(value, bytes):
             body[key] = base64.b64encode(value).decode()
-        elif isinstance(value, Mapping):
+        elif isinstance(value, MutableMapping):
             body[key] = _convert_bytes_to_b64(value)
     return body
 
 
 def _set_payload_in_log_entry(log_entry: LogEntry, body: Any | None):
     struct = Struct()
-    if isinstance(body, Mapping):
+    if isinstance(body, MutableMapping):
         struct.update(_convert_bytes_to_b64(body))
         log_entry.json_payload = struct
     elif isinstance(body, bytes):
