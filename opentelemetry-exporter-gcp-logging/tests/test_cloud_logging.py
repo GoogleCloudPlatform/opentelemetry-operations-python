@@ -94,6 +94,7 @@ def test_convert_otlp_dict_body(
                             }
                         ],
                         "bytes_field": b"bytes",
+                        "repeated_bytes_field": [b"bytes", b"bytes", b"bytes"],
                     }
                 },
             ),

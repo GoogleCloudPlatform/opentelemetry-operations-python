@@ -117,19 +117,29 @@ def _convert_any_value_to_string(value: Any) -> str:
     return ""
 
 
-def _convert_bytes_to_b64(body: MutableMapping) -> MutableMapping:
+def _convert_bytes_to_b64(body: Mapping, new_body: dict) -> dict:
     for key, value in list(body.items()):
-        if isinstance(value, bytes):
-            body[key] = base64.b64encode(value).decode()
+        if (
+            isinstance(value, Sequence)
+            and len(value) > 0
+            and isinstance(value[0], bytes)
+        ):
+            new_body[key] = [base64.b64encode(v).decode() for v in value]
+        elif isinstance(value, bytes):
+            new_body[key] = base64.b64encode(value).decode()
         elif isinstance(value, MutableMapping):
-            body[key] = _convert_bytes_to_b64(value)
-    return body
+            new_subbody = {}
+            new_body[key] = _convert_bytes_to_b64(value, new_subbody)
+        else:
+            new_body[key] = value
+    return new_body
 
 
 def _set_payload_in_log_entry(log_entry: LogEntry, body: Any | None):
     struct = Struct()
-    if isinstance(body, MutableMapping):
-        struct.update(_convert_bytes_to_b64(body))
+    if isinstance(body, Mapping):
+        new_body = {}
+        struct.update(_convert_bytes_to_b64(body, new_body))
         log_entry.json_payload = struct
     elif isinstance(body, bytes):
         json_str = body.decode("utf-8", errors="replace")
