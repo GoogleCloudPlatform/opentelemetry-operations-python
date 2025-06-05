@@ -50,6 +50,7 @@ from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import LogExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace import format_span_id, format_trace_id
+from opentelemetry.util.types import AnyValue
 
 DEFAULT_MAX_ENTRY_SIZE = 256000  # 256 KB
 DEFAULT_MAX_REQUEST_SIZE = 10000000  # 10 MB
@@ -117,19 +118,28 @@ def _convert_any_value_to_string(value: Any) -> str:
     return ""
 
 
-def _convert_bytes_to_b64(body: Mapping, new_body: dict) -> dict:
+# Be careful not to mutate original body. Make copies of anything that needs to change.
+def _sanitized_body(
+    body: Mapping[str, AnyValue]
+) -> MutableMapping[str, AnyValue]:
+    new_body: MutableMapping[str, AnyValue] = {}
     for key, value in body.items():
         if (
             isinstance(value, Sequence)
             and len(value) > 0
             and isinstance(value[0], bytes)
         ):
-            new_body[key] = [base64.b64encode(v).decode() for v in value]
+            # Should not be possible for a non-bytes value to be present. AnyValue requires Sequence be of one type, and above
+            # we verified the first value is type bytes.
+            new_body[key] = [
+                base64.b64encode(v).decode()
+                for v in value
+                if isinstance(v, bytes)
+            ]
         elif isinstance(value, bytes):
             new_body[key] = base64.b64encode(value).decode()
-        elif isinstance(value, MutableMapping):
-            new_subbody = {}
-            new_body[key] = _convert_bytes_to_b64(value, new_subbody)
+        elif isinstance(value, Mapping):
+            new_body[key] = _sanitized_body(value)
         else:
             new_body[key] = value
     return new_body
@@ -138,8 +148,7 @@ def _convert_bytes_to_b64(body: Mapping, new_body: dict) -> dict:
 def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
     struct = Struct()
     if isinstance(body, Mapping):
-        new_body = {}
-        struct.update(_convert_bytes_to_b64(body, new_body))
+        struct.update(_sanitized_body(body))
         log_entry.json_payload = struct
     elif isinstance(body, bytes):
         json_str = body.decode("utf-8", errors="replace")
