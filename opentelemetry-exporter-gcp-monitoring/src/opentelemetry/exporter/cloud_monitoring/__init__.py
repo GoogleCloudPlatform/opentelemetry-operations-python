@@ -55,6 +55,8 @@ from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
 )
 from opentelemetry.sdk import version as opentelemetry_sdk_version
 from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogram,
+    ExponentialHistogramDataPoint,
     Gauge,
     Histogram,
     HistogramDataPoint,
@@ -209,6 +211,12 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             descriptor.metric_kind = MetricDescriptor.MetricKind.GAUGE
         elif isinstance(data, Histogram):
             descriptor.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
+        elif isinstance(data, ExponentialHistogram):
+            logger.warning(
+                "Unsupported metric data type %s, ignoring it",
+                type(data).__name__,
+            )
+            return None
         else:
             # Exhaustive check
             _: NoReturn = data
@@ -342,6 +350,10 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                         continue
 
                     for data_point in metric.data.data_points:
+                        if isinstance(
+                            data_point, ExponentialHistogramDataPoint
+                        ):
+                            continue
                         labels = {
                             _normalize_label_key(key): str(value)
                             for key, value in (
