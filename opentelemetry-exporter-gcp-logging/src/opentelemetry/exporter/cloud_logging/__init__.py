@@ -118,7 +118,7 @@ def _convert_any_value_to_string(value: Any) -> str:
 
 
 def _convert_bytes_to_b64(body: Mapping, new_body: dict) -> dict:
-    for key, value in list(body.items()):
+    for key, value in body.items():
         if (
             isinstance(value, Sequence)
             and len(value) > 0
