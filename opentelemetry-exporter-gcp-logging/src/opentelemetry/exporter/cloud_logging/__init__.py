@@ -135,7 +135,7 @@ def _convert_bytes_to_b64(body: Mapping, new_body: dict) -> dict:
     return new_body
 
 
-def _set_payload_in_log_entry(log_entry: LogEntry, body: Any | None):
+def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
     struct = Struct()
     if isinstance(body, Mapping):
         new_body = {}
