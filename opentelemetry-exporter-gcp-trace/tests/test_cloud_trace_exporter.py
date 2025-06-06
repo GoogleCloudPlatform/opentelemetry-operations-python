@@ -550,6 +550,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
             ),
             attributes={"illegal_attr_value": dict(), "int_attr_value": 123},
         )
+        print(link3.attributes)
         self.assertEqual(
             _extract_links([link1, link2, link3]),
             ProtoSpan.Links(
@@ -571,6 +572,7 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         "span_id": span_id2,
                         "type": "TYPE_UNSPECIFIED",
                         "attributes": {
+                            "dropped_attributes_count": 1,
                             "attribute_map": {
                                 "int_attr_value": AttributeValue(int_value=123)
                             },

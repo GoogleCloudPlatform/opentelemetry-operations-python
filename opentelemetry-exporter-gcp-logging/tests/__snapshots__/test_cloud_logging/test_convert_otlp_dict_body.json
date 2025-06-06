@@ -4,6 +4,12 @@
       {
         "jsonPayload": {
           "kvlistValue": {
+            "bytes_field": "Ynl0ZXM=",
+            "repeated_bytes_field": [
+              "Ynl0ZXM=",
+              "Ynl0ZXM=",
+              "Ynl0ZXM="
+            ],
             "values": [
               {
                 "key": "content",
