@@ -14,7 +14,7 @@
 
 import logging
 from functools import lru_cache
-from typing import Union, TypedDict
+from typing import TypedDict, Union
 
 import requests
 

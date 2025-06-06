@@ -14,13 +14,12 @@
 
 import os
 from dataclasses import dataclass
+from typing import Literal
 
 from opentelemetry.resourcedetector.gcp_resource_detector import (
     _gce,
     _metadata,
 )
-
-from typing import Literal
 
 KUBERNETES_SERVICE_HOST_ENV = "KUBERNETES_SERVICE_HOST"
 
