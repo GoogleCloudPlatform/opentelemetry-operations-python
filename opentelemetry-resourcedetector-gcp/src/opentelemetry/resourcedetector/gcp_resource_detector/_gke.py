@@ -20,8 +20,7 @@ from opentelemetry.resourcedetector.gcp_resource_detector import (
     _metadata,
 )
 
-# TODO: remove when Python 3.7 is dropped
-from typing_extensions import Literal
+from typing import Literal
 
 KUBERNETES_SERVICE_HOST_ENV = "KUBERNETES_SERVICE_HOST"
 
