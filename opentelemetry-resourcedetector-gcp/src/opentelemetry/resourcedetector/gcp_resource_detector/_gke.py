@@ -14,14 +14,12 @@
 
 import os
 from dataclasses import dataclass
+from typing import Literal
 
 from opentelemetry.resourcedetector.gcp_resource_detector import (
     _gce,
     _metadata,
 )
-
-# TODO: remove when Python 3.7 is dropped
-from typing_extensions import Literal
 
 KUBERNETES_SERVICE_HOST_ENV = "KUBERNETES_SERVICE_HOST"
 
