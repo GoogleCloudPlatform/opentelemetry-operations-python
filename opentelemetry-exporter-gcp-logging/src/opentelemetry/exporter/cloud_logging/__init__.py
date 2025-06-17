@@ -57,6 +57,7 @@ DEFAULT_MAX_REQUEST_SIZE = 10000000  # 10 MB
 
 HTTP_REQUEST_ATTRIBUTE_KEY = "gcp.http_request"
 LOG_NAME_ATTRIBUTE_KEY = "gcp.log_name"
+EVENT_NAME_ATTRIBUTE_KEY = "event.name"
 SOURCE_LOCATION_ATTRIBUTE_KEY = "gcp.source_location"
 TRACE_SAMPLED_ATTRIBUTE_KEY = "gcp.trace_sampled"
 PROJECT_ID_ATTRIBUTE_KEY = "gcp.project_id"
@@ -197,13 +198,11 @@ class CloudLoggingExporter(LogExporter):
             project_id = str(
                 attributes.get(PROJECT_ID_ATTRIBUTE_KEY, self.project_id)
             )
-            log_suffix = urllib.parse.quote_plus(
-                str(
-                    attributes.get(
-                        LOG_NAME_ATTRIBUTE_KEY, self.default_log_name
-                    )
-                )
-            )
+            log_suffix = self.default_log_name
+            if attributes.get(LOG_NAME_ATTRIBUTE_KEY):
+                log_suffix = urllib.parse.quote_plus(attributes.get(LOG_NAME_ATTRIBUTE_KEY))
+            elif attributes.get(EVENT_NAME_ATTRIBUTE_KEY):
+                log_suffix = urllib.parse.quote_plus(attributes.get(EVENT_NAME_ATTRIBUTE_KEY))
             log_entry.log_name = f"projects/{project_id}/logs/{log_suffix}"
             # If timestamp is unset fall back to observed_time_unix_nano as recommended,
             # see https://github.com/open-telemetry/opentelemetry-proto/blob/4abbb78/opentelemetry/proto/logs/v1/logs.proto#L176-L179
