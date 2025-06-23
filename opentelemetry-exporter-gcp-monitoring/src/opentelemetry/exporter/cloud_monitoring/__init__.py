@@ -137,7 +137,9 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         self._metric_descriptors: Dict[str, MetricDescriptor] = {}
         self.unique_identifier = None
         if add_unique_identifier:
-            self.unique_identifier = "{:08x}".format(random.randint(0, 16**8))
+            self.unique_identifier = "{:08x}".format(
+                random.randint(0, 16**8)
+            )
 
         (
             self._exporter_start_time_seconds,
@@ -405,9 +407,9 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                             ).items()
                         }
                         if self.unique_identifier:
-                            labels[UNIQUE_IDENTIFIER_KEY] = (
-                                self.unique_identifier
-                            )
+                            labels[
+                                UNIQUE_IDENTIFIER_KEY
+                            ] = self.unique_identifier
                         point = self._to_point(
                             descriptor.metric_kind, data_point
                         )
