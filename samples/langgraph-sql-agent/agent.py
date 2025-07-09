@@ -26,7 +26,7 @@ from langgraph.prebuilt import create_react_agent
 from opentelemetry import trace
 from sqlalchemy import create_engine
 
-from patched_vertexai import PatchedChatVertexAI
+from langchain_google_vertexai import ChatVertexAI
 from utils import ask_prompt, console, print_markdown, render_messages
 
 SYSTEM_PROMPT = SystemMessage(
@@ -71,7 +71,7 @@ tracer = trace.get_tracer(__name__)
 
 
 def run_agent(*, model_name: str, recursion_limit: int = 50) -> None:
-    model = PatchedChatVertexAI(model=model_name)
+    model = ChatVertexAI(model=model_name)
     checkpointer = InMemorySaver()
 
     # Ephemeral sqlite database per run
