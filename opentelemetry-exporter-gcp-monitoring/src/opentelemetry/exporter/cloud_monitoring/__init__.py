@@ -286,9 +286,6 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             )
         elif isinstance(data_point, ExponentialHistogramDataPoint):
             # Adapted from https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/v1.8.0/exporter/collector/metrics.go#L582
-            mean = (
-                data_point.sum / data_point.count if data_point.count else 0.0
-            )
 
             # Calculate underflow bucket (zero count + negative buckets)
             underflow = data_point.zero_count
@@ -325,6 +322,9 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                     )
                 )
 
+            mean = (
+                data_point.sum / data_point.count if data_point.count else 0.0
+            )
             point_value = TypedValue(
                 distribution_value=Distribution(
                     count=data_point.count,
