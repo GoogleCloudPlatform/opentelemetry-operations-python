@@ -20,8 +20,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "langchain-community>=0.3.16",
-    "langchain-google-vertexai>=2.0.7",
-    "langgraph>=0.4.3",
+    "langchain-google-vertexai>=2.0.27",
+    "langgraph>=0.5.1",
     "opentelemetry-exporter-gcp-logging>=1.9.0a0",
     "opentelemetry-exporter-gcp-monitoring>=1.9.0a0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.33.0",
