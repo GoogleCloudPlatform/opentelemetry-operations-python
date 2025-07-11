@@ -1,0 +1,238 @@
+{
+  "/google.monitoring.v3.MetricService/CreateMetricDescriptor": [
+    {
+      "metricDescriptor": {
+        "description": "foo",
+        "displayName": "myexponentialhistogram",
+        "labels": [
+          {
+            "key": "string"
+          },
+          {
+            "key": "int"
+          },
+          {
+            "key": "float"
+          }
+        ],
+        "metricKind": "CUMULATIVE",
+        "type": "workload.googleapis.com/myexponentialhistogram",
+        "unit": "{myunit}",
+        "valueType": "DISTRIBUTION"
+      },
+      "name": "projects/fakeproject"
+    }
+  ],
+  "/google.monitoring.v3.MetricService/CreateTimeSeries": [
+    {
+      "name": "projects/fakeproject",
+      "timeSeries": [
+        {
+          "metric": {
+            "labels": {
+              "float": "123.4",
+              "int": "123",
+              "string": "string"
+            },
+            "type": "workload.googleapis.com/myexponentialhistogram"
+          },
+          "metricKind": "CUMULATIVE",
+          "points": [
+            {
+              "interval": {
+                "endTime": "str",
+                "startTime": "str"
+              },
+              "value": {
+                "distributionValue": {
+                  "bucketCounts": [
+                    "0",
+                    "1",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "1",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "1",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "1",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "1",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "1",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "1",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0"
+                  ],
+                  "bucketOptions": {
+                    "exponentialBuckets": {
+                      "growthFactor": 1.0218971486541166,
+                      "numFiniteBuckets": 160,
+                      "scale": 24.67537320652687
+                    }
+                  },
+                  "count": "7",
+                  "mean": 128.57142857142858
+                }
+              }
+            }
+          ],
+          "resource": {
+            "labels": {
+              "location": "global",
+              "namespace": "",
+              "node_id": ""
+            },
+            "type": "generic_node"
+          },
+          "unit": "{myunit}"
+        }
+      ]
+    }
+  ]
+}
