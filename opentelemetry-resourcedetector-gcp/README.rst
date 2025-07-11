@@ -25,8 +25,23 @@ Installation
     pip install opentelemetry-resourcedetector-gcp
 
 ..
-    TODO: Add usage info here
 
+Usage
+------------
+
+.. code:: python
+    from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry import trace
+
+    resource = GoogleCloudResourceDetector().detect()
+    traceProvider = TracerProvider(resource=resource)
+    processor = BatchSpanProcessor(OTLPSpanExporter())
+    traceProvider.add_span_processor(processor)
+    trace.set_tracer_provider(traceProvider)
+..
 
 References
 ----------
