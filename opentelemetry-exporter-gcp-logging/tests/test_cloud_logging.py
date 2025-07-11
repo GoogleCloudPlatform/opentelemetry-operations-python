@@ -92,7 +92,9 @@ def test_convert_otlp_dict_body(
                                     "stringValue": "You're a helpful assistant."
                                 },
                             }
-                        ]
+                        ],
+                        "bytes_field": b"bytes",
+                        "repeated_bytes_field": [b"bytes", b"bytes", b"bytes"],
                     }
                 },
             ),

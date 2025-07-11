@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import math
 import random
 from dataclasses import replace
 from time import time_ns
@@ -55,6 +56,8 @@ from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
 )
 from opentelemetry.sdk import version as opentelemetry_sdk_version
 from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogram,
+    ExponentialHistogramDataPoint,
     Gauge,
     Histogram,
     HistogramDataPoint,
@@ -209,6 +212,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             descriptor.metric_kind = MetricDescriptor.MetricKind.GAUGE
         elif isinstance(data, Histogram):
             descriptor.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
+        elif isinstance(data, ExponentialHistogram):
+            descriptor.metric_kind = MetricDescriptor.MetricKind.CUMULATIVE
         else:
             # Exhaustive check
             _: NoReturn = data
@@ -226,6 +231,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                 else MetricDescriptor.ValueType.DOUBLE
             )
         elif isinstance(first_point, HistogramDataPoint):
+            descriptor.value_type = MetricDescriptor.ValueType.DISTRIBUTION
+        elif isinstance(first_point, ExponentialHistogramDataPoint):
             descriptor.value_type = MetricDescriptor.ValueType.DISTRIBUTION
         elif first_point is None:
             pass
@@ -257,7 +264,9 @@ class CloudMonitoringMetricsExporter(MetricExporter):
     @staticmethod
     def _to_point(
         kind: "MetricDescriptor.MetricKind.V",
-        data_point: Union[NumberDataPoint, HistogramDataPoint],
+        data_point: Union[
+            NumberDataPoint, HistogramDataPoint, ExponentialHistogramDataPoint
+        ],
     ) -> Point:
         if isinstance(data_point, HistogramDataPoint):
             mean = (
@@ -273,6 +282,55 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                             bounds=data_point.explicit_bounds,
                         )
                     ),
+                )
+            )
+        elif isinstance(data_point, ExponentialHistogramDataPoint):
+            # Adapted from https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/v1.8.0/exporter/collector/metrics.go#L582
+
+            # Calculate underflow bucket (zero count + negative buckets)
+            underflow = data_point.zero_count
+            if data_point.negative.bucket_counts:
+                underflow += sum(data_point.negative.bucket_counts)
+
+            # Create bucket counts array: [underflow, positive_buckets..., overflow=0]
+            bucket_counts = [underflow]
+            if data_point.positive.bucket_counts:
+                bucket_counts.extend(data_point.positive.bucket_counts)
+            bucket_counts.append(0)  # overflow bucket is always empty
+
+            # Determine bucket options
+            if not data_point.positive.bucket_counts:
+                # If no positive buckets, use explicit buckets with bounds=[0]
+                bucket_options = Distribution.BucketOptions(
+                    explicit_buckets=Distribution.BucketOptions.Explicit(
+                        bounds=[0.0],
+                    )
+                )
+            else:
+                # Use exponential bucket options
+                # growth_factor = 2^(2^(-scale))
+                growth_factor = math.pow(2, math.pow(2, -data_point.scale))
+                # scale = growth_factor^(positive_bucket_offset)
+                scale = math.pow(growth_factor, data_point.positive.offset)
+                num_finite_buckets = len(bucket_counts) - 2
+
+                bucket_options = Distribution.BucketOptions(
+                    exponential_buckets=Distribution.BucketOptions.Exponential(
+                        num_finite_buckets=num_finite_buckets,
+                        growth_factor=growth_factor,
+                        scale=scale,
+                    )
+                )
+
+            mean = (
+                data_point.sum / data_point.count if data_point.count else 0.0
+            )
+            point_value = TypedValue(
+                distribution_value=Distribution(
+                    count=data_point.count,
+                    mean=mean,
+                    bucket_counts=bucket_counts,
+                    bucket_options=bucket_options,
                 )
             )
         else:

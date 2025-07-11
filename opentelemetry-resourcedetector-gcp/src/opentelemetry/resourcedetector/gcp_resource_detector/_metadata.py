@@ -14,12 +14,9 @@
 
 import logging
 from functools import lru_cache
-from typing import Union
+from typing import TypedDict, Union
 
 import requests
-
-# TODO: remove when Python 3.7 is dropped
-from typing_extensions import TypedDict
 
 _GCP_METADATA_URL = "http://metadata.google.internal/computeMetadata/v1/"
 _INSTANCE = "instance"
