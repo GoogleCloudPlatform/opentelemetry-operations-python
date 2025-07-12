@@ -78,7 +78,7 @@ protobuf==4.25.3
     #   opentelemetry-proto
 typing-extensions==4.12.2
     # via opentelemetry-sdk
-werkzeug==3.0.3
+werkzeug==3.0.6
     # via
     #   -r requirements.in
     #   flask
