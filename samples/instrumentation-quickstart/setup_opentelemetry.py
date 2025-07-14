@@ -31,13 +31,6 @@ from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudReso
 
 # [START opentelemetry_instrumentation_setup_opentelemetry]
 def setup_opentelemetry() -> None:
-    # resource = Resource.create(
-    #     attributes={
-    #         # Use the PID as the service.instance.id to avoid duplicate timeseries
-    #         # from different Gunicorn worker processes.
-    #         SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
-    #     }
-    # ) 
     resource = GoogleCloudResourceDetector().detect()
 
     # Set up OpenTelemetry Python SDK
