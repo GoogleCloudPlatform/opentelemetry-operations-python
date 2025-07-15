@@ -25,7 +25,7 @@
           "gen_ai.system": "true",
           "test": "23"
         },
-        "logName": "projects/fakeproject/logs/test",
+        "logName": "projects/fakeproject/logs/random_genai_event",
         "resource": {
           "labels": {
             "location": "global",
