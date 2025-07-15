@@ -61,9 +61,6 @@ built with the the LangGraph prebuilt **ReAct Agent** and the **SQLDatabaseToolk
 ---
 """
 
-tracer = trace.get_tracer(__name__)
-
-
 def get_dbpath(thread_id: str) -> str:
     # Ephemeral sqlite database per conversation thread
     _, path = tempfile.mkstemp(suffix=".db")

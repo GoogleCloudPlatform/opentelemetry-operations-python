@@ -30,16 +30,11 @@ git clone https://github.com/GoogleCloudPlatform/opentelemetry-operations-python
 cd opentelemetry-operations-python/samples/adk-sql-agent
 ```
 
-Create a virtual environment and install the dependencies:
+Configure the environment and run the sample:
 ```sh
 python -m venv venv/
 source venv/bin/activate
 pip install -r requirements.txt
-```
-
-Configure the environment and run the sample:
-
-```sh
 env $(cat main.env | xargs) python main.py
 ```
 
