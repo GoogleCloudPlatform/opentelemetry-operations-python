@@ -28,5 +28,4 @@ dependencies = [
     "opentelemetry-instrumentation-requests>=0.54b0",
     "opentelemetry-instrumentation-sqlite3>=0.54b0",
     "opentelemetry-instrumentation-vertexai>=2.0b0",
-    "rich>=14.0.0",
 ]
