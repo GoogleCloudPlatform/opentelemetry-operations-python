@@ -30,13 +30,20 @@ Usage
 ------------
 
 .. code:: python
-    from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry import trace
+    from opentelemetry.sdk.resources import SERVICE_INSTANCE_ID, Resource
 
-    resource = GoogleCloudResourceDetector().detect()
+    # This will use the GooglecloudResourceDetector under the covers.
+    resource = Resource.create(
+        attributes={
+            # Use the PID as the service.instance.id to avoid duplicate timeseries
+            # from different Gunicorn worker processes.
+            SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
+        }
+    )
     traceProvider = TracerProvider(resource=resource)
     processor = BatchSpanProcessor(OTLPSpanExporter())
     traceProvider.add_span_processor(processor)

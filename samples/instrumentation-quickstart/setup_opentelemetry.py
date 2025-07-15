@@ -23,15 +23,19 @@ from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import SERVICE_INSTANCE_ID, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector
-
 # [START opentelemetry_instrumentation_setup_opentelemetry]
 def setup_opentelemetry() -> None:
-    resource = GoogleCloudResourceDetector().detect()
-
+    resource = Resource.create(
+        attributes={
+            # Use the PID as the service.instance.id to avoid duplicate timeseries
+            # from different Gunicorn worker processes.
+            SERVICE_INSTANCE_ID: f"worker-{os.getpid()}",
+        }
+    )
     # Set up OpenTelemetry Python SDK
     tracer_provider = TracerProvider(resource=resource)
     tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))

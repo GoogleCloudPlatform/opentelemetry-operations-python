@@ -24,9 +24,9 @@ from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector
 
 """
 This is a sample script that exports OTLP traces encoded as protobufs via gRPC. 
@@ -34,7 +34,7 @@ This is a sample script that exports OTLP traces encoded as protobufs via gRPC.
 
 credentials, _ = google.auth.default()
 request = google.auth.transport.requests.Request()
-resource = GoogleCloudResourceDetector().detect()
+resource = Resource.create(attributes={SERVICE_NAME: "otlp-gcp-grpc-sample"})
 
 auth_metadata_plugin = AuthMetadataPlugin(credentials=credentials, request=request)
 channel_creds = grpc.composite_channel_credentials(
