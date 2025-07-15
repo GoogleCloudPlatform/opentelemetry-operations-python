@@ -40,6 +40,7 @@ from opentelemetry.exporter.cloud_monitoring import (
 from opentelemetry.metrics import CallbackOptions, Observation
 from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
     View,
 )
 from opentelemetry.sdk.resources import Resource
@@ -134,6 +135,32 @@ def test_histogram_single_bucket(
         "myhistogram", description="foo", unit="{myunit}"
     )
     for value in range(10_000):
+        histogram.record(value, LABELS)
+
+    meter_provider.force_flush()
+    assert gcmfake.get_calls() == snapshot_gcmcalls
+
+
+def test_exponential_histogram(
+    gcmfake_meter_provider: GcmFakeMeterProvider,
+    gcmfake: GcmFake,
+    snapshot_gcmcalls,
+) -> None:
+    meter_provider = gcmfake_meter_provider(
+        views=[
+            View(
+                instrument_name="myexponentialhistogram",
+                aggregation=ExponentialBucketHistogramAggregation(
+                    max_size=160, max_scale=20
+                ),
+            )
+        ]
+    )
+    histogram = meter_provider.get_meter(__name__).create_histogram(
+        "myexponentialhistogram", description="foo", unit="{myunit}"
+    )
+
+    for value in [100, 50, 200, 25, 300, 75, 150]:
         histogram.record(value, LABELS)
 
     meter_provider.force_flush()
