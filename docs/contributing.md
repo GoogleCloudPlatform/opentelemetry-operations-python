@@ -55,17 +55,17 @@ tox -e dev
 
 ### Running tests
 
-This project supports python versions 3.5 to 3.9. To run tests, use `tox`:
+This project supports python versions 3.9 to 3.13. To run tests, use `tox`:
 
 ```sh
 # List all tox environments
 tox -l
 
-# Run python3.8 exporter tests
-tox -e py38-ci-test-exporter
+# Run python3.12 exporter tests
+tox -e py312-ci-test-exporter
 
-# Run all python3.8 tests in parallel
-tox -f py38-test -pauto
+# Run all python3.12 tests in parallel
+tox -f py312-test -pauto
 
 # All checks that run in continuous integration use the "ci" factor, which
 # makes it easy to test without submitting a PR. To run all of them in
