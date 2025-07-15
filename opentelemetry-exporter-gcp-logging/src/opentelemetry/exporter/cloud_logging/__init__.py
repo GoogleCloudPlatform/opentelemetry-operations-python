@@ -198,10 +198,9 @@ class CloudLoggingExporter(LogExporter):
                 attributes.get(PROJECT_ID_ATTRIBUTE_KEY, self.project_id)
             )
             log_suffix = self.default_log_name
-            if attributes.get(LOG_NAME_ATTRIBUTE_KEY):
-                log_suffix = urllib.parse.quote_plus(
-                    attributes.get(LOG_NAME_ATTRIBUTE_KEY)
-                )
+            log_name_attr = attributes.get(LOG_NAME_ATTRIBUTE_KEY)
+            if log_name_attr and isinstance(log_name_attr, str):
+                log_suffix = urllib.parse.quote_plus(log_name_attr)
             elif log_record.event_name:
                 log_suffix = urllib.parse.quote_plus(
                     log_record.event_name.replace(".", "_")
