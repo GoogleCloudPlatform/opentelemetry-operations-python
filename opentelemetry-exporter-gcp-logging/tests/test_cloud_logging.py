@@ -74,7 +74,7 @@ def test_convert_otlp_dict_body(
     log_data = [
         LogData(
             log_record=LogRecord(
-                event_name='random.genai.event',
+                event_name="random.genai.event",
                 timestamp=1736976310997977393,
                 severity_number=SeverityNumber(20),
                 trace_id=25,
