@@ -22,9 +22,7 @@ from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.propagators.cloud_trace_propagator import (
     CloudTraceFormatPropagator,
 )
-from opentelemetry.resourcedetector.gcp_resource_detector._detector import (
-    GoogleCloudResourceDetector,
-)
+from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
