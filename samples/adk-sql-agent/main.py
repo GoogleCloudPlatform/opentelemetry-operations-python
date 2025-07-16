@@ -51,9 +51,6 @@ ALLOWED_ORIGINS = ["http://localhost", "http://localhost:8080", "*"]
 # Set web=True if you intend to serve a web interface, False otherwise
 SERVE_WEB_INTERFACE = True
 
-logging.getLogger("opentelemetry").setLevel(logging.DEBUG)
-
-
 # [START opentelemetry_adk_otel_setup]
 def setup_opentelemetry() -> None:
     credentials, project_id = google.auth.default()
@@ -121,7 +118,7 @@ def main() -> None:
     # For this example this would be the current directory containing main.py.
     # Note: Calling this method attempts to set the global tracer provider, which has already been
     # set by the setup_opentelemetry() function.
-    app: FastAPI = get_fast_api_app(
+    app = get_fast_api_app(
         agents_dir=AGENT_DIR,
         session_service_uri=SESSION_DB_URL,
         allow_origins=ALLOWED_ORIGINS,

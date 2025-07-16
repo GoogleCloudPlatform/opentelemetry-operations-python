@@ -34,7 +34,7 @@ class SqlRunResult(TypedDict):
     """The rows returned by the SQL query"""
 
 @tracer.start_as_current_span("create_database")
-def create_database_tool(tool_context: ToolContext):
+def create_database_tool(tool_context: ToolContext) -> None:
     """Creates a temporary file in the /tmp directory to hold an ephemeral
     sqlite3 database if a database is not found for the current session.
     """
@@ -42,7 +42,7 @@ def create_database_tool(tool_context: ToolContext):
         _, path = tempfile.mkstemp(suffix=".db")
         # No scope prefix in the state data indicates that it will be persisted for
         # current session.
-        # See https://deepwiki.com/google/adk-python/3.4-state-management.
+        # See https://google.github.io/adk-docs/sessions/state/.
         tool_context.state[SESSION_DB_KEY] = path
 
 @tracer.start_as_current_span("run_sql")

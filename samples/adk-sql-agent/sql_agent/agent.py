@@ -40,8 +40,8 @@ You can use create_database_tool to create a new ephemeral sqlite3 database if o
 You should always check if database for current session exist before running sql queries by calling create_database_tool.
 If you make a mistake, try to recover."""
 
-INTRO_TEXT = """\
-Starting agent using ephemeral SQLite DB {dbpath}. This demo allows you to chat with an Agent
+DESCRIPTION = """\
+Starting agent using ephemeral SQLite DB. This demo allows you to chat with an Agent
 that has full access to an ephemeral SQLite database. The database is initially empty. It is
 built with the the LangGraph prebuilt **ReAct Agent** and the **SQLDatabaseToolkit**. Here are some samples you can try:
 
@@ -64,7 +64,7 @@ built with the the LangGraph prebuilt **ReAct Agent** and the **SQLDatabaseToolk
 root_agent = Agent(
     name="weather_time_agent",
     model="gemini-2.0-flash",
-    description=INTRO_TEXT,
+    description=DESCRIPTION,
     instruction=SYSTEM_PROMPT,
     tools=[run_sql_tool, create_database_tool],
 )
