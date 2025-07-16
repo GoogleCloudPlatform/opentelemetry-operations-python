@@ -13,10 +13,7 @@
 # limitations under the License.
 
 from google.adk.agents import Agent
-from google.adk.agents import BaseAgent
-import tempfile
-from .tools import create_run_sql_tool
-
+from .tools import run_sql_tool, create_database_tool
 
 import sqlite3
 
@@ -38,6 +35,9 @@ questions and perform actions. Follow these rules:
 - Always prefer to insert multiple rows in a single call to the sql_db_query tool, if possible.
 - You may request to execute multiple sql_db_query tool calls which will be run in parallel.
 
+You can use run_sql_tool to run sql queries against the current sqlite3 database.
+You can use create_database_tool to create a new ephemeral sqlite3 database if one is not found in current state.
+You should always check if database for current session exist before running sql queries by calling create_database_tool.
 If you make a mistake, try to recover."""
 
 INTRO_TEXT = """\
@@ -61,19 +61,10 @@ built with the the LangGraph prebuilt **ReAct Agent** and the **SQLDatabaseToolk
 ---
 """
 
-def get_dbpath(thread_id: str) -> str:
-    # Ephemeral sqlite database per conversation thread
-    _, path = tempfile.mkstemp(suffix=".db")
-    return path
-
-
-# TODO: how to get the session from within a callback.
-dbpath = get_dbpath("default")
-
 root_agent = Agent(
     name="weather_time_agent",
     model="gemini-2.0-flash",
     description=INTRO_TEXT,
     instruction=SYSTEM_PROMPT,
-    tools=[create_run_sql_tool(dbpath)],
+    tools=[run_sql_tool, create_database_tool],
 )
