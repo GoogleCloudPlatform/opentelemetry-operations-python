@@ -146,3 +146,6 @@ cython_debug/
 # Sphinx
 _build/
 _autosummary/
+
+# Ephemeral Databases
+*.db
