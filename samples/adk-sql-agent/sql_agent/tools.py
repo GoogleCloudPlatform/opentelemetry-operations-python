@@ -33,6 +33,7 @@ class SqlRunResult(TypedDict):
     rows: NotRequired[list[tuple[str, ...]]]
     """The rows returned by the SQL query"""
 
+# [START opentelemetry_adk_agent_span]
 @tracer.start_as_current_span("create_database")
 def create_database_tool(tool_context: ToolContext) -> dict[str, Any]:
     """Creates a temporary file in the /tmp directory to hold an ephemeral
@@ -46,6 +47,7 @@ def create_database_tool(tool_context: ToolContext) -> dict[str, Any]:
         tool_context.state[SESSION_DB_KEY] = path
         return {"resp": "Created an ephemeral database"}
     return {"resp": f"Skipping database creation, {tool_context.state[SESSION_DB_KEY]} already exists"}
+# [END opentelemetry_adk_agent_span]
 
 @tracer.start_as_current_span("run_sql")
 def run_sql_tool(sql_query: str, tool_context: ToolContext) -> dict[str, Any]:

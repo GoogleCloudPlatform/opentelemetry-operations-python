@@ -17,11 +17,6 @@ from .tools import run_sql_tool, create_database_tool
 
 import sqlite3
 
-from opentelemetry import trace
-
-# from utils import ask_prompt, console, print_markdown, render_messages
-
-
 SYSTEM_PROMPT = f"""\
 You are a helpful AI assistant with a mastery of database design and querying. You have access
 to an ephemeral sqlite3 database that you can query and modify through some tools. Help answer

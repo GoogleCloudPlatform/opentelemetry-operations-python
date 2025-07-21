@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import google.auth
 import google.auth.transport.requests
 import grpc
@@ -97,6 +96,7 @@ def setup_opentelemetry() -> None:
 
     # Load instrumentors
     SQLite3Instrumentor().instrument()
+    # ADK uses Vertex AI and Google Gen AI SDKs.
     VertexAIInstrumentor().instrument()
     GoogleGenAiSdkInstrumentor().instrument()
 
