@@ -8,7 +8,8 @@ OpenTelemetry GCP Credential Provider for OTLP Exporters
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-This library provides support for supplying GCP authentication credentials to Python's auto instrumentation/
+This library provides support for supplying GCP authentication credentials to Python's auto instrumentation.
+The credentials are passed to gRPC/HTTP exporters to send telemetry to `telemetry.googleapis.com`.
 
 
 To get started with instrumentation in Google Cloud, see `Generate traces and metrics with
