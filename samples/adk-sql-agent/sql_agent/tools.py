@@ -34,7 +34,7 @@ class SqlRunResult(TypedDict):
     """The rows returned by the SQL query"""
 
 @tracer.start_as_current_span("create_database")
-def create_database_tool(tool_context: ToolContext) -> None:
+def create_database_tool(tool_context: ToolContext) -> dict[str, Any]:
     """Creates a temporary file in the /tmp directory to hold an ephemeral
     sqlite3 database if a database is not found for the current session.
     """
@@ -44,11 +44,16 @@ def create_database_tool(tool_context: ToolContext) -> None:
         # current session.
         # See https://google.github.io/adk-docs/sessions/state/.
         tool_context.state[SESSION_DB_KEY] = path
+        return {"resp": "Created an ephemeral database"}
+    return {"resp": f"Skipping database creation, {tool_context.state[SESSION_DB_KEY]} already exists"}
 
 @tracer.start_as_current_span("run_sql")
 def run_sql_tool(sql_query: str, tool_context: ToolContext) -> dict[str, Any]:
     """Runs a SQLite query. The SQL query can be DDL or DML. Returns the rows if it's a SELECT query."""
-    current_session_db_path = tool_context.state[SESSION_DB_KEY]
+    current_session_db_path = tool_context.state.get(SESSION_DB_KEY)
+    if current_session_db_path is None:
+        return {"error": "Failed to find a database fo this session"}
+
     with sqlite3.connect(current_session_db_path) as db:
         try:
             cursor = db.cursor()
