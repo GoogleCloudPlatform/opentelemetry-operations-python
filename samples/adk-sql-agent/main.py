@@ -103,13 +103,13 @@ def setup_opentelemetry() -> None:
 
 # [END opentelemetry_adk_otel_setup]
 
-
+# [START opentelemetry_adk_launch_web_interface]
 def main() -> None:
     # Make sure to set:
     # OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
     # OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true
     # in order to full prompts and responses and logs messages.
-    # For this sample, these can be set by loading the `main.env` file.
+    # For this sample, these can be set by loading the `opentelemetry.env` file.
     setup_opentelemetry()
 
     # Call the function to get the FastAPI app instance.
@@ -125,7 +125,9 @@ def main() -> None:
         web=SERVE_WEB_INTERFACE,
     )
 
+    # Lauch the web interface on port 8080.
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+# [END opentelemetry_adk_launch_web_interface]
 
 
 if __name__ == "__main__":
