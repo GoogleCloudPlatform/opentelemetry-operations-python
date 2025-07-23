@@ -20,14 +20,11 @@ import google.auth.transport.grpc
 import google.auth.transport.requests
 import grpc
 from google.auth.transport.grpc import AuthMetadataPlugin
-from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
 )
-from opentelemetry.resourcedetector.gcp_resource_detector._detector import (
-    GoogleCloudResourceDetector,
-)
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource, get_aggregated_resources
+from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector
+from opentelemetry.sdk.resources import get_aggregated_resources
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
