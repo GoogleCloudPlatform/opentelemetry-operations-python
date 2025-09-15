@@ -8,8 +8,9 @@ OpenTelemetry GCP Credential Provider for OTLP Exporters
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-This library provides support for supplying GCP authentication credentials to Python's auto instrumentation.
-The credentials are passed to gRPC/HTTP exporters to send telemetry to `telemetry.googleapis.com`.
+This library provides support for supplying your machine's Application Default Credentials (https://cloud.google.com/docs/authentication/application-default-credentials)
+to the OTLP Exporters created automatically by OTEL Python's auto instrumentation.
+These credentials allow telemetry to be sent to `telemetry.googleapis.com`.
 
 
 To get started with instrumentation in Google Cloud, see `Generate traces and metrics with
@@ -35,15 +36,17 @@ Installation
 Usage
 -----
 
+Your installed HTTP/GRPC OTLP Exporter must be at release `>=1.37` for this feature.
+
 Set the following environment variables:
 `export OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=<project-id>"`
+`export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="https://telemetry.googleapis.com:443/v1/traces"`
 
-To have python auto instrumentation use the HTTP OTLP Exporter to send traces to Cloud Trace:
-`SET`
+If you plan to have python auto instrumentation use the GRPC OTLP Exporter to send traces to Cloud Trace:
+`export OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER=gcp_grpc_credentials`
 
-To have python auto instrumentation use the GRPC OTLP Exporter to send traces to Cloud Trace:
-''
-
+If you plan to have python auto instrumentation use the HTTP OTLP Exporter to send traces to Cloud Trace:
+`export OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER=gcp_http_credentials`
 
 
 References

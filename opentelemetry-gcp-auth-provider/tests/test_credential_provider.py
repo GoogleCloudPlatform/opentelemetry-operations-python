@@ -22,11 +22,9 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
-
-# private import for testing only
-from opentelemetry.sdk._configuration import _init_exporter
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
 )
 
 
@@ -35,36 +33,14 @@ class TestOTLPTraceAutoInstrumentGcpCredential(TestCase):
     @patch.dict(
         environ,
         {
-            OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER: "gcp_http_authorized_session"
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER: "gcp_http_credentials",
+            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER: "gcp_grpc_credentials",
         },
     )
-    def test_loads_otlp_http_exporter_with_google_session(self):
+    def test_loads_otlp_exporters_with_google_creds(self):
         """Test that OTel configuration internals can load the credentials from entrypoint by
         name"""
 
-        exporter = _init_exporter(
-            "traces",
-            {},
-            OTLPSpanExporter,
-            otlp_credential_param_for_all_signal_types=None,
-        )
-        assert isinstance(exporter._session, AuthorizedSession)
-
-    @patch.dict(
-        environ,
-        {
-            OTEL_PYTHON_EXPORTER_OTLP_TRACES_CREDENTIAL_PROVIDER: "gcp_grpc_channel_credentials"
-        },
-    )
-    def test_loads_otlp_grpc_exporter_with_google_channel_creds(self):
-        """Test that OTel configuration internals can load the credentials from entrypoint by
-        name"""
-
-        exporter = _init_exporter(
-            "traces",
-            {},
-            GRPCOTLPSpanExporter,
-            otlp_credential_param_for_all_signal_types=None,
-        )
-        # TODO: Figure out how to assert something about exporter.credentials. google's grpc credentials obj look exactly like
-        # the default one..
+        http_exporter = OTLPSpanExporter()
+        assert isinstance(http_exporter._session, AuthorizedSession)
+        grpc_exporter = GRPCOTLPSpanExporter()
