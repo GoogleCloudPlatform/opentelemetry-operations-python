@@ -27,8 +27,6 @@ from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
 )
 
-
-# These tests will not pass until the upstream PR is submitted.
 class TestOTLPTraceAutoInstrumentGcpCredential(TestCase):
     @patch.dict(
         environ,
@@ -43,4 +41,6 @@ class TestOTLPTraceAutoInstrumentGcpCredential(TestCase):
 
         http_exporter = OTLPSpanExporter()
         assert isinstance(http_exporter._session, AuthorizedSession)
+        # TODO: figure out how to assert something about the credentials that this thing initializes..
         grpc_exporter = GRPCOTLPSpanExporter()
+        print(type(grpc_exporter._credentials))
