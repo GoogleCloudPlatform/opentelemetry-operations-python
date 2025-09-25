@@ -112,9 +112,6 @@ def _convert_any_value_to_string(value: Any) -> str:
         return str(value)
     if isinstance(value, (list, tuple)):
         return json.dumps(value)
-    logging.warning(
-        "Unknown value %s found, cannot convert to string.", type(value)
-    )
     return ""
 
 
@@ -158,7 +155,7 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
             log_entry.json_payload = struct
         else:
             log_entry.text_payload = base64.b64encode(body).decode()
-    else:
+    elif body is not None:
         log_entry.text_payload = _convert_any_value_to_string(body)
 
 
