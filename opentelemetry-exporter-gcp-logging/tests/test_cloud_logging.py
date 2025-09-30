@@ -155,12 +155,16 @@ def test_convert_non_json_dict_bytes(
 
 @pytest.mark.parametrize(
     "body",
-    [pytest.param("A text body", id="str"), pytest.param(True, id="bool")],
+    [
+        pytest.param("A text body", id="str"),
+        pytest.param(True, id="bool"),
+        pytest.param(None, id="None"),
+    ],
 )
 def test_convert_various_types_of_bodies(
     cloudloggingfake: CloudLoggingFake,
     snapshot_writelogentrycalls: List[WriteLogEntriesCall],
-    body: Union[str, bool],
+    body: Union[str, bool, None],
 ) -> None:
     log_data = [
         LogData(
