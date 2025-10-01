@@ -24,8 +24,6 @@ Installation
 
     pip install opentelemetry-resourcedetector-gcp
 
-..
-
 Usage
 -----
 
@@ -48,7 +46,6 @@ Usage
     processor = BatchSpanProcessor(OTLPSpanExporter())
     traceProvider.add_span_processor(processor)
     trace.set_tracer_provider(traceProvider)
-..
 
 References
 ----------
