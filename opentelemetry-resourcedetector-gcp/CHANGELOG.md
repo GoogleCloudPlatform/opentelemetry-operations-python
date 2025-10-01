@@ -2,7 +2,12 @@
 
 ## Unreleased
 
-Update opentelemetry-api/sdk dependencies to 1.3.
+- Update opentelemetry-api/sdk dependencies to 1.3.
+
+- This is a breaking change which moves our official recource detector from `opentelemetry.resourcedetector.gcp_resource_detector._detector`
+into `opentelemetry.resourcedetector.gcp_resource_detector` and deletes the outdated duplicate resource detector
+which used to be there. Use `from opentelemetry.resourcedetector.gcp_resource_detector import GoogleCloudResourceDetector`
+to import it. See ([#389](https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/pull/389)) for details.
 
 ## Version 1.9.0a0
 
