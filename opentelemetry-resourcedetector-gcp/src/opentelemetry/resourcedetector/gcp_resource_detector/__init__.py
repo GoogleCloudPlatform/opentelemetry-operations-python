@@ -138,3 +138,6 @@ def _make_resource(attrs: Mapping[str, AttributeValue]) -> Resource:
             **attrs,
         }
     )
+
+
+__all__ = ["GoogleCloudResourceDetector"]
