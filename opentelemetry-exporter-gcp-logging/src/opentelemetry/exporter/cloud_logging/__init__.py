@@ -159,7 +159,7 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
         try:
             struct.update(sanitized)
             log_entry.json_payload = struct
-        except Exception as exc:  # pylint: disable=broad-exception-caught
+        except Exception as exc:  # pylint: disable=broad-except
             logging.exception(
                 "Error mapping LogRecord.body to Struct, will write log with empty body: %s",
                 exc,
