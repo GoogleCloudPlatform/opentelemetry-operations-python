@@ -26,7 +26,7 @@ tox -e py310-ci-test-cloudlogging -- --snapshot-update
 Be sure to review the changes.
 """
 import re
-from typing import List, Union
+from typing import List, Mapping, Union
 
 import pytest
 from fixtures.cloud_logging_fake import CloudLoggingFake, WriteLogEntriesCall
@@ -156,12 +156,25 @@ def test_convert_non_json_dict_bytes(
 
 @pytest.mark.parametrize(
     "body",
-    [pytest.param("A text body", id="str"), pytest.param(True, id="bool")],
+    [
+        pytest.param("A text body", id="str"),
+        pytest.param(True, id="bool"),
+        pytest.param(None, id="None"),
+        pytest.param(
+            {"my_dict": [{"key": b"bytes"}]}, id="list_of_dicts_with_bytes"
+        ),
+        pytest.param(
+            {"my_dict": [True, False, False, True]}, id="list_of_bools"
+        ),
+        pytest.param(
+            {"my_dict": [True, "str", 1, 0.234]}, id="list_of_mixed_sequence"
+        ),
+    ],
 )
 def test_convert_various_types_of_bodies(
     cloudloggingfake: CloudLoggingFake,
     snapshot_writelogentrycalls: List[WriteLogEntriesCall],
-    body: Union[str, bool],
+    body: Union[str, bool, None, Mapping],
 ) -> None:
     log_data = [
         LogData(

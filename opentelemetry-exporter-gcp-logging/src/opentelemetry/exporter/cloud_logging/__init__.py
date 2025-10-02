@@ -112,9 +112,6 @@ def _convert_any_value_to_string(value: Any) -> str:
         return str(value)
     if isinstance(value, (list, tuple)):
         return json.dumps(value)
-    logging.warning(
-        "Unknown value %s found, cannot convert to string.", type(value)
-    )
     return ""
 
 
@@ -132,9 +129,19 @@ def _sanitized_body(
             # Should not be possible for a non-bytes value to be present. AnyValue requires Sequence be of one type, and above
             # we verified the first value is type bytes.
             new_body[key] = [
-                base64.b64encode(v).decode()
+                base64.b64encode(v).decode() if isinstance(v, bytes) else v
                 for v in value
-                if isinstance(v, bytes)
+            ]
+        elif (
+            isinstance(value, Sequence)
+            and len(value) > 0
+            and isinstance(value[0], Mapping)
+        ):
+            # Should not be possible for a non-mapping value to be present. AnyValue requires Sequence be of one type, and above
+            # we verified the first value is type mapping.
+            new_body[key] = [
+                _sanitized_body(x) if isinstance(x, Mapping) else x
+                for x in value
             ]
         elif isinstance(value, bytes):
             new_body[key] = base64.b64encode(value).decode()
@@ -148,8 +155,15 @@ def _sanitized_body(
 def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
     struct = Struct()
     if isinstance(body, Mapping):
-        struct.update(_sanitized_body(body))
-        log_entry.json_payload = struct
+        sanitized = _sanitized_body(body)
+        try:
+            struct.update(sanitized)
+            log_entry.json_payload = struct
+        except Exception as exc:  # pylint: disable=broad-except
+            logging.exception(
+                "Error mapping LogRecord.body to Struct, will write log with empty body: %s",
+                exc,
+            )
     elif isinstance(body, bytes):
         json_str = body.decode("utf-8", errors="replace")
         json_dict = json.loads(json_str)
@@ -158,7 +172,7 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
             log_entry.json_payload = struct
         else:
             log_entry.text_payload = base64.b64encode(body).decode()
-    else:
+    elif body is not None:
         log_entry.text_payload = _convert_any_value_to_string(body)
 
 

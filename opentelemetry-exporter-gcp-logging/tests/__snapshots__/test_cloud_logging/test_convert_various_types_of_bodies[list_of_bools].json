@@ -1,0 +1,27 @@
+[
+  {
+    "entries": [
+      {
+        "jsonPayload": {
+          "my_dict": [
+            true,
+            false,
+            false,
+            true
+          ]
+        },
+        "logName": "projects/fakeproject/logs/test",
+        "resource": {
+          "labels": {
+            "location": "global",
+            "namespace": "",
+            "node_id": ""
+          },
+          "type": "generic_node"
+        },
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      }
+    ],
+    "partialSuccess": true
+  }
+]
