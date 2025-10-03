@@ -17,6 +17,7 @@ import base64
 import datetime
 import json
 import logging
+import re
 import urllib.parse
 from typing import Any, Mapping, MutableMapping, Optional, Sequence
 
@@ -102,6 +103,8 @@ SEVERITY_MAPPING: dict[int, int] = {
     24: LogSeverity.EMERGENCY,
 }
 
+INVALID_LOG_NAME_MESSAGE = "%s is not a valid log name. log name must be <512 characters and only contain characters: A-Za-z0-9/-_."
+
 
 def _convert_any_value_to_string(value: Any) -> str:
     if isinstance(value, bool):
@@ -176,6 +179,12 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
         log_entry.text_payload = _convert_any_value_to_string(body)
 
 
+def is_log_id_valid(log_id: str) -> bool:
+    return len(log_id) < 512 and not bool(
+        re.search(r"[^A-Za-z0-9\-_/\.]", log_id)
+    )
+
+
 class CloudLoggingExporter(LogExporter):
     def __init__(
         self,
@@ -201,6 +210,15 @@ class CloudLoggingExporter(LogExporter):
             )
         )
 
+    def pick_log_id(self, log_name_attr: Any, event_name: str | None) -> str:
+        if log_name_attr and isinstance(log_name_attr, str):
+            if is_log_id_valid(log_name_attr):
+                return log_name_attr.replace("/", "%2F")
+            logging.warning(INVALID_LOG_NAME_MESSAGE, log_name_attr)
+        if event_name and is_log_id_valid(event_name):
+            return event_name.replace("/", "%2F")
+        return self.default_log_name
+
     def export(self, batch: Sequence[LogData]):
         now = datetime.datetime.now()
         log_entries = []
@@ -208,18 +226,12 @@ class CloudLoggingExporter(LogExporter):
             log_entry = LogEntry()
             log_record = log_data.log_record
             attributes = log_record.attributes or {}
+            if log_record.event_name:
+                attributes["event_name"] = log_record.event_name
             project_id = str(
                 attributes.get(PROJECT_ID_ATTRIBUTE_KEY, self.project_id)
             )
-            log_suffix = self.default_log_name
-            log_name_attr = attributes.get(LOG_NAME_ATTRIBUTE_KEY)
-            if log_name_attr and isinstance(log_name_attr, str):
-                log_suffix = urllib.parse.quote_plus(log_name_attr)
-            elif log_record.event_name:
-                log_suffix = urllib.parse.quote_plus(
-                    log_record.event_name.replace(".", "_")
-                )
-            log_entry.log_name = f"projects/{project_id}/logs/{log_suffix}"
+            log_entry.log_name = f"projects/{project_id}/logs/{self.pick_log_id(attributes.get(LOG_NAME_ATTRIBUTE_KEY), log_record.event_name)}"
             # If timestamp is unset fall back to observed_time_unix_nano as recommended,
             # see https://github.com/open-telemetry/opentelemetry-proto/blob/4abbb78/opentelemetry/proto/logs/v1/logs.proto#L176-L179
             ts = Timestamp()

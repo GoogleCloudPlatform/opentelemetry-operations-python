@@ -26,7 +26,9 @@ tox -e py310-ci-test-cloudlogging -- --snapshot-update
 Be sure to review the changes.
 """
 import re
+from functools import partial
 from typing import List, Mapping, Union
+from unittest.mock import patch
 
 import pytest
 from fixtures.cloud_logging_fake import CloudLoggingFake, WriteLogEntriesCall
@@ -34,8 +36,15 @@ from google.auth.credentials import AnonymousCredentials
 from google.cloud.logging_v2.services.logging_service_v2 import (
     LoggingServiceV2Client,
 )
+from google.cloud.logging_v2.services.logging_service_v2.transports.grpc import (
+    LoggingServiceV2GrpcTransport,
+)
+from grpc import insecure_channel
 from opentelemetry._logs.severity import SeverityNumber
-from opentelemetry.exporter.cloud_logging import CloudLoggingExporter
+from opentelemetry.exporter.cloud_logging import (
+    CloudLoggingExporter,
+    is_log_id_valid,
+)
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs._internal import LogRecord
 from opentelemetry.sdk.resources import Resource
@@ -82,7 +91,6 @@ def test_convert_otlp_dict_body(
                 attributes={
                     "gen_ai.system": True,
                     "test": 23,
-                    "event.name": "gen_ai.system.message",
                 },
                 body={
                     "kvlistValue": {
@@ -152,6 +160,119 @@ def test_convert_non_json_dict_bytes(
     ]
     cloudloggingfake.exporter.export(log_data)
     assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+
+
+def test_convert_gen_ai_body(
+    cloudloggingfake: CloudLoggingFake,
+    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+) -> None:
+    log_data = [
+        LogData(
+            log_record=LogRecord(
+                event_name="gen_ai.client.inference.operation.details",
+                timestamp=1736976310997977393,
+                body={
+                    "gen_ai.input.messages": (
+                        {
+                            "role": "user",
+                            "parts": (
+                                {
+                                    "type": "text",
+                                    "content": "Get weather details in New Delhi and San Francisco?",
+                                },
+                            ),
+                        },
+                        {
+                            "role": "model",
+                            "parts": (
+                                {
+                                    "type": "tool_call",
+                                    "arguments": {"location": "New Delhi"},
+                                    "name": "get_current_weather",
+                                    "id": "get_current_weather_0",
+                                },
+                                {
+                                    "type": "tool_call",
+                                    "arguments": {"location": "San Francisco"},
+                                    "name": "get_current_weather",
+                                    "id": "get_current_weather_1",
+                                },
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "parts": (
+                                {
+                                    "type": "tool_call_response",
+                                    "response": {
+                                        "content": '{"temperature": 35, "unit": "C"}'
+                                    },
+                                    "id": "get_current_weather_0",
+                                },
+                                {
+                                    "type": "tool_call_response",
+                                    "response": {
+                                        "content": '{"temperature": 25, "unit": "C"}'
+                                    },
+                                    "id": "get_current_weather_1",
+                                },
+                            ),
+                        },
+                    ),
+                    "gen_ai.system_instructions": (
+                        {
+                            "type": "text",
+                            "content": "You are a clever language model",
+                        },
+                    ),
+                    "gen_ai.output.messages": (
+                        {
+                            "role": "model",
+                            "parts": (
+                                {
+                                    "type": "text",
+                                    "content": "The current temperature in New Delhi is 35°C, and in San Francisco, it is 25°C.",
+                                },
+                            ),
+                            "finish_reason": "stop",
+                        },
+                    ),
+                },
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        )
+    ]
+    cloudloggingfake.exporter.export(log_data)
+    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+
+
+def test_is_log_id_valid():
+    assert is_log_id_valid(";") is False
+    assert is_log_id_valid("aB12//..--__") is True
+    assert is_log_id_valid("a" * 512) is False
+    assert is_log_id_valid("abc1212**") is False
+    assert is_log_id_valid("gen_ai.client.inference.operation.details") is True
+
+
+def test_pick_log_id() -> None:
+    exporter = CloudLoggingExporter(
+        project_id=PROJECT_ID,
+        default_log_name="test",
+    )
+    assert (
+        exporter.pick_log_id("valid_log_name_attr", "event_name_str")
+        == "valid_log_name_attr"
+    )
+    assert (
+        exporter.pick_log_id("invalid_attr**2", "event_name_str")
+        == "event_name_str"
+    )
+    assert exporter.pick_log_id(None, "event_name_str") == "event_name_str"
+    assert exporter.pick_log_id(None, None) == exporter.default_log_name
+    assert (
+        exporter.pick_log_id(None, "invalid_event_name_id24$")
+        == exporter.default_log_name
+    )
 
 
 @pytest.mark.parametrize(
