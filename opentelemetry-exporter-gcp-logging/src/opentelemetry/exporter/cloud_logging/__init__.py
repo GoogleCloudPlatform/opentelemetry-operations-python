@@ -226,8 +226,6 @@ class CloudLoggingExporter(LogExporter):
             log_entry = LogEntry()
             log_record = log_data.log_record
             attributes = log_record.attributes or {}
-            if log_record.event_name:
-                attributes["event.name"] = log_record.event_name
             project_id = str(
                 attributes.get(PROJECT_ID_ATTRIBUTE_KEY, self.project_id)
             )
@@ -269,6 +267,8 @@ class CloudLoggingExporter(LogExporter):
                 k: _convert_any_value_to_string(v)
                 for k, v in attributes.items()
             }
+            if log_record.event_name:
+                log_entry.labels["event.name"] = log_record.event_name
             _set_payload_in_log_entry(log_entry, log_record.body)
             log_entries.append(log_entry)
 
