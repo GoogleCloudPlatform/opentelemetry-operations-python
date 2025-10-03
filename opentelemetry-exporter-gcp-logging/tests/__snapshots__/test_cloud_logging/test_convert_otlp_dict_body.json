@@ -21,7 +21,7 @@
           }
         },
         "labels": {
-          "event_name": "random.genai.event",
+          "event.name": "random.genai.event",
           "gen_ai.system": "true",
           "test": "23"
         },

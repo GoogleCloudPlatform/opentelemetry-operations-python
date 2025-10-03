@@ -227,7 +227,7 @@ class CloudLoggingExporter(LogExporter):
             log_record = log_data.log_record
             attributes = log_record.attributes or {}
             if log_record.event_name:
-                attributes["event_name"] = log_record.event_name
+                attributes["event.name"] = log_record.event_name
             project_id = str(
                 attributes.get(PROJECT_ID_ATTRIBUTE_KEY, self.project_id)
             )

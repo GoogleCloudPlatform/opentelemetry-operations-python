@@ -74,7 +74,7 @@
           ]
         },
         "labels": {
-          "event_name": "gen_ai.client.inference.operation.details"
+          "event.name": "gen_ai.client.inference.operation.details"
         },
         "logName": "projects/fakeproject/logs/gen_ai.client.inference.operation.details",
         "resource": {
