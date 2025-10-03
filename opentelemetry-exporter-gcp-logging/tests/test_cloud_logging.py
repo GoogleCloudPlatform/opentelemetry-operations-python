@@ -26,9 +26,7 @@ tox -e py310-ci-test-cloudlogging -- --snapshot-update
 Be sure to review the changes.
 """
 import re
-from functools import partial
 from typing import List, Mapping, Union
-from unittest.mock import patch
 
 import pytest
 from fixtures.cloud_logging_fake import CloudLoggingFake, WriteLogEntriesCall
@@ -36,10 +34,6 @@ from google.auth.credentials import AnonymousCredentials
 from google.cloud.logging_v2.services.logging_service_v2 import (
     LoggingServiceV2Client,
 )
-from google.cloud.logging_v2.services.logging_service_v2.transports.grpc import (
-    LoggingServiceV2GrpcTransport,
-)
-from grpc import insecure_channel
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.exporter.cloud_logging import (
     CloudLoggingExporter,
@@ -256,6 +250,7 @@ def test_is_log_id_valid():
 
 def test_pick_log_id() -> None:
     exporter = CloudLoggingExporter(
+        client=LoggingServiceV2Client(credentials=AnonymousCredentials()),
         project_id=PROJECT_ID,
         default_log_name="test",
     )
