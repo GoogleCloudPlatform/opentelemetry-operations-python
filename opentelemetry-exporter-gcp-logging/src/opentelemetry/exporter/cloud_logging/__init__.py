@@ -18,7 +18,7 @@ import datetime
 import json
 import logging
 import re
-import urllib.parse
+from base64 import b64encode
 from typing import Any, Mapping, MutableMapping, Optional, Sequence
 
 import google.auth
@@ -106,15 +106,27 @@ SEVERITY_MAPPING: dict[int, int] = {
 INVALID_LOG_NAME_MESSAGE = "%s is not a valid log name. log name must be <512 characters and only contain characters: A-Za-z0-9/-_."
 
 
-def _convert_any_value_to_string(value: Any) -> str:
+class _GenAiJsonEncoder(json.JSONEncoder):
+    def default(self, o: Any) -> Any:
+        if isinstance(o, bytes):
+            return b64encode(o).decode()
+        return super().default(o)
+
+
+def _convert_any_value_to_string(value: Any, debug_location: str) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, bytes):
         return base64.b64encode(value).decode()
     if isinstance(value, (int, float, str)):
         return str(value)
-    if isinstance(value, (list, tuple)):
-        return json.dumps(value)
+    if isinstance(value, (list, tuple, Mapping)):
+        return json.dumps(value, separators=(",", ":"), cls=_GenAiJsonEncoder)
+    logging.warning(
+        "Unexpected type %s found in %s, this field will not be added to the LogEntry.",
+        type(value),
+        debug_location,
+    )
     return ""
 
 
@@ -176,7 +188,9 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
         else:
             log_entry.text_payload = base64.b64encode(body).decode()
     elif body is not None:
-        log_entry.text_payload = _convert_any_value_to_string(body)
+        log_entry.text_payload = _convert_any_value_to_string(
+            body, "LogRecord.body"
+        )
 
 
 def is_log_id_valid(log_id: str) -> bool:
@@ -264,7 +278,9 @@ class CloudLoggingExporter(LogExporter):
                     log_record.severity_number.value  # type: ignore[index]
                 ]
             log_entry.labels = {
-                k: _convert_any_value_to_string(v)
+                k: _convert_any_value_to_string(
+                    v, "LogRecord.Attribute {}".format(k)
+                )
                 for k, v in attributes.items()
             }
             if log_record.event_name:

@@ -14,10 +14,10 @@
           "Ref": 164611595.0
         },
         "labels": {
-          "boolArray": "[true, false, true, true]",
+          "boolArray": "[true,false,true,true]",
           "float": "25.43231",
           "int": "25",
-          "intArray": "[21, 18, 23, 17]"
+          "intArray": "[21,18,23,17]"
         },
         "logName": "projects/fakeproject/logs/test",
         "resource": {
