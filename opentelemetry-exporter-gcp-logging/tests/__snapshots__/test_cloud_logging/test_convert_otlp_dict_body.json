@@ -21,11 +21,11 @@
           }
         },
         "labels": {
-          "event.name": "gen_ai.system.message",
+          "event.name": "random.genai.event",
           "gen_ai.system": "true",
           "test": "23"
         },
-        "logName": "projects/fakeproject/logs/test",
+        "logName": "projects/fakeproject/logs/random.genai.event",
         "resource": {
           "labels": {
             "location": "global",

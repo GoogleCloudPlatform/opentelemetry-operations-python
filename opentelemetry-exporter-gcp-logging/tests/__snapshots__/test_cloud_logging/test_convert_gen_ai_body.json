@@ -1,0 +1,93 @@
+[
+  {
+    "entries": [
+      {
+        "jsonPayload": {
+          "gen_ai.input.messages": [
+            {
+              "parts": [
+                {
+                  "content": "Get weather details in New Delhi and San Francisco?",
+                  "type": "text"
+                }
+              ],
+              "role": "user"
+            },
+            {
+              "parts": [
+                {
+                  "arguments": {
+                    "location": "New Delhi"
+                  },
+                  "id": "get_current_weather_0",
+                  "name": "get_current_weather",
+                  "type": "tool_call"
+                },
+                {
+                  "arguments": {
+                    "location": "San Francisco"
+                  },
+                  "id": "get_current_weather_1",
+                  "name": "get_current_weather",
+                  "type": "tool_call"
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "parts": [
+                {
+                  "id": "get_current_weather_0",
+                  "response": {
+                    "content": "{\"temperature\": 35, \"unit\": \"C\"}"
+                  },
+                  "type": "tool_call_response"
+                },
+                {
+                  "id": "get_current_weather_1",
+                  "response": {
+                    "content": "{\"temperature\": 25, \"unit\": \"C\"}"
+                  },
+                  "type": "tool_call_response"
+                }
+              ],
+              "role": "user"
+            }
+          ],
+          "gen_ai.output.messages": [
+            {
+              "finish_reason": "stop",
+              "parts": [
+                {
+                  "content": "The current temperature in New Delhi is 35°C, and in San Francisco, it is 25°C.",
+                  "type": "text"
+                }
+              ],
+              "role": "model"
+            }
+          ],
+          "gen_ai.system_instructions": [
+            {
+              "content": "You are a clever language model",
+              "type": "text"
+            }
+          ]
+        },
+        "labels": {
+          "event.name": "gen_ai.client.inference.operation.details"
+        },
+        "logName": "projects/fakeproject/logs/gen_ai.client.inference.operation.details",
+        "resource": {
+          "labels": {
+            "location": "global",
+            "namespace": "",
+            "node_id": ""
+          },
+          "type": "generic_node"
+        },
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      }
+    ],
+    "partialSuccess": true
+  }
+]
