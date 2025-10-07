@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- Added support for when a `Mapping[str, bytes]` or `Mapping[str, List[bytes]]` is in `LogRecord.body`.
-- Added support for when a `Mapping[str, List[Mapping]]` is in `LogRecord.body`.
+- Added support for when a `Mapping[str, bytes]` or `Mapping[str, List[bytes]]` is in `LogRecord.body` or `LogRecord.attributes`.
+- Added support for when a `Mapping[str, List[Mapping]]` is in `LogRecord.body` or `LogRecord.attributes`.
 - Do not call `logging.warning` when `LogRecord.body` is of None type, instead leave `LogEntry.payload` empty.
 - Update opentelemetry-api/sdk dependencies to 1.3.
 

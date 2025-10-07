@@ -113,7 +113,7 @@ class _GenAiJsonEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def _convert_any_value_to_string(value: Any, debug_location: str) -> str:
+def _convert_any_value_to_string(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, bytes):
@@ -122,12 +122,14 @@ def _convert_any_value_to_string(value: Any, debug_location: str) -> str:
         return str(value)
     if isinstance(value, (list, tuple, Mapping)):
         return json.dumps(value, separators=(",", ":"), cls=_GenAiJsonEncoder)
-    logging.warning(
-        "Unexpected type %s found in %s, this field will not be added to the LogEntry.",
-        type(value),
-        debug_location,
-    )
-    return ""
+    try:
+        return str(value)
+    except Exception as exc: # pylint: disable=broad-except
+        logging.exception(
+            "Error mapping AnyValue to string, this field will not be added to the LogEntry: %s",
+            exc,
+        )
+        return ""
 
 
 # Be careful not to mutate original body. Make copies of anything that needs to change.
@@ -189,7 +191,7 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
             log_entry.text_payload = base64.b64encode(body).decode()
     elif body is not None:
         log_entry.text_payload = _convert_any_value_to_string(
-            body, "LogRecord.body"
+            body
         )
 
 
@@ -279,7 +281,7 @@ class CloudLoggingExporter(LogExporter):
                 ]
             log_entry.labels = {
                 k: _convert_any_value_to_string(
-                    v, "LogRecord.Attribute {}".format(k)
+                    v
                 )
                 for k, v in attributes.items()
             }
