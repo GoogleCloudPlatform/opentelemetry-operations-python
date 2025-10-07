@@ -124,7 +124,7 @@ def _convert_any_value_to_string(value: Any) -> str:
         return json.dumps(value, separators=(",", ":"), cls=_GenAiJsonEncoder)
     try:
         return str(value)
-    except Exception as exc: # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
         logging.exception(
             "Error mapping AnyValue to string, this field will not be added to the LogEntry: %s",
             exc,
@@ -190,9 +190,7 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
         else:
             log_entry.text_payload = base64.b64encode(body).decode()
     elif body is not None:
-        log_entry.text_payload = _convert_any_value_to_string(
-            body
-        )
+        log_entry.text_payload = _convert_any_value_to_string(body)
 
 
 def is_log_id_valid(log_id: str) -> bool:
@@ -280,9 +278,7 @@ class CloudLoggingExporter(LogExporter):
                     log_record.severity_number.value  # type: ignore[index]
                 ]
             log_entry.labels = {
-                k: _convert_any_value_to_string(
-                    v
-                )
+                k: _convert_any_value_to_string(v)
                 for k, v in attributes.items()
             }
             if log_record.event_name:
