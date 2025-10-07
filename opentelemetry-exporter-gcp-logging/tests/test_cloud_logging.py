@@ -46,6 +46,74 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 PROJECT_ID = "fakeproject"
 
+GEN_AI_DICT = {
+    "gen_ai.input.messages": (
+        {
+            "role": "user",
+            "parts": (
+                {
+                    "type": "text",
+                    "content": "Get weather details in New Delhi and San Francisco?",
+                },
+            ),
+        },
+        {
+            "role": "model",
+            "parts": (
+                {
+                    "type": "tool_call",
+                    "arguments": {"location": "New Delhi"},
+                    "name": "get_current_weather",
+                    "id": "get_current_weather_0",
+                },
+                {
+                    "type": "tool_call",
+                    "arguments": {"location": "San Francisco"},
+                    "name": "get_current_weather",
+                    "id": "get_current_weather_1",
+                },
+            ),
+        },
+        {
+            "role": "user",
+            "parts": (
+                {
+                    "type": "tool_call_response",
+                    "response": {
+                        "content": '{"temperature": 35, "unit": "C"}'
+                    },
+                    "id": "get_current_weather_0",
+                },
+                {
+                    "type": "tool_call_response",
+                    "response": {
+                        "content": '{"temperature": 25, "unit": "C"}'
+                    },
+                    "id": "get_current_weather_1",
+                },
+            ),
+        },
+    ),
+    "gen_ai.system_instructions": (
+        {
+            "type": "text",
+            "content": "You are a clever language model",
+        },
+    ),
+    "gen_ai.output.messages": (
+        {
+            "role": "model",
+            "parts": (
+                {
+                    "type": "text",
+                    "content": "The current temperature in New Delhi is 35°C, and in San Francisco, it is 25°C.",
+                },
+            ),
+            "finish_reason": "stop",
+        },
+    ),
+}
+
 
 def test_too_large_log_raises_warning(caplog) -> None:
     client = LoggingServiceV2Client(credentials=AnonymousCredentials())
@@ -165,73 +233,7 @@ def test_convert_gen_ai_body(
             log_record=LogRecord(
                 event_name="gen_ai.client.inference.operation.details",
                 timestamp=1736976310997977393,
-                body={
-                    "gen_ai.input.messages": (
-                        {
-                            "role": "user",
-                            "parts": (
-                                {
-                                    "type": "text",
-                                    "content": "Get weather details in New Delhi and San Francisco?",
-                                },
-                            ),
-                        },
-                        {
-                            "role": "model",
-                            "parts": (
-                                {
-                                    "type": "tool_call",
-                                    "arguments": {"location": "New Delhi"},
-                                    "name": "get_current_weather",
-                                    "id": "get_current_weather_0",
-                                },
-                                {
-                                    "type": "tool_call",
-                                    "arguments": {"location": "San Francisco"},
-                                    "name": "get_current_weather",
-                                    "id": "get_current_weather_1",
-                                },
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "parts": (
-                                {
-                                    "type": "tool_call_response",
-                                    "response": {
-                                        "content": '{"temperature": 35, "unit": "C"}'
-                                    },
-                                    "id": "get_current_weather_0",
-                                },
-                                {
-                                    "type": "tool_call_response",
-                                    "response": {
-                                        "content": '{"temperature": 25, "unit": "C"}'
-                                    },
-                                    "id": "get_current_weather_1",
-                                },
-                            ),
-                        },
-                    ),
-                    "gen_ai.system_instructions": (
-                        {
-                            "type": "text",
-                            "content": "You are a clever language model",
-                        },
-                    ),
-                    "gen_ai.output.messages": (
-                        {
-                            "role": "model",
-                            "parts": (
-                                {
-                                    "type": "text",
-                                    "content": "The current temperature in New Delhi is 35°C, and in San Francisco, it is 25°C.",
-                                },
-                            ),
-                            "finish_reason": "stop",
-                        },
-                    ),
-                },
+                body=GEN_AI_DICT,
             ),
             instrumentation_scope=InstrumentationScope("test"),
         )
@@ -297,6 +299,28 @@ def test_convert_various_types_of_bodies(
             log_record=LogRecord(
                 timestamp=1736976310997977393,
                 body=body,
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        )
+    ]
+    cloudloggingfake.exporter.export(log_data)
+    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+
+
+def test_convert_various_types_of_attributes(
+    cloudloggingfake: CloudLoggingFake,
+    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+) -> None:
+    log_data = [
+        LogData(
+            log_record=LogRecord(
+                attributes={
+                    "a": [{"key": b"bytes"}],
+                    "b": [True, False, False, True],
+                    "c": {"a_dict": "abcd", "akey": 1234},
+                    "d": GEN_AI_DICT,
+                },
+                timestamp=1736976310997977393,
             ),
             instrumentation_scope=InstrumentationScope("test"),
         )

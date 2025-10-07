@@ -1,0 +1,25 @@
+[
+  {
+    "entries": [
+      {
+        "labels": {
+          "a": "[{\"key\":\"Ynl0ZXM=\"}]",
+          "b": "[true,false,false,true]",
+          "c": "{\"a_dict\":\"abcd\",\"akey\":1234}",
+          "d": "{\"gen_ai.input.messages\":[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"Get weather details in New Delhi and San Francisco?\"}]},{\"role\":\"model\",\"parts\":[{\"type\":\"tool_call\",\"arguments\":{\"location\":\"New Delhi\"},\"name\":\"get_current_weather\",\"id\":\"get_current_weather_0\"},{\"type\":\"tool_call\",\"arguments\":{\"location\":\"San Francisco\"},\"name\":\"get_current_weather\",\"id\":\"get_current_weather_1\"}]},{\"role\":\"user\",\"parts\":[{\"type\":\"tool_call_response\",\"response\":{\"content\":\"{\\\"temperature\\\": 35, \\\"unit\\\": \\\"C\\\"}\"},\"id\":\"get_current_weather_0\"},{\"type\":\"tool_call_response\",\"response\":{\"content\":\"{\\\"temperature\\\": 25, \\\"unit\\\": \\\"C\\\"}\"},\"id\":\"get_current_weather_1\"}]}],\"gen_ai.system_instructions\":[{\"type\":\"text\",\"content\":\"You are a clever language model\"}],\"gen_ai.output.messages\":[{\"role\":\"model\",\"parts\":[{\"type\":\"text\",\"content\":\"The current temperature in New Delhi is 35\\u00b0C, and in San Francisco, it is 25\\u00b0C.\"}],\"finish_reason\":\"stop\"}]}"
+        },
+        "logName": "projects/fakeproject/logs/test",
+        "resource": {
+          "labels": {
+            "location": "global",
+            "namespace": "",
+            "node_id": ""
+          },
+          "type": "generic_node"
+        },
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      }
+    ],
+    "partialSuccess": true
+  }
+]

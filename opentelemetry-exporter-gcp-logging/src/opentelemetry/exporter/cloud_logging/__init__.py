@@ -18,7 +18,7 @@ import datetime
 import json
 import logging
 import re
-import urllib.parse
+from base64 import b64encode
 from typing import Any, Mapping, MutableMapping, Optional, Sequence
 
 import google.auth
@@ -106,6 +106,13 @@ SEVERITY_MAPPING: dict[int, int] = {
 INVALID_LOG_NAME_MESSAGE = "%s is not a valid log name. log name must be <512 characters and only contain characters: A-Za-z0-9/-_."
 
 
+class _GenAiJsonEncoder(json.JSONEncoder):
+    def default(self, o: Any) -> Any:
+        if isinstance(o, bytes):
+            return b64encode(o).decode()
+        return super().default(o)
+
+
 def _convert_any_value_to_string(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
@@ -113,9 +120,16 @@ def _convert_any_value_to_string(value: Any) -> str:
         return base64.b64encode(value).decode()
     if isinstance(value, (int, float, str)):
         return str(value)
-    if isinstance(value, (list, tuple)):
-        return json.dumps(value)
-    return ""
+    if isinstance(value, (list, tuple, Mapping)):
+        return json.dumps(value, separators=(",", ":"), cls=_GenAiJsonEncoder)
+    try:
+        return str(value)
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.exception(
+            "Error mapping AnyValue to string, this field will not be added to the LogEntry: %s",
+            exc,
+        )
+        return ""
 
 
 # Be careful not to mutate original body. Make copies of anything that needs to change.
