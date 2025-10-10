@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.10.0a0
+
+Released 2025-10-10
+
 - Added support for when a `Mapping[str, bytes]` or `Mapping[str, List[bytes]]` is in `LogRecord.body` or `LogRecord.attributes`.
 - Added support for when a `Mapping[str, List[Mapping]]` is in `LogRecord.body` or `LogRecord.attributes`.
 - Do not call `logging.warning` when `LogRecord.body` is of None type, instead leave `LogEntry.payload` empty.
