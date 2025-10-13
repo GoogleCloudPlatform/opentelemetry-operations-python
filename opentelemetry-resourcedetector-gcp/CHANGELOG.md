@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.10.0a0
+
+Released 2025-10-13
+
 - Update opentelemetry-api/sdk dependencies to 1.3.
 
 - This is a breaking change which moves our official recource detector from `opentelemetry.resourcedetector.gcp_resource_detector._detector`
