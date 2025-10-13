@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 1.10.0
+
+Released 2025-10-13
+
 Update opentelemetry-api/sdk dependencies to 1.3.
 
 ## Version 1.9.0
