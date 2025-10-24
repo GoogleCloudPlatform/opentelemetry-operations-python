@@ -1,0 +1,30 @@
+[
+  {
+    "kvlistValue": {
+      "bytes_field": "Ynl0ZXM=",
+      "repeated_bytes_field": [
+        "Ynl0ZXM=",
+        "Ynl0ZXM=",
+        "Ynl0ZXM="
+      ],
+      "values": [
+        {
+          "key": "content",
+          "value": {
+            "stringValue": "You're a helpful assistant."
+          }
+        }
+      ]
+    },
+    "logging.googleapis.com/labels": {
+      "event.name": "random.genai.event",
+      "gen_ai.system": "true",
+      "test": "23"
+    },
+    "logging.googleapis.com/spanId": "0000000000000016",
+    "logging.googleapis.com/trace": "projects/fakeproject/traces/00000000000000000000000000000019",
+    "logging.googleapis.com/trace_sampled": false,
+    "severity": "ERROR",
+    "time": "2025-01-15T21:25:10.997977393Z"
+  }
+]

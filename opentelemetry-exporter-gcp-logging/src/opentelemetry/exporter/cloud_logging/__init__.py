@@ -19,7 +19,16 @@ import json
 import logging
 import re
 from base64 import b64encode
-from typing import Any, Mapping, MutableMapping, Optional, Sequence
+from functools import partial
+from typing import (
+    Any,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    TextIO,
+    cast,
+)
 
 import google.auth
 from google.api.monitored_resource_pb2 import (  # pylint: disable = no-name-in-module
@@ -36,6 +45,7 @@ from google.cloud.logging_v2.types.logging import WriteLogEntriesRequest
 from google.logging.type.log_severity_pb2 import (  # pylint: disable = no-name-in-module
     LogSeverity,
 )
+from google.protobuf.json_format import MessageToDict
 from google.protobuf.struct_pb2 import (  # pylint: disable = no-name-in-module
     Struct,
 )
@@ -52,6 +62,9 @@ from opentelemetry.sdk._logs.export import LogExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.util.types import AnyValue
+from proto.datetime_helpers import (  # type: ignore[import]
+    DatetimeWithNanoseconds,
+)
 
 DEFAULT_MAX_ENTRY_SIZE = 256000  # 256 KB
 DEFAULT_MAX_REQUEST_SIZE = 10000000  # 10 MB
@@ -205,6 +218,8 @@ class CloudLoggingExporter(LogExporter):
         project_id: Optional[str] = None,
         default_log_name: Optional[str] = None,
         client: Optional[LoggingServiceV2Client] = None,
+        *,
+        structured_json_file: Optional[TextIO] = None,
     ):
         self.project_id: str
         if not project_id:
@@ -212,17 +227,32 @@ class CloudLoggingExporter(LogExporter):
             self.project_id = str(default_project_id)
         else:
             self.project_id = project_id
+
         if default_log_name:
             self.default_log_name = default_log_name
         else:
             self.default_log_name = "otel_python_inprocess_log_name_temp"
-        self.client = client or LoggingServiceV2Client(
-            transport=LoggingServiceV2GrpcTransport(
-                channel=LoggingServiceV2GrpcTransport.create_channel(
-                    options=_OPTIONS,
+
+        if client and structured_json_file:
+            raise ValueError(
+                "Cannot specify both client and structured_json_file"
+            )
+
+        if structured_json_file:
+            self._write_log_entries = partial(
+                self._write_log_entries_to_file, structured_json_file
+            )
+        else:
+            client = client or LoggingServiceV2Client(
+                transport=LoggingServiceV2GrpcTransport(
+                    channel=LoggingServiceV2GrpcTransport.create_channel(
+                        options=_OPTIONS,
+                    )
                 )
             )
-        )
+            self._write_log_entries = partial(
+                self._write_log_entries_to_client, client
+            )
 
     def pick_log_id(self, log_name_attr: Any, event_name: str | None) -> str:
         if log_name_attr and isinstance(log_name_attr, str):
@@ -288,7 +318,58 @@ class CloudLoggingExporter(LogExporter):
 
         self._write_log_entries(log_entries)
 
-    def _write_log_entries(self, log_entries: list[LogEntry]):
+    @staticmethod
+    def _write_log_entries_to_file(file: TextIO, log_entries: list[LogEntry]):
+        """Formats logs into the Cloud Logging structured log format, and writes them to the
+        specified file-like object
+
+        See https://cloud.google.com/logging/docs/structured-logging
+        """
+        # TODO: this is not resilient to exceptions which can cause recursion when using OTel's
+        # logging handler. See
+        # https://github.com/open-telemetry/opentelemetry-python/issues/4261 for outstanding
+        # issue in OTel.
+
+        for entry in log_entries:
+            json_dict: dict[str, Any] = {}
+
+            # These are not added in export() so not added to the JSON here.
+            # - httpRequest
+            # - logging.googleapis.com/sourceLocation
+            # - logging.googleapis.com/operation
+            # - logging.googleapis.com/insertId
+
+            # https://cloud.google.com/logging/docs/agent/logging/configuration#timestamp-processing
+            timestamp = cast(DatetimeWithNanoseconds, entry.timestamp)
+            json_dict["time"] = timestamp.rfc3339()
+
+            json_dict["severity"] = LogSeverity.Name(
+                cast(LogSeverity.ValueType, entry.severity)
+            )
+            json_dict["logging.googleapis.com/labels"] = dict(entry.labels)
+            json_dict["logging.googleapis.com/spanId"] = entry.span_id
+            json_dict[
+                "logging.googleapis.com/trace_sampled"
+            ] = entry.trace_sampled
+            json_dict["logging.googleapis.com/trace"] = entry.trace
+
+            if entry.text_payload:
+                json_dict["message"] = entry.text_payload
+            if entry.json_payload:
+                json_dict.update(
+                    MessageToDict(LogEntry.pb(entry).json_payload)
+                )
+
+            # Use dumps to avoid invalid json written to the stream if serialization fails for any reason
+            file.write(
+                json.dumps(json_dict, separators=(",", ":"), sort_keys=True)
+                + "\n"
+            )
+
+    @staticmethod
+    def _write_log_entries_to_client(
+        client: LoggingServiceV2Client, log_entries: list[LogEntry]
+    ):
         batch: list[LogEntry] = []
         batch_byte_size = 0
         for entry in log_entries:
@@ -302,7 +383,7 @@ class CloudLoggingExporter(LogExporter):
                 continue
             if msg_size + batch_byte_size > DEFAULT_MAX_REQUEST_SIZE:
                 try:
-                    self.client.write_log_entries(
+                    client.write_log_entries(
                         WriteLogEntriesRequest(
                             entries=batch, partial_success=True
                         )
@@ -319,7 +400,7 @@ class CloudLoggingExporter(LogExporter):
                 batch_byte_size += msg_size
         if batch:
             try:
-                self.client.write_log_entries(
+                client.write_log_entries(
                     WriteLogEntriesRequest(entries=batch, partial_success=True)
                 )
             # pylint: disable=broad-except

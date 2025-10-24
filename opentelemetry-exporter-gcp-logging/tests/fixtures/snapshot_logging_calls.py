@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, cast
 
-import pytest
-from fixtures.cloud_logging_fake import WriteLogEntriesCall
+from typing import TYPE_CHECKING, List, Optional, cast
+
 from google.protobuf import json_format
 from syrupy.extensions.json import JSONSnapshotExtension
 from syrupy.types import (
@@ -24,6 +23,9 @@ from syrupy.types import (
     SerializableData,
     SerializedData,
 )
+
+if TYPE_CHECKING:
+    from fixtures.cloud_logging_fake import WriteLogEntriesCall
 
 
 # pylint: disable=too-many-ancestors
@@ -43,12 +45,6 @@ class WriteLogEntryCallSnapshotExtension(JSONSnapshotExtension):
                     call.write_log_entries_request
                 )
             )
-            for call in cast(List[WriteLogEntriesCall], data)
+            for call in cast(List["WriteLogEntriesCall"], data)
         ]
         return super().serialize(json, exclude=exclude, matcher=matcher)
-
-
-@pytest.fixture(name="snapshot_writelogentrycalls")
-def fixture_snapshot_writelogentrycalls(snapshot):
-    """Fixture for snapshot testing of WriteLogEntriesCalls"""
-    return snapshot.use_extension(WriteLogEntryCallSnapshotExtension)()

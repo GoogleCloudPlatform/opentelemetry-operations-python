@@ -1,0 +1,11 @@
+[
+  {
+    "logging.googleapis.com/labels": {},
+    "logging.googleapis.com/spanId": "",
+    "logging.googleapis.com/trace": "",
+    "logging.googleapis.com/trace_sampled": false,
+    "message": "MTIz",
+    "severity": "DEFAULT",
+    "time": "2025-01-15T21:25:10.997977393Z"
+  }
+]

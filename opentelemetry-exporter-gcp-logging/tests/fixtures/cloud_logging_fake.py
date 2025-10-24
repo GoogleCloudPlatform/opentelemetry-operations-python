@@ -11,14 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Iterable, List, cast
+from io import StringIO
+from typing import Callable, Iterable, List, Sequence, cast
 from unittest.mock import patch
 
 import grpc
 import pytest
+from fixtures.snapshot_logging_calls import WriteLogEntryCallSnapshotExtension
 from google.cloud.logging_v2.services.logging_service_v2.transports.grpc import (
     LoggingServiceV2GrpcTransport,
 )
@@ -34,6 +37,9 @@ from grpc import (
     unary_unary_rpc_method_handler,
 )
 from opentelemetry.exporter.cloud_logging import CloudLoggingExporter
+from opentelemetry.sdk._logs import LogData
+from syrupy.assertion import SnapshotAssertion
+from syrupy.extensions.json import JSONSnapshotExtension
 
 
 @dataclass
@@ -125,3 +131,41 @@ def fixture_cloudloggingfake() -> Iterable[CloudLoggingFake]:
     finally:
         if server:
             server.stop(None)
+
+
+ExportAndAssertSnapshot = Callable[[Sequence[LogData]], None]
+
+
+@pytest.fixture(
+    name="export_and_assert_snapshot", params=["client", "structured_json"]
+)
+def fixture_export_and_assert_snapshot(
+    request: pytest.FixtureRequest,
+    snapshot: SnapshotAssertion,
+) -> ExportAndAssertSnapshot:
+    if request.param == "client":
+        cloudloggingfake: CloudLoggingFake = request.getfixturevalue(
+            "cloudloggingfake"
+        )
+
+        def export_and_assert_snapshot(log_data: Sequence[LogData]) -> None:
+            cloudloggingfake.exporter.export(log_data)
+
+            assert cloudloggingfake.get_calls() == snapshot(
+                extension_class=WriteLogEntryCallSnapshotExtension
+            )
+
+        return export_and_assert_snapshot
+
+    # pylint: disable=function-redefined
+    def export_and_assert_snapshot(log_data: Sequence[LogData]) -> None:
+        buf = StringIO()
+        exporter = CloudLoggingExporter(
+            project_id=PROJECT_ID, structured_json_file=buf
+        )
+        exporter.export(log_data)
+        buf.seek(0)
+        as_dict = [json.loads(line) for line in buf]
+        assert as_dict == snapshot(extension_class=JSONSnapshotExtension)
+
+    return export_and_assert_snapshot

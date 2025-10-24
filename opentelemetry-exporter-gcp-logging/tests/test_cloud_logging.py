@@ -26,10 +26,15 @@ tox -e py310-ci-test-cloudlogging -- --snapshot-update
 Be sure to review the changes.
 """
 import re
-from typing import List, Mapping, Union
+from io import StringIO
+from textwrap import dedent
+from typing import Mapping, Union
 
 import pytest
-from fixtures.cloud_logging_fake import CloudLoggingFake, WriteLogEntriesCall
+from fixtures.cloud_logging_fake import (
+    CloudLoggingFake,
+    ExportAndAssertSnapshot,
+)
 from google.auth.credentials import AnonymousCredentials
 from google.cloud.logging_v2.services.logging_service_v2 import (
     LoggingServiceV2Client,
@@ -138,9 +143,30 @@ def test_too_large_log_raises_warning(caplog) -> None:
     )
 
 
+def test_user_agent(cloudloggingfake: CloudLoggingFake) -> None:
+    cloudloggingfake.exporter.export(
+        [
+            LogData(
+                log_record=LogRecord(
+                    body="abc",
+                    resource=Resource({}),
+                ),
+                instrumentation_scope=InstrumentationScope("test"),
+            )
+        ]
+    )
+    for call in cloudloggingfake.get_calls():
+        assert (
+            re.match(
+                r"^opentelemetry-python \S+; google-cloud-logging-exporter \S+ grpc-python/\S+",
+                call.user_agent,
+            )
+            is not None
+        )
+
+
 def test_convert_otlp_dict_body(
-    cloudloggingfake: CloudLoggingFake,
-    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
         LogData(
@@ -172,21 +198,11 @@ def test_convert_otlp_dict_body(
             instrumentation_scope=InstrumentationScope("test"),
         )
     ]
-    cloudloggingfake.exporter.export(log_data)
-    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
-    for call in cloudloggingfake.get_calls():
-        assert (
-            re.match(
-                r"^opentelemetry-python \S+; google-cloud-logging-exporter \S+ grpc-python/\S+",
-                call.user_agent,
-            )
-            is not None
-        )
+    export_and_assert_snapshot(log_data)
 
 
 def test_convert_otlp_various_different_types_in_attrs_and_bytes_body(
-    cloudloggingfake: CloudLoggingFake,
-    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
         LogData(
@@ -203,13 +219,11 @@ def test_convert_otlp_various_different_types_in_attrs_and_bytes_body(
             instrumentation_scope=InstrumentationScope("test"),
         )
     ]
-    cloudloggingfake.exporter.export(log_data)
-    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+    export_and_assert_snapshot(log_data)
 
 
 def test_convert_non_json_dict_bytes(
-    cloudloggingfake: CloudLoggingFake,
-    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
         LogData(
@@ -220,13 +234,11 @@ def test_convert_non_json_dict_bytes(
             instrumentation_scope=InstrumentationScope("test"),
         )
     ]
-    cloudloggingfake.exporter.export(log_data)
-    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+    export_and_assert_snapshot(log_data)
 
 
 def test_convert_gen_ai_body(
-    cloudloggingfake: CloudLoggingFake,
-    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
         LogData(
@@ -238,8 +250,7 @@ def test_convert_gen_ai_body(
             instrumentation_scope=InstrumentationScope("test"),
         )
     ]
-    cloudloggingfake.exporter.export(log_data)
-    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+    export_and_assert_snapshot(log_data)
 
 
 def test_is_log_id_valid():
@@ -290,8 +301,7 @@ def test_pick_log_id() -> None:
     ],
 )
 def test_convert_various_types_of_bodies(
-    cloudloggingfake: CloudLoggingFake,
-    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    export_and_assert_snapshot: ExportAndAssertSnapshot,
     body: Union[str, bool, None, Mapping],
 ) -> None:
     log_data = [
@@ -303,13 +313,11 @@ def test_convert_various_types_of_bodies(
             instrumentation_scope=InstrumentationScope("test"),
         )
     ]
-    cloudloggingfake.exporter.export(log_data)
-    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+    export_and_assert_snapshot(log_data)
 
 
 def test_convert_various_types_of_attributes(
-    cloudloggingfake: CloudLoggingFake,
-    snapshot_writelogentrycalls: List[WriteLogEntriesCall],
+    export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
         LogData(
@@ -325,5 +333,37 @@ def test_convert_various_types_of_attributes(
             instrumentation_scope=InstrumentationScope("test"),
         )
     ]
-    cloudloggingfake.exporter.export(log_data)
-    assert cloudloggingfake.get_calls() == snapshot_writelogentrycalls
+    export_and_assert_snapshot(log_data)
+
+
+def test_structured_json_lines():
+    buf = StringIO()
+    exporter = CloudLoggingExporter(
+        project_id=PROJECT_ID, structured_json_file=buf
+    )
+    exporter.export(
+        [
+            LogData(
+                log_record=LogRecord(
+                    event_name="foo",
+                    timestamp=1736976310997977393,
+                    severity_number=SeverityNumber(20),
+                    trace_id=25,
+                    span_id=22,
+                    attributes={"key": f"{i}"},
+                    body="hello",
+                ),
+                instrumentation_scope=InstrumentationScope("test"),
+            )
+            for i in range(5)
+        ]
+    )
+    assert buf.getvalue() == dedent(
+        """\
+        {"logging.googleapis.com/labels":{"event.name":"foo","key":"0"},"logging.googleapis.com/spanId":"0000000000000016","logging.googleapis.com/trace":"projects/fakeproject/traces/00000000000000000000000000000019","logging.googleapis.com/trace_sampled":false,"message":"hello","severity":"ERROR","time":"2025-01-15T21:25:10.997977393Z"}
+        {"logging.googleapis.com/labels":{"event.name":"foo","key":"1"},"logging.googleapis.com/spanId":"0000000000000016","logging.googleapis.com/trace":"projects/fakeproject/traces/00000000000000000000000000000019","logging.googleapis.com/trace_sampled":false,"message":"hello","severity":"ERROR","time":"2025-01-15T21:25:10.997977393Z"}
+        {"logging.googleapis.com/labels":{"event.name":"foo","key":"2"},"logging.googleapis.com/spanId":"0000000000000016","logging.googleapis.com/trace":"projects/fakeproject/traces/00000000000000000000000000000019","logging.googleapis.com/trace_sampled":false,"message":"hello","severity":"ERROR","time":"2025-01-15T21:25:10.997977393Z"}
+        {"logging.googleapis.com/labels":{"event.name":"foo","key":"3"},"logging.googleapis.com/spanId":"0000000000000016","logging.googleapis.com/trace":"projects/fakeproject/traces/00000000000000000000000000000019","logging.googleapis.com/trace_sampled":false,"message":"hello","severity":"ERROR","time":"2025-01-15T21:25:10.997977393Z"}
+        {"logging.googleapis.com/labels":{"event.name":"foo","key":"4"},"logging.googleapis.com/spanId":"0000000000000016","logging.googleapis.com/trace":"projects/fakeproject/traces/00000000000000000000000000000019","logging.googleapis.com/trace_sampled":false,"message":"hello","severity":"ERROR","time":"2025-01-15T21:25:10.997977393Z"}
+        """
+    ), "Each `LogData` should be on its own line"
