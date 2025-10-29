@@ -220,7 +220,25 @@ class CloudLoggingExporter(LogExporter):
         client: Optional[LoggingServiceV2Client] = None,
         *,
         structured_json_file: Optional[TextIO] = None,
-    ):
+    ) -> None:
+        """Create a CloudLoggingExporter
+
+        Args:
+            project_id: The GCP project ID to which the logs will be sent. If not
+                provided, the exporter will infer it from Application Default Credentials.
+            default_log_name: The default log name to use for log entries.
+                If not provided, a default name will be used.
+            client: An optional `LoggingServiceV2Client` instance to use for
+                sending logs. If not provided and ``structured_json_file`` is not provided, a
+                new client will be created. Passing both ``client`` and
+                ``structured_json_file`` is not supported.
+            structured_json_file: An optional file-like object (like `sys.stdout`) to write
+                logs to in Cloud Logging `structured JSON format
+                <https://cloud.google.com/logging/docs/structured-logging>`_. If provided,
+                ``client`` must not be provided and logs will only be written to the file-like
+                object.
+        """
+
         self.project_id: str
         if not project_id:
             _, default_project_id = google.auth.default()
