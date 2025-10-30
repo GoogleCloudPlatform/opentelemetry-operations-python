@@ -12,8 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
+import pytest
+
+pytest.register_assert_rewrite("fixtures.cloud_logging_fake")
 
 # import fixtures to be made available to other tests
-from fixtures.cloud_logging_fake import fixture_cloudloggingfake
-from fixtures.snapshot_logging_calls import fixture_snapshot_writelogentrycalls
+from fixtures.cloud_logging_fake import (  # noqa: E402 pylint: disable=wrong-import-position
+    fixture_cloudloggingfake,
+    fixture_export_and_assert_snapshot,
+)
+
+__all__ = ["fixture_cloudloggingfake", "fixture_export_and_assert_snapshot"]

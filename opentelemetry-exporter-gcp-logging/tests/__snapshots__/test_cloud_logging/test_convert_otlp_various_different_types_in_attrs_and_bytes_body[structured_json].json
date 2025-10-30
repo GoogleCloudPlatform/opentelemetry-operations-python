@@ -1,0 +1,24 @@
+[
+  {
+    "Classe": [
+      "Email addresses",
+      "Passwords"
+    ],
+    "CreationDate": "2012-05-05",
+    "Date": "2016-05-21T21:35:40Z",
+    "Link": "http://some_link.com",
+    "LogoType": "png",
+    "Ref": 164611595.0,
+    "logging.googleapis.com/labels": {
+      "boolArray": "[true,false,true,true]",
+      "float": "25.43231",
+      "int": "25",
+      "intArray": "[21,18,23,17]"
+    },
+    "logging.googleapis.com/spanId": "",
+    "logging.googleapis.com/trace": "",
+    "logging.googleapis.com/trace_sampled": false,
+    "severity": "DEFAULT",
+    "time": "2025-01-15T21:25:10.997977393Z"
+  }
+]

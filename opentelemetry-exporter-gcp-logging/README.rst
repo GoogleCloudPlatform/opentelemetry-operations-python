@@ -68,6 +68,30 @@ Usage
 
     logger1.warning("string log %s", "here")
 
+If your code is running in a GCP environment with a supported Cloud Logging agent (like GKE,
+Cloud Run, GCE, etc.), you can write logs to stdout in Cloud Logging `structured JSON format
+<https://cloud.google.com/logging/docs/structured-logging>`_. Pass the ``structured_json_file``
+argument and use ``SimpleLogRecordProcessor``:
+
+.. code:: python
+
+    import sys
+    from opentelemetry.exporter.cloud_logging import (
+        CloudLoggingExporter,
+    )
+    from opentelemetry._logs import set_logger_provider
+    from opentelemetry.sdk._logs import LoggerProvider
+    from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
+
+    logger_provider = LoggerProvider()
+    set_logger_provider(logger_provider)
+    exporter = CloudLoggingExporter(structured_json_file=sys.stdout)
+    logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
+
+
+    otel_logger = logger_provider.get_logger(__name__)
+    otel_logger.emit(attributes={"hello": "world"}, body={"foo": {"bar": "baz"}})
+
 References
 ----------
 
