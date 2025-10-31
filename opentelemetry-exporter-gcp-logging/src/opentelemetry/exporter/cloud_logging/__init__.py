@@ -229,14 +229,13 @@ def _get_monitored_resource(
             cloud_resource_id,
         )
     ):
-        project_id = match.group("project_id")
         location = match.group("location")
         agent_engine_id = match.group("agent_engine_id")
         # https://cloud.google.com/monitoring/api/resources#tag_aiplatform.googleapis.com/ReasoningEngine
         return MonitoredResource(
             type="aiplatform.googleapis.com/ReasoningEngine",
             labels={
-                "resource_container": project_id,
+                # Intentionally omit the project ID
                 "location": location,
                 "reasoning_engine_id": agent_engine_id,
             },

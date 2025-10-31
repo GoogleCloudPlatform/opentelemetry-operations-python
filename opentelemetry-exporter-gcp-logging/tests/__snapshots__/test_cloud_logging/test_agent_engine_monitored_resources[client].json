@@ -6,8 +6,7 @@
         "resource": {
           "labels": {
             "location": "europe-west3",
-            "reasoning_engine_id": "8477639270431981568",
-            "resource_container": "some-project123-321"
+            "reasoning_engine_id": "8477639270431981568"
           },
           "type": "aiplatform.googleapis.com/ReasoningEngine"
         },
