@@ -147,7 +147,7 @@ def _convert_any_value_to_string(value: Any) -> str:
 
 # Be careful not to mutate original body. Make copies of anything that needs to change.
 def _sanitized_body(
-    body: Mapping[str, AnyValue]
+    body: Mapping[str, AnyValue],
 ) -> MutableMapping[str, AnyValue]:
     new_body: MutableMapping[str, AnyValue] = {}
     for key, value in body.items():
@@ -209,6 +209,46 @@ def _set_payload_in_log_entry(log_entry: LogEntry, body: AnyValue):
 def is_log_id_valid(log_id: str) -> bool:
     return len(log_id) < 512 and not bool(
         re.search(r"[^A-Za-z0-9\-_/\.]", log_id)
+    )
+
+
+def _get_monitored_resource(
+    resource: Optional[Resource],
+) -> MonitoredResource | None:
+    if not resource:
+        return None
+
+    # TODO: Remove temporary special case for Vertex Agent Engine
+    # https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/issues/444
+    cloud_resource_id = resource.attributes.get("cloud.resource_id")
+    if isinstance(cloud_resource_id, str) and (
+        match := re.match(
+            r"//aiplatform\.googleapis\.com/projects/(?P<project_id>[^/]+)"
+            r"/locations/(?P<location>[^/]+)"
+            r"/reasoningEngines/(?P<agent_engine_id>[^/]+)",
+            cloud_resource_id,
+        )
+    ):
+        project_id = match.group("project_id")
+        location = match.group("location")
+        agent_engine_id = match.group("agent_engine_id")
+        # https://cloud.google.com/monitoring/api/resources#tag_aiplatform.googleapis.com/ReasoningEngine
+        return MonitoredResource(
+            type="aiplatform.googleapis.com/ReasoningEngine",
+            labels={
+                "resource_container": project_id,
+                "location": location,
+                "reasoning_engine_id": agent_engine_id,
+            },
+        )
+
+    monitored_resource_data = get_monitored_resource(resource)
+    if not monitored_resource_data:
+        return None
+
+    return MonitoredResource(
+        type=monitored_resource_data.type,
+        labels=monitored_resource_data.labels,
     )
 
 
@@ -302,14 +342,10 @@ class CloudLoggingExporter(LogExporter):
             else:
                 ts.FromDatetime(now)
             log_entry.timestamp = ts
-            monitored_resource_data = get_monitored_resource(
-                log_record.resource or Resource({})
-            )
-            if monitored_resource_data:
-                log_entry.resource = MonitoredResource(
-                    type=monitored_resource_data.type,
-                    labels=monitored_resource_data.labels,
-                )
+            if monitored_resource := _get_monitored_resource(
+                log_record.resource
+            ):
+                log_entry.resource = monitored_resource
             log_entry.trace_sampled = (
                 log_record.trace_flags is not None
                 and log_record.trace_flags.sampled
