@@ -1,0 +1,38 @@
+[
+  {
+    "logging.googleapis.com/labels": {},
+    "logging.googleapis.com/spanId": "",
+    "logging.googleapis.com/trace": "",
+    "logging.googleapis.com/trace_sampled": false,
+    "message": "valid agent engine",
+    "severity": "DEFAULT",
+    "time": "2025-01-15T21:25:10.997977393Z"
+  },
+  {
+    "logging.googleapis.com/labels": {},
+    "logging.googleapis.com/spanId": "",
+    "logging.googleapis.com/trace": "",
+    "logging.googleapis.com/trace_sampled": false,
+    "message": "invalid 1",
+    "severity": "DEFAULT",
+    "time": "2025-01-15T21:25:10.997977393Z"
+  },
+  {
+    "logging.googleapis.com/labels": {},
+    "logging.googleapis.com/spanId": "",
+    "logging.googleapis.com/trace": "",
+    "logging.googleapis.com/trace_sampled": false,
+    "message": "invalid 2",
+    "severity": "DEFAULT",
+    "time": "2025-01-15T21:25:10.997977393Z"
+  },
+  {
+    "logging.googleapis.com/labels": {},
+    "logging.googleapis.com/spanId": "",
+    "logging.googleapis.com/trace": "",
+    "logging.googleapis.com/trace_sampled": false,
+    "message": "invalid 3",
+    "severity": "DEFAULT",
+    "time": "2025-01-15T21:25:10.997977393Z"
+  }
+]

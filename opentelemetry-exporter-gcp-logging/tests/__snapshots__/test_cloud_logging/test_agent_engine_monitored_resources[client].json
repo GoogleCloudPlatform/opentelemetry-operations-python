@@ -1,0 +1,58 @@
+[
+  {
+    "entries": [
+      {
+        "logName": "projects/fakeproject/logs/test",
+        "resource": {
+          "labels": {
+            "location": "europe-west3",
+            "reasoning_engine_id": "8477639270431981568"
+          },
+          "type": "aiplatform.googleapis.com/ReasoningEngine"
+        },
+        "textPayload": "valid agent engine",
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      },
+      {
+        "logName": "projects/fakeproject/logs/test",
+        "resource": {
+          "labels": {
+            "location": "global",
+            "namespace": "",
+            "node_id": ""
+          },
+          "type": "generic_node"
+        },
+        "textPayload": "invalid 1",
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      },
+      {
+        "logName": "projects/fakeproject/logs/test",
+        "resource": {
+          "labels": {
+            "location": "global",
+            "namespace": "",
+            "node_id": ""
+          },
+          "type": "generic_node"
+        },
+        "textPayload": "invalid 2",
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      },
+      {
+        "logName": "projects/fakeproject/logs/test",
+        "resource": {
+          "labels": {
+            "location": "global",
+            "namespace": "",
+            "node_id": ""
+          },
+          "type": "generic_node"
+        },
+        "textPayload": "invalid 3",
+        "timestamp": "2025-01-15T21:25:10.997977393Z"
+      }
+    ],
+    "partialSuccess": true
+  }
+]

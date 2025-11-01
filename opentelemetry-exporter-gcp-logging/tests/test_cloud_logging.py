@@ -165,6 +165,62 @@ def test_user_agent(cloudloggingfake: CloudLoggingFake) -> None:
         )
 
 
+def test_agent_engine_monitored_resources(
+    export_and_assert_snapshot: ExportAndAssertSnapshot,
+) -> None:
+    log_data = [
+        LogData(
+            log_record=LogRecord(
+                body="valid agent engine",
+                timestamp=1736976310997977393,
+                resource=Resource(
+                    {
+                        "cloud.resource_id": "//aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines/8477639270431981568"
+                    }
+                ),
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        ),
+        LogData(
+            log_record=LogRecord(
+                body="invalid 1",
+                timestamp=1736976310997977393,
+                resource=Resource(
+                    {
+                        "cloud.resource_id": "//aiplatform.googleapis.com/locations/europe-west3/reasoningEngines/8477639270431981568"
+                    }
+                ),
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        ),
+        LogData(
+            log_record=LogRecord(
+                body="invalid 2",
+                timestamp=1736976310997977393,
+                resource=Resource(
+                    {
+                        "cloud.resource_id": "//aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines//8477639270431981568"
+                    }
+                ),
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        ),
+        LogData(
+            log_record=LogRecord(
+                body="invalid 3",
+                timestamp=1736976310997977393,
+                resource=Resource(
+                    {
+                        "cloud.resource_id": "aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines//8477639270431981568"
+                    }
+                ),
+            ),
+            instrumentation_scope=InstrumentationScope("test"),
+        ),
+    ]
+    export_and_assert_snapshot(log_data)
+
+
 def test_convert_otlp_dict_body(
     export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
