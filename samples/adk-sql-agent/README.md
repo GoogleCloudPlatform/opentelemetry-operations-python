@@ -35,13 +35,13 @@ Configure the environment and run the sample:
 python -m venv venv/
 source venv/bin/activate
 pip install -r requirements.txt
-env $(cat opentelemetry.env | xargs) python main.py
+env $(cat opentelemetry.env | xargs) adk web --otel_to_cloud
 ```
 
 Alternatively if you have [`uv`](https://docs.astral.sh/uv/) installed:
 
 ```sh
-uv run --env-file opentelemetry.env main.py
+uv run --env-file opentelemetry.env adk web --otel_to_cloud
 ```
 
 ## Viewing the results

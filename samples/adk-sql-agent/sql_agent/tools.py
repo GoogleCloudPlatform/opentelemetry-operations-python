@@ -15,14 +15,12 @@
 
 import logging
 from typing import Any, NotRequired, TypedDict
-from opentelemetry import trace
 from google.adk.tools import ToolContext
 import sqlite3
 import tempfile
 
 SESSION_DB_KEY = "session_sqlite_db"
 
-tracer = trace.get_tracer(__name__)
 logger = logging.getLogger(__name__)
 
 
