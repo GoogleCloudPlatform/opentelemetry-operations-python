@@ -17,7 +17,7 @@ services:
   # environment variables for your container to authenticate correctly
   otel-collector:
     user: ${USERID?set USERID=$(id -u)}
-    image: otel/opentelemetry-collector-contrib:0.77.0
+    image: otel/opentelemetry-collector-contrib:0.139.0
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS?}
       - PROJECT_ID=${PROJECT_ID?}

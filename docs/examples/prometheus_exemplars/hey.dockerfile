@@ -11,6 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.20-alpine
+FROM golang:1.24-alpine
 RUN go install github.com/rakyll/hey@latest
 ENTRYPOINT ["hey"]
