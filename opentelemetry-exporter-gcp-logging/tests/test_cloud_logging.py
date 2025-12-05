@@ -25,6 +25,7 @@ tox -e py310-ci-test-cloudlogging -- --snapshot-update
 
 Be sure to review the changes.
 """
+
 import re
 from io import StringIO
 from textwrap import dedent
@@ -44,10 +45,15 @@ from opentelemetry.exporter.cloud_logging import (
     CloudLoggingExporter,
     is_log_id_valid,
 )
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs._internal import LogRecord
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    set_span_in_context,
+)
 
 PROJECT_ID = "fakeproject"
 
@@ -127,13 +133,13 @@ def test_too_large_log_raises_warning(caplog) -> None:
     )
     no_default_logname.export(
         [
-            LogData(
+            ReadableLogRecord(
                 log_record=LogRecord(
                     body="abc",
-                    resource=Resource({}),
                     attributes={str(i): "i" * 10000 for i in range(1000)},
                 ),
                 instrumentation_scope=InstrumentationScope("test"),
+                resource=Resource.get_empty(),
             )
         ]
     )
@@ -146,12 +152,12 @@ def test_too_large_log_raises_warning(caplog) -> None:
 def test_user_agent(cloudloggingfake: CloudLoggingFake) -> None:
     cloudloggingfake.exporter.export(
         [
-            LogData(
+            ReadableLogRecord(
                 log_record=LogRecord(
                     body="abc",
-                    resource=Resource({}),
                 ),
                 instrumentation_scope=InstrumentationScope("test"),
+                resource=Resource.get_empty(),
             )
         ]
     )
@@ -169,53 +175,53 @@ def test_agent_engine_monitored_resources(
     export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 body="valid agent engine",
                 timestamp=1736976310997977393,
-                resource=Resource(
-                    {
-                        "cloud.resource_id": "//aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines/8477639270431981568"
-                    }
-                ),
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource(
+                {
+                    "cloud.resource_id": "//aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines/8477639270431981568"
+                }
+            ),
         ),
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 body="invalid 1",
                 timestamp=1736976310997977393,
-                resource=Resource(
-                    {
-                        "cloud.resource_id": "//aiplatform.googleapis.com/locations/europe-west3/reasoningEngines/8477639270431981568"
-                    }
-                ),
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource(
+                {
+                    "cloud.resource_id": "//aiplatform.googleapis.com/locations/europe-west3/reasoningEngines/8477639270431981568"
+                }
+            ),
         ),
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 body="invalid 2",
                 timestamp=1736976310997977393,
-                resource=Resource(
-                    {
-                        "cloud.resource_id": "//aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines//8477639270431981568"
-                    }
-                ),
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource(
+                {
+                    "cloud.resource_id": "//aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines//8477639270431981568"
+                }
+            ),
         ),
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 body="invalid 3",
                 timestamp=1736976310997977393,
-                resource=Resource(
-                    {
-                        "cloud.resource_id": "aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines//8477639270431981568"
-                    }
-                ),
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource(
+                {
+                    "cloud.resource_id": "aiplatform.googleapis.com/projects/some-project123-321/locations/europe-west3/reasoningEngines//8477639270431981568"
+                }
+            ),
         ),
     ]
     export_and_assert_snapshot(log_data)
@@ -225,13 +231,18 @@ def test_convert_otlp_dict_body(
     export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 event_name="random.genai.event",
                 timestamp=1736976310997977393,
                 severity_number=SeverityNumber(20),
-                trace_id=25,
-                span_id=22,
+                context=set_span_in_context(
+                    NonRecordingSpan(
+                        context=SpanContext(
+                            trace_id=25, span_id=22, is_remote=False
+                        )
+                    )
+                ),
                 attributes={
                     "gen_ai.system": True,
                     "test": 23,
@@ -252,6 +263,7 @@ def test_convert_otlp_dict_body(
                 },
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource.get_empty(),
         )
     ]
     export_and_assert_snapshot(log_data)
@@ -261,7 +273,7 @@ def test_convert_otlp_various_different_types_in_attrs_and_bytes_body(
     export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 timestamp=1736976310997977393,
                 attributes={
@@ -273,6 +285,7 @@ def test_convert_otlp_various_different_types_in_attrs_and_bytes_body(
                 body=b'{"Date": "2016-05-21T21:35:40Z", "CreationDate": "2012-05-05", "LogoType": "png", "Ref": 164611595, "Classe": ["Email addresses", "Passwords"],"Link":"http://some_link.com"}',
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource.get_empty(),
         )
     ]
     export_and_assert_snapshot(log_data)
@@ -282,12 +295,13 @@ def test_convert_non_json_dict_bytes(
     export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 timestamp=1736976310997977393,
                 body=b"123",
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource.get_empty(),
         )
     ]
     export_and_assert_snapshot(log_data)
@@ -297,13 +311,14 @@ def test_convert_gen_ai_body(
     export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 event_name="gen_ai.client.inference.operation.details",
                 timestamp=1736976310997977393,
                 body=GEN_AI_DICT,
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource.get_empty(),
         )
     ]
     export_and_assert_snapshot(log_data)
@@ -361,12 +376,13 @@ def test_convert_various_types_of_bodies(
     body: Union[str, bool, None, Mapping],
 ) -> None:
     log_data = [
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 timestamp=1736976310997977393,
                 body=body,
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource.get_empty(),
         )
     ]
     export_and_assert_snapshot(log_data)
@@ -376,7 +392,7 @@ def test_convert_various_types_of_attributes(
     export_and_assert_snapshot: ExportAndAssertSnapshot,
 ) -> None:
     log_data = [
-        LogData(
+        ReadableLogRecord(
             log_record=LogRecord(
                 attributes={
                     "a": [{"key": b"bytes"}],
@@ -387,6 +403,7 @@ def test_convert_various_types_of_attributes(
                 timestamp=1736976310997977393,
             ),
             instrumentation_scope=InstrumentationScope("test"),
+            resource=Resource.get_empty(),
         )
     ]
     export_and_assert_snapshot(log_data)
@@ -399,17 +416,23 @@ def test_structured_json_lines():
     )
     exporter.export(
         [
-            LogData(
+            ReadableLogRecord(
                 log_record=LogRecord(
                     event_name="foo",
                     timestamp=1736976310997977393,
                     severity_number=SeverityNumber(20),
-                    trace_id=25,
-                    span_id=22,
+                    context=set_span_in_context(
+                        NonRecordingSpan(
+                            context=SpanContext(
+                                trace_id=25, span_id=22, is_remote=False
+                            )
+                        )
+                    ),
                     attributes={"key": f"{i}"},
                     body="hello",
                 ),
                 instrumentation_scope=InstrumentationScope("test"),
+                resource=Resource.get_empty(),
             )
             for i in range(5)
         ]

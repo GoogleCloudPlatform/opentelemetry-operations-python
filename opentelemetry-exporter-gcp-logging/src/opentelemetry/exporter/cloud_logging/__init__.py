@@ -57,8 +57,11 @@ from opentelemetry.resourcedetector.gcp_resource_detector._mapping import (
     get_monitored_resource,
 )
 from opentelemetry.sdk import version as opentelemetry_sdk_version
-from opentelemetry.sdk._logs import LogData
-from opentelemetry.sdk._logs.export import LogExporter
+from opentelemetry.sdk._logs import ReadableLogRecord
+from opentelemetry.sdk._logs.export import (
+    LogRecordExporter,
+    LogRecordExportResult,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.util.types import AnyValue
@@ -251,7 +254,7 @@ def _get_monitored_resource(
     )
 
 
-class CloudLoggingExporter(LogExporter):
+class CloudLoggingExporter(LogRecordExporter):
     def __init__(
         self,
         project_id: Optional[str] = None,
@@ -320,12 +323,14 @@ class CloudLoggingExporter(LogExporter):
             return event_name.replace("/", "%2F")
         return self.default_log_name
 
-    def export(self, batch: Sequence[LogData]):
+    def export(
+        self, batch: Sequence[ReadableLogRecord]
+    ) -> LogRecordExportResult:
         now = datetime.datetime.now()
         log_entries = []
-        for log_data in batch:
+        for readable_log_record in batch:
             log_entry = LogEntry()
-            log_record = log_data.log_record
+            log_record = readable_log_record.log_record
             attributes = log_record.attributes or {}
             project_id = str(
                 attributes.get(PROJECT_ID_ATTRIBUTE_KEY, self.project_id)
@@ -342,7 +347,7 @@ class CloudLoggingExporter(LogExporter):
                 ts.FromDatetime(now)
             log_entry.timestamp = ts
             if monitored_resource := _get_monitored_resource(
-                log_record.resource
+                readable_log_record.resource
             ):
                 log_entry.resource = monitored_resource
             log_entry.trace_sampled = (
@@ -370,6 +375,8 @@ class CloudLoggingExporter(LogExporter):
             log_entries.append(log_entry)
 
         self._write_log_entries(log_entries)
+
+        return LogRecordExportResult.SUCCESS
 
     @staticmethod
     def _write_log_entries_to_file(file: TextIO, log_entries: list[LogEntry]):

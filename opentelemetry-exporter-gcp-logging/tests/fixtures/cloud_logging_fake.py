@@ -37,7 +37,7 @@ from grpc import (
     unary_unary_rpc_method_handler,
 )
 from opentelemetry.exporter.cloud_logging import CloudLoggingExporter
-from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs import ReadableLogRecord
 from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.json import JSONSnapshotExtension
 
@@ -133,7 +133,7 @@ def fixture_cloudloggingfake() -> Iterable[CloudLoggingFake]:
             server.stop(None)
 
 
-ExportAndAssertSnapshot = Callable[[Sequence[LogData]], None]
+ExportAndAssertSnapshot = Callable[[Sequence[ReadableLogRecord]], None]
 
 
 @pytest.fixture(
@@ -148,7 +148,9 @@ def fixture_export_and_assert_snapshot(
             "cloudloggingfake"
         )
 
-        def export_and_assert_snapshot(log_data: Sequence[LogData]) -> None:
+        def export_and_assert_snapshot(
+            log_data: Sequence[ReadableLogRecord],
+        ) -> None:
             cloudloggingfake.exporter.export(log_data)
 
             assert cloudloggingfake.get_calls() == snapshot(
@@ -158,7 +160,9 @@ def fixture_export_and_assert_snapshot(
         return export_and_assert_snapshot
 
     # pylint: disable=function-redefined
-    def export_and_assert_snapshot(log_data: Sequence[LogData]) -> None:
+    def export_and_assert_snapshot(
+        log_data: Sequence[ReadableLogRecord],
+    ) -> None:
         buf = StringIO()
         exporter = CloudLoggingExporter(
             project_id=PROJECT_ID, structured_json_file=buf
