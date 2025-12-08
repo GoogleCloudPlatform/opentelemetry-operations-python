@@ -13,7 +13,13 @@
 # limitations under the License.
 
 steps:
+  - name: docker:20.10.24-dind
+    waitFor: ["-"]
+    dir: samples/instrumentation-quickstart
+    script: |
+      docker compose -f docker-compose.yaml -f docker-compose.creds.yaml -f docker-compose.cloudbuild.yaml up  --abort-on-container-exit
   - name: golang:1.25
+    waitFor: ["-"]
     dir: samples/instrumentation-quickstart/integrationtest
     env:
       - COMPOSE_OVERRIDE_FILE=../docker-compose.cloudbuild.yaml
