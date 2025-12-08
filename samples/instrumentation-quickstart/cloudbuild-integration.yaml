@@ -13,6 +13,18 @@
 # limitations under the License.
 
 steps:
+  # Tail logs
+  - name: docker:20.10.24-dind
+    id: dind
+    waitFor: ['-']
+    script: |
+      docker events --filter 'event=start' --format='{{ .Actor.Attributes.name }}' | \
+      while read name; do
+        if [ "$name" != "dind" ]; then
+          echo "Tailing logs for container $name"
+          docker logs -f "$name" | sed "s/^/[$name] /" &
+        fi
+      done
   - name: golang:1.25
     dir: samples/instrumentation-quickstart/integrationtest
     env:
