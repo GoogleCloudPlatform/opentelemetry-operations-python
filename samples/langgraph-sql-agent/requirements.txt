@@ -526,9 +526,9 @@ langchain-community==0.4.1 \
     --hash=sha256:2135abb2c7748a35c84613108f7ebf30f8505b18c3c18305ffaecfc7651f6c6a \
     --hash=sha256:f3b211832728ee89f169ddce8579b80a085222ddb4f4ed445a46e977d17b1e85
     # via langgraph-sql-agent
-langchain-core==1.0.3 \
-    --hash=sha256:10744945d21168fb40d1162a5f1cf69bf0137ff6ad2b12c87c199a5297410887 \
-    --hash=sha256:64f1bd45f04b174bbfd54c135a8adc52f4902b347c15a117d6383b412bf558a5
+langchain-core==1.2.5 \
+    --hash=sha256:3255944ef4e21b2551facb319bfc426057a40247c0a05de5bd6f2fc021fbfa34 \
+    --hash=sha256:d674f6df42f07e846859b9d3afe547cad333d6bf9763e92c88eb4f8aaedcd3cc
     # via
     #   langchain-classic
     #   langchain-community
