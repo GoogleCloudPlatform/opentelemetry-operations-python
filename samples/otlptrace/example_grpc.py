@@ -15,15 +15,19 @@
 
 import time
 
+# [START opentelemetry_otlp_grpc_auth_imports]
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
 import grpc
 from google.auth.transport.grpc import AuthMetadataPlugin
+# [END opentelemetry_otlp_grpc_auth_imports]
+# [START opentelemetry_otlp_grpc_imports]
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+# [END opentelemetry_otlp_grpc_imports]
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -32,6 +36,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 This is a sample script that exports OTLP traces encoded as protobufs via gRPC. 
 """
 
+# [START opentelemetry_otlp_grpc_auth_setup]
 credentials, _ = google.auth.default()
 request = google.auth.transport.requests.Request()
 resource = Resource.create(attributes={SERVICE_NAME: "otlp-gcp-grpc-sample"})
@@ -41,7 +46,11 @@ channel_creds = grpc.composite_channel_credentials(
     grpc.ssl_channel_credentials(),
     grpc.metadata_call_credentials(auth_metadata_plugin),
 )
+# [END opentelemetry_otlp_grpc_auth_setup]
 
+# [START opentelemetry_otlp_grpc_init]
+# Initialize OpenTelemetry with OTLP exporters
+# channel_creds: configure Application Default Credentials
 trace_provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(
     OTLPSpanExporter(
@@ -52,6 +61,7 @@ processor = BatchSpanProcessor(
 trace_provider.add_span_processor(processor)
 trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer("my.tracer.name")
+# [END opentelemetry_otlp_grpc_init]
 
 
 def do_work():
