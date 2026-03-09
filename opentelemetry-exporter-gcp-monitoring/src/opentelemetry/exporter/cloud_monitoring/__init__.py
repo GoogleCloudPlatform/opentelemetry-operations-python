@@ -20,6 +20,7 @@ from time import time_ns
 from typing import Dict, List, NoReturn, Optional, Set, Union
 
 import google.auth
+from google.api_core.exceptions import AlreadyExists
 from google.api.distribution_pb2 import (  # pylint: disable=no-name-in-module
     Distribution,
 )
@@ -250,6 +251,15 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                     name=self.project_name, metric_descriptor=descriptor
                 )
             )
+        except AlreadyExists:
+            # Metric descriptor already exists, cache and return our descriptor.
+            # GCP will update the descriptor on metric export if needed.
+            logger.debug(
+                "Metric descriptor %s already exists, using local descriptor",
+                descriptor_type,
+            )
+            self._metric_descriptors[descriptor_type] = descriptor
+            return descriptor
         # pylint: disable=broad-except
         except Exception as ex:
             logger.error(
