@@ -222,6 +222,9 @@ class CloudTraceSpanExporter(SpanExporter):
 
         for span in spans:
             ctx = span.get_span_context()
+            if ctx is None:
+                # Should not happen at runtime, but needed to satisfy mypy
+                continue
             trace_id = format_trace_id(ctx.trace_id)
             span_id = format_span_id(ctx.span_id)
             span_name = "projects/{}/traces/{}/spans/{}".format(
