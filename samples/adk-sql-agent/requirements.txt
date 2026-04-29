@@ -220,8 +220,9 @@ fastapi==0.121.0 \
     --hash=sha256:06663356a0b1ee93e875bbf05a31fb22314f5bed455afaaad2b2dad7f26e98fa \
     --hash=sha256:8bdf1b15a55f4e4b0d6201033da9109ea15632cb76cf156e7b8b4019f2172106
     # via google-adk
-google-adk==1.17.0 \
-    --hash=sha256:1d32b425087bd57015b18c86f9850366fd5ea6a805bbcd147493750438ed6276
+google-adk==1.28.1 \
+    --hash=sha256:76e6ec4a13f981bd9c2c7782e8b37b0e973b570b699b750a52444998e8886ced \
+    --hash=sha256:ee7cdf90ba05737be3a2aa4867804324a02f2918bd810e746fe6416184e11511
     # via adk-sql-agent
 google-api-core==2.28.1 \
     --hash=sha256:2b405df02d68e68ce0fbc138559e6036559e685159d148ae5861013dc201baf8 \
