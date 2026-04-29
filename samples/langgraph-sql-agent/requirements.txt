@@ -541,9 +541,9 @@ langchain-google-vertexai==3.0.2 \
     --hash=sha256:5119fc8d6988b08e8b1fddf87e830f79ea8700dd88ee925261e198b4fdbf86ce \
     --hash=sha256:f90cbbdd789583f5d5e026e5cbb9dd6cea7a1efd9138729e0732b4eb6a8f53a4
     # via langgraph-sql-agent
-langchain-text-splitters==1.0.0 \
-    --hash=sha256:d8580a20ad7ed10b432feb273e5758b2cc0902d094919629cec0e1ad691a6744 \
-    --hash=sha256:f00c8219d3468f2c5bd951b708b6a7dd9bc3c62d0cfb83124c377f7170f33b2e
+langchain-text-splitters==1.1.2 \
+    --hash=sha256:782a723db0a4746ac91e251c7c1d57fd23636e4f38ed733074e28d7a86f41627 \
+    --hash=sha256:a2de0d799ff31886429fd6e2e0032df275b60ec817c19059a7b46181cc1c2f10
     # via langchain-classic
 langgraph==1.0.2 \
     --hash=sha256:b3d56b8c01de857b5fb1da107e8eab6e30512a377685eeedb4f76456724c9729 \
