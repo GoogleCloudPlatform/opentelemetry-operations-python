@@ -36,13 +36,18 @@ steps:
   - name: $_TEST_RUNNER_IMAGE
     id: run-tests-cloud-run
     dir: /
-    env: ["PROJECT_ID=$PROJECT_ID"]
+    env: ["PROJECT_ID=$PROJECT_ID", "TEST_RUN_ID=$BUILD_ID"]
     args:
       - cloud-functions-gen2
       - --functionsource=/workspace/e2e-test-server/function-source.zip
       - --runtime=python311
       - --entrypoint=cloud_functions_handler
+      - --skip-cleanup
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:
-  _TEST_RUNNER_IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-e2e-testing:0.21.0
+  _TEST_RUNNER_IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-e2e-testing:0.22.0
+
+options:
+  # Notify for Cloud Build async cleanup trigger
+  pubsubTopic: projects/opentelemetry-ops-e2e/topics/e2e-cleanup
