@@ -23,6 +23,86 @@ from syrupy.assertion import SnapshotAssertion
 
 
 @pytest.mark.parametrize(
+    ("otel_attributes", "expected_type", "expected_labels"),
+    [
+        pytest.param(
+            {
+                "cloud.platform": "aws_ec2",
+                "cloud.region": "us-east-1",
+                "k8s.cluster.name": "mycluster",
+                "k8s.namespace.name": "myns",
+                "k8s.pod.name": "mypod",
+                "k8s.container.name": "mycontainer",
+            },
+            "k8s_container",
+            {
+                "location": "us-east-1",
+                "cluster_name": "mycluster",
+                "namespace_name": "myns",
+                "pod_name": "mypod",
+                "container_name": "mycontainer",
+            },
+            id="container",
+        ),
+        pytest.param(
+            {
+                "cloud.platform": "aws_ec2",
+                "cloud.region": "us-east-1",
+                "k8s.cluster.name": "mycluster",
+                "k8s.namespace.name": "myns",
+                "k8s.pod.name": "mypod",
+            },
+            "k8s_pod",
+            {
+                "location": "us-east-1",
+                "cluster_name": "mycluster",
+                "namespace_name": "myns",
+                "pod_name": "mypod",
+            },
+            id="pod",
+        ),
+        pytest.param(
+            {
+                "cloud.platform": "aws_ec2",
+                "cloud.region": "us-east-1",
+                "k8s.cluster.name": "mycluster",
+                "k8s.node.name": "mynode",
+            },
+            "k8s_node",
+            {
+                "location": "us-east-1",
+                "cluster_name": "mycluster",
+                "node_name": "mynode",
+            },
+            id="node",
+        ),
+        pytest.param(
+            {
+                "cloud.platform": "aws_ec2",
+                "cloud.region": "us-east-1",
+                "k8s.cluster.name": "mycluster",
+            },
+            "k8s_cluster",
+            {"location": "us-east-1", "cluster_name": "mycluster"},
+            id="cluster",
+        ),
+    ],
+)
+def test_get_monitored_resource_non_gke_k8s(
+    otel_attributes: Attributes,
+    expected_type: str,
+    expected_labels: dict[str, str],
+) -> None:
+    monitored_resource = get_monitored_resource(
+        Resource.create(otel_attributes)
+    )
+
+    assert monitored_resource is not None
+    assert monitored_resource.type == expected_type
+    assert monitored_resource.labels == expected_labels
+
+
+@pytest.mark.parametrize(
     "otel_attributes",
     [
         # GCE
