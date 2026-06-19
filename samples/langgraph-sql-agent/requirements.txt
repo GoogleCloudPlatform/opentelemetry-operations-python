@@ -1625,9 +1625,9 @@ validators==0.35.0 \
     --hash=sha256:992d6c48a4e77c81f1b4daba10d16c3a9bb0dbb79b3a19ea847ff0928e70497a \
     --hash=sha256:e8c947097eae7892cb3d26868d637f79f47b4a0554bc6b80065dfe5aac3705dd
     # via langchain-google-vertexai
-vcrpy==8.1.1 \
-    --hash=sha256:2d16f31ad56493efb6165182dd99767207031b0da3f68b18f975545ede8ac4b9 \
-    --hash=sha256:58e3053e33b423f3594031cb758c3f4d1df931307f1e67928e30cf352df7709f
+vcrpy==8.2.1 \
+    --hash=sha256:7ce58c9e2792b246f79d6f4b3e9660676cc6f853be17e1547305b4437ab1ff85 \
+    --hash=sha256:d73a6e4eb6dae8148e659764b7a00e68cc51ba29ba9e6a85e1f0790ad96b97df
     # via
     #   langchain-tests
     #   pytest-recording
