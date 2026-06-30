@@ -748,9 +748,9 @@ importlib-metadata==8.7.1 \
     --hash=sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb \
     --hash=sha256:5a1f80bf1daa489495071efbb095d75a634cf28a8bc299581244063b53176151
     # via opentelemetry-api
-joserfc==1.6.4 \
-    --hash=sha256:34ce5f499bfcc5e9ad4cc75077f9278ab3227b71da9aaf28f9ab705f8a560d3c \
-    --hash=sha256:3e4a22b509b41908989237a045e25c8308d5fd47ab96bdae2dd8057c6451003a
+joserfc==1.6.7 \
+    --hash=sha256:6999fe89457069ecacd8cc797c88a805f83054dd883333fa0409f74b46479fd7 \
+    --hash=sha256:9e51e4a64840aa1734a058258e80a4480e2ff2d5686e480e7c92c954a92fbe05
     # via authlib
 jsonschema==4.26.0 \
     --hash=sha256:0c26707e2efad8aa1bfc5b7ce170f3fccc2e4918ff85989ba9ffa9facb2be326 \
