@@ -157,9 +157,7 @@ def get_monitored_resource(
     attrs = resource.attributes
 
     platform = attrs.get(ResourceAttributes.CLOUD_PLATFORM_KEY)
-    if platform == ResourceAttributes.GCP_COMPUTE_ENGINE:
-        mr = _create_monitored_resource(_constants.GCE_INSTANCE, attrs)
-    elif platform == ResourceAttributes.GCP_KUBERNETES_ENGINE:
+    if ResourceAttributes.K8S_CLUSTER_NAME in attrs:
         if ResourceAttributes.K8S_CONTAINER_NAME in attrs:
             mr = _create_monitored_resource(_constants.K8S_CONTAINER, attrs)
         elif ResourceAttributes.K8S_POD_NAME in attrs:
@@ -168,6 +166,8 @@ def get_monitored_resource(
             mr = _create_monitored_resource(_constants.K8S_NODE, attrs)
         else:
             mr = _create_monitored_resource(_constants.K8S_CLUSTER, attrs)
+    elif platform == ResourceAttributes.GCP_COMPUTE_ENGINE:
+        mr = _create_monitored_resource(_constants.GCE_INSTANCE, attrs)
     elif platform == ResourceAttributes.AWS_EC2:
         mr = _create_monitored_resource(_constants.AWS_EC2_INSTANCE, attrs)
     else:
