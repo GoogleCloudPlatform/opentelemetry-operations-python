@@ -102,8 +102,12 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         cls.example_span_id = "95bb5edabd45950f"
         cls.example_time_in_ns = 1589919268850900051
         cls.example_time_stamp = _get_time_from_ns(cls.example_time_in_ns)
-        cls.str_20kb = "a" * 20 * 1024
-        cls.str_16kb = "a" * 16 * 1024
+        cls.str_70kb = "a" * 70 * 1024
+        cls.str_64kb = "a" * 64 * 1024
+        cls.str_1100 = "a" * 1100
+        cls.str_1024 = "a" * 1024
+        cls.str_600 = "a" * 600
+        cls.str_512 = "a" * 512
         cls.str_300 = "a" * 300
         cls.str_256 = "a" * 256
         cls.str_128 = "a" * 128
@@ -338,10 +342,10 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_attribute_value_truncation(self):
         # shouldn't truncate
         self.assertEqual(
-            _format_attribute_value(self.str_300),
+            _format_attribute_value(self.str_600),
             AttributeValue(
                 string_value=TruncatableString(
-                    value=self.str_300,
+                    value=self.str_600,
                     truncated_byte_count=0,
                 )
             ),
@@ -349,11 +353,11 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
         # huge string should truncate
         self.assertEqual(
-            _format_attribute_value(self.str_20kb),
+            _format_attribute_value(self.str_70kb),
             AttributeValue(
                 string_value=TruncatableString(
-                    value=self.str_16kb,
-                    truncated_byte_count=(20 - 16) * 1024,
+                    value=self.str_64kb,
+                    truncated_byte_count=(70 - 64) * 1024,
                 )
             ),
         )
@@ -395,11 +399,11 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
     def test_attribute_key_truncation(self):
         self.assertEqual(
             _extract_attributes(
-                {self.str_300: "attr_value"}, num_attrs_limit=4
+                {self.str_600: "attr_value"}, num_attrs_limit=4
             ),
             ProtoSpan.Attributes(
                 attribute_map={
-                    self.str_128: AttributeValue(
+                    self.str_512: AttributeValue(
                         string_value=TruncatableString(
                             value="attr_value", truncated_byte_count=0
                         )
@@ -504,7 +508,9 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
 
     def test_event_name_truncation(self):
         event1 = Event(
-            name=self.str_300, attributes={}, timestamp=self.example_time_in_ns
+            name=self.str_1100,
+            attributes={},
+            timestamp=self.example_time_in_ns,
         )
         self.assertEqual(
             _extract_events([event1]),
@@ -514,8 +520,8 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
                         "time": self.example_time_stamp,
                         "annotation": {
                             "description": TruncatableString(
-                                value=self.str_256,
-                                truncated_byte_count=300 - 256,
+                                value=self.str_1024,
+                                truncated_byte_count=1100 - 1024,
                             ),
                             "attributes": {},
                         },
@@ -779,4 +785,24 @@ class TestCloudTraceSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             _extract_span_kind(-1), ProtoSpan.SpanKind.SPAN_KIND_UNSPECIFIED
+        )
+
+    def test_span_name_truncation(self):
+        exporter = CloudTraceSpanExporter(self.project_id)
+        span_data = Span(
+            name=self.str_1100,
+            context=SpanContext(
+                trace_id=int(self.example_trace_id, 16),
+                span_id=int(self.example_span_id, 16),
+                is_remote=False,
+            ),
+        )
+        # pylint: disable=protected-access
+        translated_spans = exporter._translate_to_cloud_trace([span_data])
+        self.assertEqual(
+            translated_spans[0].display_name,
+            TruncatableString(
+                value=self.str_1024,
+                truncated_byte_count=1100 - 1024,
+            ),
         )

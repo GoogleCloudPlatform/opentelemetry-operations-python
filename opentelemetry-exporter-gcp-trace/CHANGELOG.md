@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update span and attribute limits to match Cloud Trace backend
+
 ## Version 1.14.0
 
 Released 2026-08-03

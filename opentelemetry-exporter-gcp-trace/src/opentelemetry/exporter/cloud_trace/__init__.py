@@ -137,12 +137,12 @@ _OPTIONS = [
 
 
 MAX_NUM_LINKS = 128
-MAX_NUM_EVENTS = 32
-MAX_EVENT_ATTRS = 4
-MAX_LINK_ATTRS = 32
-MAX_SPAN_ATTRS = 32
-MAX_ATTR_KEY_BYTES = 128
-MAX_ATTR_VAL_BYTES = 16 * 1024  # 16 kilobytes
+MAX_NUM_EVENTS = 256
+MAX_EVENT_ATTRS = 1024
+MAX_LINK_ATTRS = 1024
+MAX_SPAN_ATTRS = 1024
+MAX_ATTR_KEY_BYTES = 512
+MAX_ATTR_VAL_BYTES = 64 * 1024  # 64 kilobytes
 
 
 def _create_default_client() -> TraceServiceClient:
@@ -260,7 +260,7 @@ class CloudTraceSpanExporter(SpanExporter):
                 trace_types.Span(
                     name=span_name,
                     span_id=span_id,
-                    display_name=_get_truncatable_str_object(span.name, 128),
+                    display_name=_get_truncatable_str_object(span.name, 1024),
                     start_time=start_time,
                     end_time=end_time,
                     parent_span_id=parent_id,
@@ -400,7 +400,7 @@ def _extract_events(
             trace_types.Span.TimeEvent(
                 time=_get_time_from_ns(event.timestamp),
                 annotation=trace_types.Span.TimeEvent.Annotation(
-                    description=_get_truncatable_str_object(event.name, 256),
+                    description=_get_truncatable_str_object(event.name, 1024),
                     attributes=_extract_attributes(
                         event.attributes, MAX_EVENT_ATTRS
                     ),
