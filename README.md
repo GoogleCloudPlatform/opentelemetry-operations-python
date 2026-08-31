@@ -3,19 +3,14 @@
 [![Documentation Status](https://readthedocs.org/projects/google-cloud-opentelemetry/badge/?version=latest)](https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest)
 <!-- todo add pypi badges here -->
 
+> [!WARNING]
+> **DEPRECATION NOTICE**: This repository and all of its contents are deprecated and will be archived on October 30th, 2026. Please refer to the [Migration Guide](MIGRATION.md) for detailed instructions on migrating your application to standard OpenTelemetry OTLP exporters and W3C Trace Context propagation.
+
 This repo provides OpenTelemetry Python exporters, propagators, and resource detectors
 for Google Cloud Platform.
 
 To get started with instrumentation in Google Cloud, see [Generate traces and metrics with
 Python](https://cloud.google.com/stackdriver/docs/instrumentation/setup/python).
-
-## ⚠️ Deprecation Notice
-
-**All custom Google Cloud exporters in this repository (`opentelemetry-exporter-gcp-trace`, `opentelemetry-exporter-gcp-monitoring`, and `opentelemetry-exporter-gcp-logging`) are deprecated.**
-
-Google Cloud supports native OpenTelemetry Protocol (OTLP) ingestion for Cloud Trace, Cloud Monitoring, and Cloud Logging via the [Telemetry API](https://docs.cloud.google.com/stackdriver/docs/reference/telemetry/overview).
-
-Please refer to the [Migration Guide](MIGRATION.md) for detailed instructions on migrating your application to standard OpenTelemetry OTLP exporters.
 
 ## Google Cloud Resource Detector
 
