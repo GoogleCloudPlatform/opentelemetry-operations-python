@@ -6,10 +6,6 @@ This guide provides instructions on how to migrate from the custom exporters and
 
 Google Cloud supports native OTLP (OpenTelemetry Protocol) ingestion for Cloud Trace, Cloud Monitoring, and Cloud Logging via the [Telemetry API](https://docs.cloud.google.com/stackdriver/docs/reference/telemetry/overview). This allows you to use standard OpenTelemetry OTLP exporters for sending telemetry data to Google Cloud. In addition, Google Cloud infrastructure natively supports standard W3C Trace Context headers (`traceparent` and `tracestate`), allowing you to use standard OpenTelemetry context propagation without proprietary headers.
 
-## Deprecation Notice
-
-All exporters and propagators in this repository (`opentelemetry-exporter-gcp-trace`, `opentelemetry-exporter-gcp-monitoring`, `opentelemetry-exporter-gcp-logging`, and `opentelemetry-propagator-gcp`) are deprecated. Please migrate to standard OTLP exporters and standard W3C Trace Context propagation using standard OpenTelemetry libraries.
-
 ---
 
 ## Resource Detection (Recommended for All Signals)
