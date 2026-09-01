@@ -506,13 +506,6 @@ The standard W3C Trace Context propagator is included automatically with `opente
 
 When using OpenTelemetry auto-instrumentation (`opentelemetry-instrument`), W3C Trace Context (`tracecontext`) and Baggage (`baggage`) are used by default (`OTEL_PROPAGATORS="tracecontext,baggage"`).
 
-If you explicitly configured `OTEL_PROPAGATORS` to include `gcp_trace`, update it to remove it:
-
-```bash
-# Environment Variables
-OTEL_PROPAGATORS="tracecontext,baggage"
-```
-
 If you use the `opentelemetry-instrument` CLI for auto-instrumentation, remove the `--propagator gcp_trace` flag:
 
 ```bash
@@ -523,9 +516,11 @@ opentelemetry-instrument --propagator gcp_trace python main.py
 opentelemetry-instrument python main.py
 ```
 
-#### 3. Update Manual Configuration in Code
+#### 3. Remove Manual Configuration in Code
 
-If you manually registered `CloudTraceFormatPropagator` in your application code, replace it with the standard OpenTelemetry `TraceContextTextMapPropagator` (and optionally `W3CBaggagePropagator`):
+If you manually registered `CloudTraceFormatPropagator` or `CloudTraceOneWayPropagator` in your application code, simply remove the propagator import and `set_global_textmap` registration.
+
+OpenTelemetry automatically uses standard W3C Trace Context propagation by default—no manual `set_global_textmap` call is necessary.
 
 ##### Before (Legacy GCP Propagator)
 
@@ -539,24 +534,12 @@ from opentelemetry.propagators.cloud_trace_propagator import (
 set_global_textmap(CloudTraceFormatPropagator())
 ```
 
-##### After (Standard W3C Trace Context Propagator)
+##### After
 
 ```python
-from opentelemetry.baggage.propagation import W3CBaggagePropagator
-from opentelemetry.propagate import set_global_textmap
-from opentelemetry.propagators.composite import CompositePropagator
-from opentelemetry.trace.propagation.tracecontext import (
-    TraceContextTextMapPropagator,
-)
-
-# Set standard W3C Trace Context and Baggage propagators
-set_global_textmap(
-    CompositePropagator([
-        TraceContextTextMapPropagator(),
-        W3CBaggagePropagator(),
-    ])
-)
+# Simply remove the GCP propagator import and set_global_textmap call.
+# OpenTelemetry automatically defaults to standard W3C Trace Context propagation.
 ```
 
 > [!NOTE]
-> When using `opentelemetry-instrument` (or relying on default `opentelemetry-api` propagation), standard W3C propagation is enabled automatically by default without requiring manual code setup.
+> Standard W3C Trace Context propagation is built into `opentelemetry-api` and enabled by default. You do not need to call `set_global_textmap` unless you are configuring non-default custom propagators.
