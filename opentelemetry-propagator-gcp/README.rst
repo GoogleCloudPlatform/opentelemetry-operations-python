@@ -8,6 +8,15 @@ OpenTelemetry Google Cloud Propagator
     :target: https://google-cloud-opentelemetry.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
+
+.. admonition:: Warning - Deprecated
+    :class: warning
+
+    This package is deprecated and will be archived after October 30th, 2026.
+    Google Cloud infrastructure now natively supports standard W3C Trace Context
+    headers. Please use standard W3C Trace Context propagation instead.
+    See the `Migration Guide <https://github.com/GoogleCloudPlatform/opentelemetry-operations-python/blob/main/MIGRATION.md>`_ for details.
+
 This library provides support for propagating trace context in the Google
 Cloud ``X-Cloud-Trace-Context`` format.
 

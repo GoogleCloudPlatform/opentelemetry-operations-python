@@ -1,14 +1,10 @@
 # Migration Guide
 
-This guide provides instructions on how to migrate from the custom exporters in this repository to the standard OpenTelemetry OTLP exporters.
+This guide provides instructions on how to migrate from the custom exporters and propagators in this repository to the standard OpenTelemetry OTLP exporters and W3C Trace Context propagator.
 
 ## Overview
 
-Google Cloud supports native OTLP (OpenTelemetry Protocol) ingestion for Cloud Trace, Cloud Monitoring, and Cloud Logging via the [Telemetry API](https://docs.cloud.google.com/stackdriver/docs/reference/telemetry/overview). This allows you to use standard OpenTelemetry OTLP exporters for sending telemetry data to Google Cloud.
-
-## Deprecation Notice
-
-All exporters in this repository (`opentelemetry-exporter-gcp-trace`, `opentelemetry-exporter-gcp-monitoring`, and `opentelemetry-exporter-gcp-logging`) are deprecated. Please migrate to standard OTLP exporters using standard OpenTelemetry libraries.
+Google Cloud supports native OTLP (OpenTelemetry Protocol) ingestion for Cloud Trace, Cloud Monitoring, and Cloud Logging via the [Telemetry API](https://docs.cloud.google.com/stackdriver/docs/reference/telemetry/overview). This allows you to use standard OpenTelemetry OTLP exporters for sending telemetry data to Google Cloud. In addition, Google Cloud infrastructure natively supports standard W3C Trace Context headers (`traceparent` and `tracestate`), allowing you to use standard OpenTelemetry context propagation without proprietary headers.
 
 ---
 
@@ -25,7 +21,7 @@ pip install opentelemetry-resourcedetector-gcp
 ### Usage & Configuration
 
 * **Manual SDK Setup (In Code):** When manually setting up the SDK in Python (e.g., instantiating `TracerProvider()`, `MeterProvider()`, or `LoggerProvider()`), the GCP resource detector is **automatically discovered and applied** simply by installing `opentelemetry-resourcedetector-gcp`. No additional code changes or environment variables are required.
-* **Autoconfiguration / Zero-Code Instrumentation:** When using OpenTelemetry autoconfiguration (`opentelemetry-sdk-extension-autoconfigure` or `opentelemetry-instrument`), enable the GCP resource detector via the `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` environment variable:
+* **Auto-Instrumentation / Zero-Code:** When using OpenTelemetry auto-instrumentation (`opentelemetry-instrument`), enable the GCP resource detector via the `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` environment variable:
 
 ```bash
 export OTEL_EXPERIMENTAL_RESOURCE_DETECTORS="gcp"
@@ -479,3 +475,71 @@ logger_provider.add_log_record_processor(
 * **Log Names & Resources:** The OTLP endpoint maps log names from resource attributes (e.g. `gcp.log_name` or defaults to `projects/<project>/logs/otel`).
 * **Query Impact:** If your existing Cloud Logging log queries filter by specific `logName` values (such as python logger names mapped by `CloudLoggingExporter`), you may need to update your Cloud Logging query filters to match the OTLP log names and attributes.
 * **GCP Monitored Resource Association:** Installing `opentelemetry-resourcedetector-gcp` ensures log records contain appropriate GCP resource attributes, allowing Cloud Logging to associate logs with standard monitored resources (GCE instances, GKE pods, Cloud Run services, etc.).
+
+---
+
+## Migrate from X-Cloud-Trace-Context Propagator to W3C Trace Context Propagator
+
+Google Cloud infrastructure now natively supports standard W3C Trace Context headers (`traceparent` and `tracestate`). The `opentelemetry-propagator-gcp` package is deprecated and will be archived after October 30th, 2026. You should migrate to standard OpenTelemetry W3C Trace Context propagation.
+
+### Why Migrate?
+
+* **Standardization:** W3C Trace Context is the industry standard for distributed tracing context propagation and is natively supported across cloud providers, libraries, and frameworks.
+* **Native GCP Support:** Google Cloud services (such as Cloud Run, Cloud Functions, App Engine, Google Kubernetes Engine, Cloud Trace, and Google Cloud Load Balancers) natively support W3C Trace Context headers without requiring proprietary headers.
+* **Built-in OpenTelemetry Support:** W3C Trace Context propagation is built into the core `opentelemetry-api` package and is enabled by default in OpenTelemetry Python.
+
+---
+
+### Migration Steps
+
+#### 1. Remove Legacy Dependency
+
+Remove the `opentelemetry-propagator-gcp` dependency from your project (`requirements.txt`, `pyproject.toml`, etc.):
+
+```bash
+pip uninstall opentelemetry-propagator-gcp
+```
+
+The standard W3C Trace Context propagator is included automatically with `opentelemetry-api`.
+
+#### 2. Update Configuration (Auto-Instrumentation / CLI)
+
+Unless overriden with `set_global_textmap()`, W3C Trace Context (`tracecontext`) and Baggage (`baggage`) are used by default (`OTEL_PROPAGATORS="tracecontext,baggage"`) in OpenTelemetry Python, regardless of if you're using auto-instrumentation or manual.
+
+If you use the `opentelemetry-instrument` CLI for auto-instrumentation, remove the `--propagator gcp_trace` flag:
+
+```bash
+# Before
+opentelemetry-instrument --propagator gcp_trace python main.py
+
+# After (uses default W3C Trace Context and Baggage propagators)
+opentelemetry-instrument python main.py
+```
+
+#### 3. Remove Manual Configuration in Code
+
+If you manually registered `CloudTraceFormatPropagator` or `CloudTraceOneWayPropagator` in your application code, simply remove the propagator import and `set_global_textmap` registration.
+
+OpenTelemetry automatically uses standard W3C Trace Context propagation by default—no manual `set_global_textmap` call is necessary.
+
+##### Before (Legacy GCP Propagator)
+
+```python
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.propagators.cloud_trace_propagator import (
+    CloudTraceFormatPropagator,
+)
+
+# Sets the X-Cloud-Trace-Context header propagator
+set_global_textmap(CloudTraceFormatPropagator())
+```
+
+##### After
+
+```python
+# Simply remove the GCP propagator import and set_global_textmap call.
+# OpenTelemetry automatically defaults to standard W3C Trace Context propagation.
+```
+
+> [!NOTE]
+> Standard W3C Trace Context propagation is built into `opentelemetry-api` and enabled by default. You do not need to call `set_global_textmap` unless you are configuring non-default custom propagators.
