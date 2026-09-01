@@ -504,7 +504,7 @@ The standard W3C Trace Context propagator is included automatically with `opente
 
 #### 2. Update Configuration (Auto-Instrumentation / CLI)
 
-When using OpenTelemetry auto-instrumentation (`opentelemetry-instrument`), W3C Trace Context (`tracecontext`) and Baggage (`baggage`) are used by default (`OTEL_PROPAGATORS="tracecontext,baggage"`).
+Unless overriden with `set_global_textmap()`, W3C Trace Context (`tracecontext`) and Baggage (`baggage`) are used by default (`OTEL_PROPAGATORS="tracecontext,baggage"`) in OpenTelemetry Python, regardless of if you're using auto-instrumentation or manual.
 
 If you use the `opentelemetry-instrument` CLI for auto-instrumentation, remove the `--propagator gcp_trace` flag:
 
