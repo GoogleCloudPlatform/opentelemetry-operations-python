@@ -36,7 +36,7 @@ pydantic_core==2.10.1
 requests==2.31.0
 rsa==4.9
 typing_extensions==4.10.0
-urllib3==2.0.6
+urllib3==2.7.0
 waitress==2.1.2
 watchdog==4.0.1
 Werkzeug==3.0.0
