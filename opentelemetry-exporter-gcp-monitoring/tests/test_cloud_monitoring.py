@@ -29,6 +29,7 @@ Be sure to review the changes.
 """
 
 from typing import List, Union
+from unittest.mock import Mock
 
 import pytest
 from fixtures.gcmfake import GcmFake, GcmFakeMeterProvider
@@ -38,12 +39,23 @@ from opentelemetry.exporter.cloud_monitoring import (
     CloudMonitoringMetricsExporter,
 )
 from opentelemetry.metrics import CallbackOptions, Observation
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    Metric,
+    MetricExportResult,
+    MetricsData,
+    NumberDataPoint,
+    ResourceMetrics,
+    ScopeMetrics,
+    Sum,
+)
 from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     ExponentialBucketHistogramAggregation,
     View,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
 
 PROJECT_ID = "fakeproject"
@@ -67,6 +79,63 @@ def test_create_monitoring_exporter() -> None:
         project_id=PROJECT_ID,
         client=client,
         prefix="custom.googleapis.com",
+    )
+
+
+def test_export_passes_timeout_to_cloud_monitoring_client() -> None:
+    client = Mock()
+    client.common_project_path.return_value = "projects/fakeproject"
+    client.create_metric_descriptor.side_effect = (
+        lambda request, timeout: request.metric_descriptor
+    )
+
+    exporter = CloudMonitoringMetricsExporter(
+        project_id=PROJECT_ID,
+        client=client,
+    )
+
+    result = exporter.export(_metrics_data(), timeout_millis=2500)
+
+    assert result is MetricExportResult.SUCCESS
+    assert client.create_metric_descriptor.call_args.kwargs["timeout"] == 2.5
+    assert client.create_time_series.call_args.kwargs["timeout"] == 2.5
+
+
+def _metrics_data() -> MetricsData:
+    return MetricsData(
+        resource_metrics=[
+            ResourceMetrics(
+                resource=Resource.create({}),
+                scope_metrics=[
+                    ScopeMetrics(
+                        scope=InstrumentationScope(__name__),
+                        metrics=[
+                            Metric(
+                                name="timeout_counter",
+                                description="",
+                                unit="1",
+                                data=Sum(
+                                    data_points=[
+                                        NumberDataPoint(
+                                            attributes={},
+                                            start_time_unix_nano=1,
+                                            time_unix_nano=2,
+                                            value=1,
+                                        )
+                                    ],
+                                    aggregation_temporality=(
+                                        AggregationTemporality.CUMULATIVE
+                                    ),
+                                    is_monotonic=True,
+                                ),
+                            )
+                        ],
+                        schema_url="",
+                    )
+                ],
+                schema_url="",
+            )
+        ]
     )
 
 
