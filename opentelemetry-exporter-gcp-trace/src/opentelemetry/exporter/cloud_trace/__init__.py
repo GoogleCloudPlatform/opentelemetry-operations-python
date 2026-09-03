@@ -245,7 +245,7 @@ class CloudTraceSpanExporter(SpanExporter):
 
             if span.attributes and len(span.attributes) > MAX_SPAN_ATTRS:
                 logger.warning(
-                    "Span has more then %s attributes, some will be truncated",
+                    "Span has more than %s attributes, some will be truncated",
                     MAX_SPAN_ATTRS,
                 )
 
@@ -345,7 +345,7 @@ def _extract_links(
     dropped_links = 0
     if len(links) > MAX_NUM_LINKS:
         logger.warning(
-            "Exporting more then %s links, some will be truncated",
+            "Exporting more than %s links, some will be truncated",
             MAX_NUM_LINKS,
         )
         dropped_links = len(links) - MAX_NUM_LINKS
@@ -354,7 +354,7 @@ def _extract_links(
         link_attributes = link.attributes or {}
         if len(link_attributes) > MAX_LINK_ATTRS:
             logger.warning(
-                "Link has more then %s attributes, some will be truncated",
+                "Link has more than %s attributes, some will be truncated",
                 MAX_LINK_ATTRS,
             )
         trace_id = format_trace_id(link.context.trace_id)
@@ -384,7 +384,7 @@ def _extract_events(
     dropped_annontations = 0
     if len(events) > MAX_NUM_EVENTS:
         logger.warning(
-            "Exporting more then %s annotations, some will be truncated",
+            "Exporting more than %s annotations, some will be truncated",
             MAX_NUM_EVENTS,
         )
         dropped_annontations = len(events) - MAX_NUM_EVENTS
@@ -392,7 +392,7 @@ def _extract_events(
     for event in events:
         if event.attributes and len(event.attributes) > MAX_EVENT_ATTRS:
             logger.warning(
-                "Event %s has more then %s attributes, some will be truncated",
+                "Event %s has more than %s attributes, some will be truncated",
                 event.name,
                 MAX_EVENT_ATTRS,
             )
