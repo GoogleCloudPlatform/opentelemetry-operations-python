@@ -700,9 +700,9 @@ langgraph-prebuilt==1.0.12 \
     --hash=sha256:ab83822d2724d434d3536dc127b86c7d16fe3fb8dc02a89a683bc77b2e55f6e9 \
     --hash=sha256:edcb11ff29996def816243f267fb2c85c0a2e4fb618c275f3d238aee8dd6a5ec
     # via langgraph
-langgraph-sdk==0.3.13 \
-    --hash=sha256:419ca5663eec3cec192ad194ac0647c0c826866b446073eb40f384f950986cd5 \
-    --hash=sha256:aee09e345c90775f6de9d6f4c7b847cfc652e49055c27a2aed0d981af2af3bd0
+langgraph-sdk==0.3.15 \
+    --hash=sha256:29e805003d2c6e296823dd71992610976fd0428cefaa8b3304fd91f2247037de \
+    --hash=sha256:3838773acf7456d158165385d49f48f1e856f28b56ccd99ea139a8f27004815d
     # via langgraph
 langsmith==0.7.38 \
     --hash=sha256:0db529b768d66c45f22fe959a0af7151342704fefafdecf3c60b14097c14fdb1 \
