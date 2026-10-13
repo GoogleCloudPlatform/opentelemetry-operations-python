@@ -34,8 +34,8 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/compose-spec/compose-go/v2 v2.9.1 // indirect
 	github.com/containerd/console v1.0.5 // indirect
-	github.com/containerd/containerd/api v1.9.0 // indirect
-	github.com/containerd/containerd/v2 v2.1.4 // indirect
+	github.com/containerd/containerd/api v1.10.0 // indirect
+	github.com/containerd/containerd/v2 v2.2.9 // indirect
 	github.com/containerd/continuity v0.4.5 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
@@ -103,7 +103,7 @@ require (
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.1 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20251013123823-9fd1530e3ec3 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
@@ -194,14 +194,14 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/grpc v1.83.0 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.34.1 // indirect
-	k8s.io/apimachinery v0.34.1 // indirect
-	k8s.io/client-go v0.34.1 // indirect
+	k8s.io/api v0.34.10 // indirect
+	k8s.io/apimachinery v0.34.10 // indirect
+	k8s.io/client-go v0.34.10 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250910181357-589584f1c912 // indirect
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4 // indirect
@@ -209,5 +209,5 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
-	tags.cncf.io/container-device-interface v1.0.1 // indirect
+	tags.cncf.io/container-device-interface v1.1.0 // indirect
 )
