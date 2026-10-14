@@ -152,7 +152,9 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         ) = divmod(time_ns(), NANOS_PER_SECOND)
         self._prefix = prefix
 
-    def _batch_write(self, series: List[TimeSeries]) -> None:
+    def _batch_write(
+        self, series: List[TimeSeries], timeout_millis: float
+    ) -> None:
         """Cloud Monitoring allows writing up to 200 time series at once
 
         :param series: ProtoBuf TimeSeries
@@ -167,11 +169,12 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                         write_ind : write_ind + MAX_BATCH_WRITE
                     ],
                 ),
+                timeout=timeout_millis / 1000,
             )
             write_ind += MAX_BATCH_WRITE
 
     def _get_metric_descriptor(
-        self, metric: Metric
+        self, metric: Metric, timeout_millis: float
     ) -> Optional[MetricDescriptor]:
         """We can map Metric to MetricDescriptor using Metric.name or
         MetricDescriptor.type. We create the MetricDescriptor if it doesn't
@@ -253,7 +256,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
             response_descriptor = self.client.create_metric_descriptor(
                 CreateMetricDescriptorRequest(
                     name=self.project_name, metric_descriptor=descriptor
-                )
+                ),
+                timeout=timeout_millis / 1000,
             )
         # pylint: disable=broad-except
         except Exception as ex:
@@ -367,7 +371,6 @@ class CloudMonitoringMetricsExporter(MetricExporter):
     def export(
         self,
         metrics_data: MetricsData,
-        # TODO(aabmass): pass timeout to api calls
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
@@ -400,7 +403,9 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                         ),
                     )
 
-                    descriptor = self._get_metric_descriptor(metric)
+                    descriptor = self._get_metric_descriptor(
+                        metric, timeout_millis
+                    )
                     if not descriptor:
                         continue
 
@@ -431,7 +436,7 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                         all_series.append(series)
 
         try:
-            self._batch_write(all_series)
+            self._batch_write(all_series, timeout_millis)
         # pylint: disable=broad-except
         except Exception as ex:
             logger.error(
