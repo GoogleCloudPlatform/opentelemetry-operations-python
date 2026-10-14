@@ -14,7 +14,7 @@
 
 # Build relative to root of repository i.e. `docker build --file Dockerfile --tag=$tag ..`
 
-FROM python:3.9-slim as python-base
+FROM python:3.11-slim as python-base
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \

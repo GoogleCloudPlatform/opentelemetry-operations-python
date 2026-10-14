@@ -17,6 +17,7 @@ steps:
     dir: samples/instrumentation-quickstart/integrationtest
     env:
       - COMPOSE_OVERRIDE_FILE=../docker-compose.cloudbuild.yaml
+      - DOCKER_API_VERSION=1.41
       # https://github.com/testcontainers/testcontainers-go/issues/2754
       - TESTCONTAINERS_RYUK_CONNECTION_TIMEOUT=10m
       - TESTCONTAINERS_RYUK_RECONNECTION_TIMEOUT=10m
