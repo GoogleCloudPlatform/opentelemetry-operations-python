@@ -162,9 +162,9 @@ attrs==26.1.0 \
     #   aiohttp
     #   jsonschema
     #   referencing
-authlib==1.7.1 \
-    --hash=sha256:8470f4aa6b5590ac41bd81d6e6ee12448ce36a0da0af19bbed69fb53fb4e8ad9 \
-    --hash=sha256:8c09b0f9d080c823e594b52316af70f79a1fa4eed64d0363a076233c04ef063a
+authlib==1.9.1 \
+    --hash=sha256:5c7d9848f47cac340f060f76ae0bc09b59f5c8e89cc1bb032d4370a0c55b5974 \
+    --hash=sha256:8b9be8b1e5174dcbf5520e984f1a22dc2edae5b6e40a61d4cedbf86b97e9e69b
     # via google-adk
 certifi==2026.4.22 \
     --hash=sha256:3cb2210c8f88ba2318d29b0388d1023c8492ff72ecdde4ebdaddbb13a31b1c4a \
