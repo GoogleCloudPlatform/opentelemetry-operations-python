@@ -1133,9 +1133,9 @@ multidict==6.9.1 \
     # via
     #   aiohttp
     #   yarl
-opentelemetry-api==1.38.0 \
-    --hash=sha256:2891b0197f47124454ab9f0cf58f3be33faca394457ac3e09daba13ff50aa582 \
-    --hash=sha256:f4c193b5e8acb0912b06ac5b16321908dd0843d75049c091487322284a3eea12
+opentelemetry-api==1.45.2 \
+    --hash=sha256:2cbd737377e710ee740d261c94e93fa0f08e6d037c18f17513cc0a2d94479a34 \
+    --hash=sha256:d7b0008e21e5fd61cbe7a7f34ca3b6905a78ab677d9bc395e299359c75cda6b4
     # via
     #   google-adk
     #   google-cloud-logging
