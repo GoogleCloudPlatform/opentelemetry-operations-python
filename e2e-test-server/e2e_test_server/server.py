@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import threading
 from typing import Literal
 
 from cloudevents.http.event import CloudEvent
@@ -112,6 +113,25 @@ def handle_message(
         return "ack"
 
 
+def _create_health_check_app():
+    from flask import Flask, Response
+
+    app = Flask(__name__)
+
+    # Health checks for GAE. See:
+    # https://cloud.google.com/appengine/docs/flexible/reference/app-yaml#updated_health_checks
+    # https://github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/blob/v0.24.0/tf/gae/gae.tf#L32-L38
+    @app.route("/alive")
+    def alive() -> Response:
+        return Response(status=200)
+
+    @app.route("/ready")
+    def ready() -> Response:
+        return Response(status=200)
+
+    return app
+
+
 def pubsub_pull() -> None:
     """Pull incoming pub/sub push messages on REQUEST_SUBSCRIPTION_NAME"""
     responder = _Responder()
@@ -137,6 +157,18 @@ def pubsub_pull() -> None:
         subscription_path, callback=pubsub_callback
     )
 
+    if PUSH_PORT:
+        from waitress import serve
+
+        health_app = _create_health_check_app()
+        logger.info("Starting health check server on port %s", PUSH_PORT)
+        threading.Thread(
+            target=serve,
+            args=(health_app,),
+            kwargs={"port": PUSH_PORT},
+            daemon=True,
+        ).start()
+
     logger.info(
         "Listening on subscription {} for pub/sub messages".format(
             REQUEST_SUBSCRIPTION_NAME
@@ -148,22 +180,11 @@ def pubsub_pull() -> None:
 
 def pubsub_push() -> None:
     """Start a web server listening for incoming pub/sub push message"""
-    from flask import Flask, Response, request
+    from flask import Response, request
     from waitress import serve
 
-    app = Flask(__name__)
+    app = _create_health_check_app()
     responder = _Responder()
-
-    # Health checks for GAE. See:
-    # https://cloud.google.com/appengine/docs/flexible/reference/app-yaml#updated_health_checks
-    # https://github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/blob/v0.16.0/tf/gae/gae.tf#L32-L38
-    @app.route("/alive")
-    def alive() -> Response:
-        return Response(status=200)
-
-    @app.route("/ready")
-    def ready() -> Response:
-        return Response(status=200)
 
     # Actual pub/sub handler
     @app.route("/", methods=["POST"])
