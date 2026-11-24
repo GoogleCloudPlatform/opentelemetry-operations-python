@@ -33,8 +33,4 @@ SUBSCRIPTION_MODE: SubscriptionMode = SubscriptionMode(
 PROJECT_ID = os.environ["PROJECT_ID"]
 REQUEST_SUBSCRIPTION_NAME = os.environ.get("REQUEST_SUBSCRIPTION_NAME")
 RESPONSE_TOPIC_NAME = os.environ["RESPONSE_TOPIC_NAME"]
-PUSH_PORT = (
-    os.environ["PUSH_PORT"]
-    if SUBSCRIPTION_MODE is SubscriptionMode.PUSH
-    else None
-)
+PUSH_PORT = os.environ.get("PUSH_PORT") or os.environ.get("PORT")
